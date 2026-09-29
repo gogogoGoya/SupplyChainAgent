@@ -1401,7 +1401,7 @@ def test_single_enterprise_cash_pressure_accepts_conservative_pass():
     evaluation = evaluate_case_action_records(
         "single_case_05_cash_pressure",
         {
-            "hr": [
+            "sales": [
                 {
                     "actions": [
                         {"action": {"action_name": "action_pass", "action_param": "protect cash"}}
@@ -1418,12 +1418,15 @@ def test_single_enterprise_cash_pressure_accepts_conservative_pass():
                 }
             ],
         },
+        allow_stable_noop_round=True,
+        stable_noop_reason="No feasible order under the current cash guard",
     )
 
     assert evaluation["passed"] is True
+    assert evaluation["relaxed_stable_noop"] is True
 
 
-def test_single_enterprise_order_seed_actions_are_deferred_after_static_init():
+def test_single_enterprise_order_seed_actions_follow_prewarm_schedule():
     scenario = get_scenario_config("single_case_03_capacity_bottleneck_scripted")
 
     init3_action_names = [
@@ -1432,18 +1435,10 @@ def test_single_enterprise_order_seed_actions_are_deferred_after_static_init():
     ]
     assert init3_action_names == ["set_product_recipe", "build_production_line"]
 
-    deferred_action_names = [
-        item["action"]["action_name"]
-        for item in scenario["single_enterprise_case"]["deferred_init_actions"]
-    ]
-    assert deferred_action_names == [
-        "create_order",
-        "accept_order",
-        "create_order",
-        "accept_order",
-        "create_order",
-        "accept_order",
-    ]
+    assert scenario["single_enterprise_case"]["deferred_init_actions"] == []
+    days = scenario["single_enterprise_case"]["prewarm_execution_plan"]["days"]
+    assert days["1"]["sales"]["workflow"][0]["action"]["action_name"] == "create_order"
+    assert days["2"]["sales"]["workflow"][0]["action"]["action_name"] == "accept_order"
 
 
 def test_single_enterprise_case01_init_line_and_prewarm_material_buffer():
@@ -2417,9 +2412,10 @@ def test_scripted_procurement_respects_supplier_moq_and_budget(tmp_path):
     )
     procurement_state = {
         "purchasable_materials_idList": ["Malt"],
-        "suppliers": [
-            {"name": "Upstream", "materials_offered": ["Malt"]},
+        "supplier_candidates": [
+            {"supplier_name": "Upstream", "materials": {"Malt": {"unit_price": 1.0}}},
         ],
+        "staff_summary": {"available_workers": 1},
         "materials_suppliers_matrix": {
             "Malt": [
                 {
@@ -2535,11 +2531,12 @@ def test_single_case_scripted_material_shortage_prioritizes_procurement(tmp_path
         10,
         {
             "purchasable_materials_idList": ["MATERIAL_1"],
-            "suppliers": [{"supplier_name": "供应商A"}],
+            "supplier_candidates": [{"supplier_name": "Supplier_A", "materials": {"MATERIAL_1": {"unit_price": 10}}}],
+            "staff_summary": {"available_workers": 1},
             "materials_suppliers_matrix": {
                 "MATERIAL_1": [
                     {
-                        "supplier_name": "供应商A",
+                        "supplier_name": "Supplier_A",
                         "unit_price": 10,
                         "min_order_quantity": 100,
                     }
@@ -2552,11 +2549,18 @@ def test_single_case_scripted_material_shortage_prioritizes_procurement(tmp_path
 
     assert actions[0]["action"]["action_name"] == "create_purchase_order"
     assert actions[0]["action"]["action_param"]["material_id"] == "MATERIAL_1"
-    assert actions[0]["action"]["action_param"]["supplier_name"] == "供应商A"
+    assert actions[0]["action"]["action_param"]["supplier_name"] == "Supplier_A"
 
 
 def test_single_case_scripted_staff_shortage_prioritizes_hr(tmp_path):
     runner = _single_case_scripted_runner(tmp_path, "single_case_04_staff_shortage")
+    _write_department_state(
+        tmp_path,
+        "Manufacturer",
+        "hr",
+        10,
+        {"department_staffing": {"PRODUCTION": {"count": 0, "available": 0}}},
+    )
 
     actions = runner._hr_action(10)
 
