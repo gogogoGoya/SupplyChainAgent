@@ -1,0 +1,59 @@
+{
+  "action_name": "create_purchase_order",
+  "description": "创建采购订单",
+  "mode_confirmation": "以 procurement.json.policy_context 或 blackboard.policy_context_by_department.procurement 中解析出的 is_beer_game_mode 与 action_constraints 为准；供应商必须来自实时状态中的已注册供应商或候选供应商目录",
+  "canonical_inputs": {
+    "primary": [
+      "blackboard.departments.finance.cash_summary",
+      "procurement.self_state.cash_guard",
+      "procurement.self_state.top_tier_supply_guard",
+      "procurement.self_state.top_tier_supply_plan",
+      "procurement.self_state.recipe_recovery_signal_by_material",
+      "procurement.self_state.replenishment.pending_by_material",
+      "blackboard.departments.production",
+      "blackboard.departments.inventory"
+    ],
+    "fallback": [
+      "procurement.self_state.orders",
+      "procurement.self_state.materials_suppliers_matrix",
+      "analysis"
+    ]
+  },
+  "conditions": [
+    "首要的可执行前提是企业已有注册供应商，或 procurement.json 的 self_state.supplier_candidates/materials_suppliers_matrix 中存在真实候选供应商；首次向候选供应商下单会自动建立合作关系",
+    "analysis 中明确指出 原材料不足、供应风险或需提前备货",
+    "库存水平低于安全阈值，或不足以支撑既定生产计划",
+    "生产部门存在待执行计划，但因原材料不足无法启动；若 blackboard.departments.production.recovery_material_shortages 或 procurement.self_state.recipe_recovery_signal_by_material 存在，应优先响应其中的关键缺料",
+    "预测未来需求增长，需要提前锁定原材料供给",
+    "blackboard.departments.finance.cash_summary 与 procurement.self_state.cash_guard 未显示当前采购规模会直接触发硬性现金阻断",
+    "若 procurement.self_state.top_tier_supply_guard.enabled = true，则本次订单金额还必须满足 available_credit 与 max_single_order_amount；若 procurement.self_state.top_tier_supply_plan.enabled = true，应优先参考其中 recommended_actions；若 recipe_recovery_signal_by_material 指向同一配方的多种关键料，应按统一恢复目标协同安排采购"
+  ],
+  "required_parameters": [
+    "material_id",
+    "quantity",
+    "supplier_name",
+    "logistics_mode"
+  ],
+  "parameter_constraints": [
+    "logistics_mode 必须是 \"road\", \"rail\" 或 \"air\" 中的一个：road=基础费100、单位费2、运输3天；rail=基础费200、单位费1.5、运输2天；air=基础费500、单位费5、运输1天。关键物料为0或严重短缺时优先air，中等缺口用rail，普通补库存才用road",
+    "material_id 必须是单个真实材料 ID，quantity 必须是单个数值；不得把 material_id 或 quantity 写成数组",
+    "在读取本动作模板并生成 action.json 时，action_param 只允许包含 required_parameters 中声明的字段；不要额外写入 unit_price、raw_logistics_cost、logistics_cost_multiplier 等估算字段",
+    "若 cash_summary.cash_level = warning，应优先选择更保守的 quantity 与较低成本物流方式",
+    "若 top_tier_supply_guard.enabled = true，不得把授信额度视为无限资源，单笔下单金额必须同时小于 max_single_order_amount 和 available_credit",
+    "若 top_tier_supply_plan.enabled = true，应优先让 quantity 与 preferred_logistics_mode 对齐 recommended_actions 中的建议",
+    "若 top_tier_supply_plan.package_supply_bundles 非空，应优先选择其中 credit_feasible=true 的 bundle；但同一 bundle 下的多种原料必须拆成多条 create_purchase_order 动作分别下单",
+    "若 top_tier_supply_plan.recommended_actions[*].package_coverage_sufficient = true 或 skip_due_to_inventory_headroom = true，不要仅因 package_recommended_quantity 再次外采该料",
+    "若 recipe_recovery_signal_by_material[material_id] 存在且 critical_bottleneck_products 非空，应允许围绕 linked_products 的恢复目标提高该料优先级，但仍不能突破授信和现金约束"
+  ],
+  "constraints": [
+    "必须校验采购部门人力是否满足最小要求",
+    "必须先读取 blackboard.departments.finance.cash_summary 与 procurement.self_state.cash_guard，再判断是否下单",
+    "若 cash_guard.guard_level = hard_blocked，不得继续创建会扩大现金缺口的采购单",
+    "若 top_tier_supply_guard.enabled = true，必须一并检查 accounts_payable 侧的 available_credit、due_this_round_amount、overdue_payable_amount",
+    "不要把 production、inventory、analysis 中重复出现的同一缺料提示当成多份独立证据",
+    "必须确认供应商真实存在于已注册供应商或候选供应商目录且提供该材料；不得虚构供应商参数",
+    "必须把供应商 processing_time 与物流 transit_time 相加后比较预计到货轮次",
+    "必须满足供应商的最小订货量要求",
+    "仓库容量当前未被系统校验，需避免明显超量采购"
+  ]
+}

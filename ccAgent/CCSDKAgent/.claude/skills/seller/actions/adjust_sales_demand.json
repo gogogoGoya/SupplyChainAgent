@@ -1,0 +1,33 @@
+{
+  "action_name": "adjust_sales_demand",
+  "description": "调整产品的销售需求",
+  "description_detail": "你需要将你可供销售的产品信息通过此方法展示给外部交易所,以此来吸引订单",
+  "mode_confirmation": "以 sales.json.policy_context、trade_decision_card.policy_context 或 blackboard.policy_context_by_department.sales 中解析出的 is_beer_game_mode 与 action_constraints 为准；当 is_beer_game_mode 为 true 时，本动作表示向下游企业释放可供交易数量",
+  "canonical_inputs": {
+    "primary": [
+      "trade_decision_card.delta.pressure_changes",
+      "sales.self_state.service_level_summary",
+      "blackboard.departments.inventory.products",
+      "blackboard.departments.inventory.policy_alerts"
+    ]
+  },
+  "guidelines": [
+    "对于你的每一产品,如果从未为其执行过该方法时,你必须立即执行一次,并给出其产品id和可供销售的数量",
+    "针对同样的产品你可以在不同的轮次调用此方法,来更新该产品可用于销售的数量",
+    "产品的数量会随着采购、生产和销售的发展而变化",
+    "若 service_level_summary.fill_rate 偏低、confirmed_order_backlog_quantity 偏高、stale_backlog_quantity 上升，或 blackboard.inventory.policy_alerts 显示成品库存紧张，应降低释放量并优先保障已承诺履约",
+    "若 trade_decision_card.delta.pressure_changes 显示相关产品 on_hand 下降、backlog 上升或 due_risk 走高，应更保守地释放供给"
+  ],
+  "required_parameters": [
+    "product_id",
+    "quantity"
+  ],
+  "parameter_constraints": [
+    "quantity 必须大于等于 0,且不能超过你当前的库存数量",
+    "若存在 confirmed_order_backlog_quantity、stale_backlog_quantity 或 lost_sales_quantity，数量应体现保守释放原则，不得明显放大履约风险",
+    "若 trade_decision_card.review_queue 中已有同产品待处理 proposal，应优先处理 proposal，再决定是否继续扩大 adjust_sales_demand.quantity",
+    "默认应以 service_level_summary 作为 canonical 履约状态输入，不要把 demand_backlog 与 service_level_summary.backlog_by_product 重复加权",
+    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏",
+    "不要额外写入 round_id、unit_price、price_per_unit、delivery_round_offset、delivery_deadline_offset、target_market、reason 等解释或调度字段"
+  ]
+}

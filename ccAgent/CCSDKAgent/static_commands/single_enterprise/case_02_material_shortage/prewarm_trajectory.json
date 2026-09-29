@@ -1,0 +1,37 @@
+{
+  "scene_id": "case_02_material_shortage",
+  "trajectory_type": "fixed_multi_department_prewarm_then_takeover",
+  "scene_name": "Material gap with autonomous supplier and logistics selection",
+  "core_business_logic": {
+    "what_the_company_already_has": [
+      "healthy cash reserves",
+      "stable staffing across all departments",
+      "one active market with committed demand",
+      "one available production line",
+      "one completed pilot order proving the business is operating",
+      "three observable external supplier candidates with different price, MOQ, processing time, and reliability"
+    ],
+    "what_the_company_lacks": [
+      "enough MATERIAL_1 to cover committed demand",
+      "a registered supplier and corresponding replenishment order"
+    ],
+    "what_the_scene_must_not_turn_into": [
+      "capacity_bottleneck",
+      "staff_shortage",
+      "cash_pressure",
+      "warehouse_pressure"
+    ]
+  },
+  "day_segments": {
+    "day0_to_day1": "Establish a live business baseline with one market, one pilot order, and one production line.",
+    "day2_to_day5": "Accumulate accepted demand and consume material through real production.",
+    "day6_to_day9": "Preserve the material gap without registering a supplier or placing a purchase order."
+  },
+  "handoff_success_story": [
+    "Procurement can see the current material requirement and all candidate terms.",
+    "Production has usable capacity, so another line is not the first correction.",
+    "Committed demand already exists, so market development is not the first correction.",
+    "The first purchase decision jointly determines supplier registration, order quantity, and logistics mode.",
+    "No evaluator asset is injected into the Agent prompt as a preferred answer."
+  ]
+}

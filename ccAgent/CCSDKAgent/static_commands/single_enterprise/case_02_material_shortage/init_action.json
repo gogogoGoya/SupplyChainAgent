@@ -1,0 +1,81 @@
+[
+  {
+    "action": {
+      "action_name": "initialize_staffing",
+      "action_param": {
+        "initial_staffing": {
+          "finance": 5,
+          "hr": 4,
+          "procurement": 4,
+          "production": 6,
+          "sales": 6,
+          "inventory": 2
+        }
+      }
+    },
+    "module_type": "HRManager",
+    "executor_id": "Manufacturer"
+  },
+  {
+    "action": {
+      "action_name": "set_capacity",
+      "action_param": {
+        "capacity": 30000
+      }
+    },
+    "module_type": "InventoryManager",
+    "executor_id": "Manufacturer"
+  },
+  {
+    "action": {
+      "action_name": "add_inventory",
+      "action_param": {
+        "item_id": "MATERIAL_1",
+        "quantity": 1800,
+        "purchase_price": 10,
+        "item_type": "raw_material"
+      }
+    },
+    "module_type": "InventoryManager",
+    "executor_id": "Manufacturer"
+  },
+  {
+    "action": {
+      "action_name": "add_inventory",
+      "action_param": {
+        "item_id": "PRODUCT_1",
+        "quantity": 50,
+        "purchase_price": 500,
+        "item_type": "product"
+      }
+    },
+    "module_type": "InventoryManager",
+    "executor_id": "Manufacturer"
+  },
+  {
+    "action": {
+      "action_name": "set_product_recipe",
+      "action_param": {
+        "product_id": "PRODUCT_1",
+        "raw_materials": {
+          "MATERIAL_1": 2.0
+        },
+        "production_time": 1,
+        "labor_cost_per_unit": 10,
+        "equipment_cost_per_unit": 5
+      }
+    },
+    "module_type": "ProductionManager",
+    "executor_id": "Manufacturer"
+  },
+  {
+    "action": {
+      "action_name": "build_production_line",
+      "action_param": {
+        "line_type": "small"
+      }
+    },
+    "module_type": "ProductionManager",
+    "executor_id": "Manufacturer"
+  }
+]

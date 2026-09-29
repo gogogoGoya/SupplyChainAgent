@@ -1,0 +1,26 @@
+{
+  "action_name": "reject_order",
+  "description": "拒绝销售订单",
+  "mode_confirmation": "以 sales.json.policy_context 或 blackboard.policy_context_by_department.sales 中解析出的 is_beer_game_mode 为准；当 is_beer_game_mode 为 true 时，拒绝外部 market 订单会形成 lost sales 信号，应谨慎使用",
+  "conditions": [
+    "订单交付期无法满足，存在违约风险",
+    "当前产能或库存不足，且无法通过合理调度解决",
+    "analysis 中明确要求 控制风险、优先保障既有订单",
+    "订单利润或战略价值明显偏低（如在模型中体现）"
+  ],
+  "guidelines": [
+    "拒绝订单应以稳健为优先，避免系统性违约",
+    "拒绝订单应以稳健为优先，避免产能过载",
+    "拒绝订单应以稳健为优先，避免连锁式生产与采购失控"
+  ],
+  "required_parameters": [
+    "order_id"
+  ],
+  "optional_parameters": [
+    "reason"
+  ],
+  "parameter_constraints": [
+    "在读取本动作模板并生成 action.json 时，action_param 只允许包含 required_parameters 与 optional_parameters 中声明的字段",
+    "不要把 product_id、quantity、unit_price、total_amount、source_id、delivery_deadline 等订单详情重复写入 action_param"
+  ]
+}

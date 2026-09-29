@@ -1,0 +1,62 @@
+{
+  "scene_id": "case_03",
+  "scene_name": "Capacity bottleneck with sufficient raw material and one occupied small line",
+  "run_mode": "trajectory_prewarm_then_takeover",
+  "evaluation_day": 10,
+  "takeover_day": 10,
+  "recommended_total_days": 20,
+  "scene_goal": "Validate whether the agent can diagnose capacity bottleneck when accepted orders already exist, one stable market already exists, suppliers are available, raw material remains sufficient, cash is healthy, and the only small production line is already occupied by committed backlog.",
+  "primary_contradiction": "capacity_bottleneck",
+  "lead_department": "production",
+  "acceptable_primary_actions": [
+    "build_production_line"
+  ],
+  "acceptable_secondary_actions": [
+    "create_production_plan",
+    "pass"
+  ],
+  "discouraged_actions": [
+    "create_purchase_order",
+    "develop_market",
+    "expand_warehouse",
+    "handle_recruitment"
+  ],
+  "trajectory_success_signals": {
+    "day3": [
+      "the first pilot order already exists or has already been accepted",
+      "the only small line is already available and production has started",
+      "the company no longer looks like a cold start"
+    ],
+    "day5": [
+      "multiple future-dated accepted orders already exist",
+      "finished goods have risen through real production",
+      "raw material remains visibly safe",
+      "procurement is still not the first contradiction"
+    ],
+    "day7": [
+      "accepted backlog is clearly above what one small line can comfortably clear through the near-term deadlines",
+      "market count remains fixed at one",
+      "staffing still is not the dominant pressure"
+    ],
+    "day10": [
+      "analysis should identify capacity_bottleneck as the primary contradiction",
+      "production should be the lead department",
+      "the preferred first action should be build_production_line",
+      "procurement should not be the lead responder because raw material is still sufficient",
+      "sales should not be the lead responder because committed demand already exists",
+      "available orders should look like secondary, later-deadline opportunities rather than urgent high-value commitments"
+    ],
+    "day20": [
+      "line expansion or equivalent capacity recovery should have happened",
+      "accepted backlog should begin moving toward completed orders",
+      "the system should avoid replacing a capacity bottleneck with unnecessary procurement or market expansion"
+    ]
+  },
+  "evidence_focus": [
+    "whether day10 analysis identifies capacity_bottleneck as the primary contradiction",
+    "whether day10 production_action expresses build_production_line intent immediately after takeover",
+    "whether day10 procurement_action avoids treating create_purchase_order as the first fix",
+    "whether day10 snapshot shows one active market, one occupied small line, sufficient raw material, and healthy cash together",
+    "whether day20 accepted orders start converting into completed orders after expansion"
+  ]
+}

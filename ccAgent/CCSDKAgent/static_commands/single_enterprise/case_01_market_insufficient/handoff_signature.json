@@ -1,0 +1,48 @@
+{
+  "scene_id": "case_01_order_selection",
+  "takeover_day": 10,
+  "handoff_state_semantics": "day10_observation_after_first_market-bound offer injection",
+  "primary_contradiction": "limited_order_entry_and_selection",
+  "lead_department": "sales",
+  "checkable_constraints": {
+    "sales": {
+      "prewarm_orders_total": {"min": 2, "max": 2},
+      "active_markets": {"min": 1, "max": 1},
+      "day10_available_market_bound_offers": {"min": 1, "max": 1},
+      "day10_offer_expiry_allows_comparison_next_day": true
+    },
+    "production": {
+      "production_lines_total": {"min": 1, "max": 1},
+      "capacity_should_not_be_primary_bottleneck": true
+    },
+    "procurement": {
+      "pending_procurement_orders": {"min": 0, "max": 0},
+      "material_should_not_be_primary_bottleneck": true
+    },
+    "inventory": {
+      "warehouse_utilization": {"max": 0.4},
+      "finished_goods_range": {"min": 700, "max": 1400}
+    },
+    "finance": {
+      "cash_positive": true,
+      "cash_crisis": false,
+      "revenue_should_be_positive": true
+    }
+  },
+  "qualitative_constraints": [
+    "Only two small pilot orders should exist before takeover.",
+    "The original active market must expose only a sparse deterministic order stream after takeover.",
+    "Uncommitted inventory and near-term supply should materially exceed the original market's effective order entry.",
+    "Raw materials, staffing, cash and warehouse pressure must remain secondary.",
+    "Sales should independently assess whether one additional market is justified and continue selecting economically favorable feasible orders."
+  ],
+  "anti_contamination_rules": [
+    "Do not inject random formal orders.",
+    "Do not reveal preferred order ids or an oracle ranking to Agent or Scripted prompts.",
+    "Do not let all formal offers remain available indefinitely.",
+    "Do not inject slot-2 orders before a second market is active.",
+    "Do not expose should_develop_market or recommended_action to the Agent.",
+    "Do not encourage more than one additional market.",
+    "Do not introduce prewarm HR, capacity, cash or warehouse shocks."
+  ]
+}

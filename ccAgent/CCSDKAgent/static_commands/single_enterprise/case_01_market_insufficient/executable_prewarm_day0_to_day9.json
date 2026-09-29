@@ -1,0 +1,921 @@
+{
+  "scene_id": "case_01_order_selection",
+  "handoff_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "execution_profile": "limited_order_history_current_runner_compatible_v1",
+  "department_execution_order": [
+    "finance",
+    "hr",
+    "sales",
+    "production",
+    "inventory",
+    "procurement"
+  ],
+  "default_pass_reasons": {
+    "finance": "Keep finance visibly present throughout prewarm through daily operating judgment, but do not let cash or reporting become the lead contradiction before handoff.",
+    "hr": "Keep staffing decisions conservative throughout prewarm. HR should remain present as an operating observer without turning the case into a staffing-expansion storyline before handoff.",
+    "sales": "Keep one stable market channel and only the two explicit pilot orders during prewarm. Formal heterogeneous offers begin on day10.",
+    "production": "Keep production visibly active through rolling multi-day plans so finished goods rise for real. The case should show supply moving ahead of demand, not just idle installed capacity.",
+    "inventory": "Keep inventory present every day through stock and warehouse judgment, but do not let warehouse pressure become the lead contradiction.",
+    "procurement": "Keep procurement present every day as quiet supply assurance. Use at most one measured replenishment so raw materials stay safe without becoming the main story."
+  },
+  "days": {
+    "0": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance in observation mode on day0. Startup spending is healthy and does not require corrective financial action."
+          }
+        ],
+        "communications": {
+          "to_sales": "Cash is healthy enough for one small market launch.",
+          "to_production": "Finance can support the first light operating cycle without treating capex as the main issue.",
+          "to_procurement": "Opening material stock is already safe, so procurement should stay modest.",
+          "to_hr": "No payroll-driven intervention is needed at startup."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing unchanged on day0. Existing staffing is enough to open one market and prepare the first operating cycle."
+          }
+        ],
+        "communications": {
+          "to_production": "Current production staffing is enough for initial line activation.",
+          "to_sales": "Current sales staffing is enough for one regional market and one pilot order.",
+          "to_inventory": "Inventory staffing can remain stable because warehouse load is still light.",
+          "to_procurement": "Procurement staffing can remain stable because no urgent replenishment wave is planned."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 50,
+                "unit_price": 760.0,
+                "source_id": "seed_customer_alpha_v5",
+                "source_type": "b2b_sales",
+                "delivery_deadline": 5
+              }
+            },
+            "action_reason": "Seed one tiny direct pilot order so the trajectory starts with a real commercial baseline before formal order selection begins.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 50,
+                "unit_price": 760.0,
+                "source_id": "seed_customer_beta_v5",
+                "source_type": "b2b_sales",
+                "delivery_deadline": 5
+              }
+            },
+            "action_reason": "Seed a second tiny direct pilot order explicitly so the day4 acceptance no longer depends on validation-side duplicate order creation.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "regional_channel_alpha_v5",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open exactly one small regional market on day0. The prewarm seed will only create the fixed order ids required by the existing accept actions, without relying on validation-side duplicate order creation or automatic prewarm market injection.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "Reserve only a tiny amount of finished goods for the pilot orders while keeping most stock ready for the single early market.",
+          "to_production": "Build supply readiness while one narrow market starts accumulating a visible but still insufficient demand trail.",
+          "to_procurement": "No urgent replenishment is needed yet because raw-material opening stock is already safe.",
+          "to_hr": "Current sales staffing is enough for two tiny pilot orders and one small regional market."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "The initial production line already exists from init. Hold day0 planning until the pilot-order baseline is in place."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Current finished-goods opening stock is enough for the day0 launch.",
+          "to_sales": "Production is ready for the pilot-order baseline; later commitments must stay within joint fulfillment capacity.",
+          "to_procurement": "Opening raw-material stock is enough for the first short run.",
+          "to_hr": "Current staffing is enough to start the first production cycle tomorrow."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Warehouse capacity and stock posture are already safe on day0. Inventory should stay visible as an observer without expanding capacity."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished goods are already available for the pilot order and the first small market.",
+          "to_production": "Warehouse space is sufficient for upcoming rolling production.",
+          "to_procurement": "Inbound material pressure is low at startup.",
+          "to_hr": "Current inventory staffing is enough for the current warehouse load."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Opening raw-material stock is already sufficient for the first short production cycle. Procurement should stay present but quiet on day0."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound surge is planned today.",
+          "to_production": "Current material stock is sufficient for the first planned rolling run.",
+          "to_sales": "Demand remains intentionally narrow, so procurement should not overreact.",
+          "to_hr": "Current procurement staffing is enough for monitoring mode."
+        }
+      }
+    },
+    "1": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance in observation mode on day1. Cash remains healthy and the first short production run is affordable."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finance supports the pilot-order operation, but new commitments should remain disciplined before handoff.",
+          "to_production": "The first short production run fits the current cash posture.",
+          "to_procurement": "No finance-driven procurement acceleration is needed.",
+          "to_hr": "No payroll intervention is needed for the current operating scale."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing stable on day1. The company is only entering its first real operating cycle, so HR should observe rather than expand."
+          }
+        ],
+        "communications": {
+          "to_production": "Current staffing is enough for the first short rolling plan.",
+          "to_sales": "Current sales staffing is still enough for one small market.",
+          "to_inventory": "Inventory staffing remains adequate for current load.",
+          "to_procurement": "Procurement staffing remains adequate for quiet support mode."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "pass_reason": "Keep the day0 channel unchanged on day1 and introduce no extra prewarm offers while production builds supply readiness."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No extra finished-goods reservation is needed beyond the existing pilot posture.",
+          "to_production": "Keep building bounded supply readiness ahead of the formal offer window.",
+          "to_procurement": "The small pilot-order signal does not justify aggressive procurement today.",
+          "to_hr": "Current sales staffing remains enough for one active regional market."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 200,
+                "daily_capacity": 100
+              }
+            },
+            "action_reason": "Start the first two-day rolling production plan so finished goods begin rising through real output rather than through idle capacity only.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods should start climbing immediately while warehouse pressure stays low.",
+          "to_procurement": "Opening raw-material stock is still sufficient for this first short run.",
+          "to_sales": "Supply readiness is being built ahead of the current one-market demand pace.",
+          "to_hr": "Existing production staffing should remain sufficient for this first short rolling plan."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep warehouse posture unchanged on day1. Capacity is already sufficient, and inventory should simply begin recording the first real production movement."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished goods remain sufficient for the narrow commercial posture.",
+          "to_production": "Warehouse can absorb the first rolling production run without expansion.",
+          "to_procurement": "No inventory-driven replenishment urgency is present yet.",
+          "to_hr": "Current inventory staffing is enough for current throughput."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Stay in quiet assurance mode on day1. Materials are still sufficient for the first short production run."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound change is needed today.",
+          "to_production": "Current material stock safely covers the first rolling plan.",
+          "to_sales": "Demand remains narrow enough that procurement should stay conservative.",
+          "to_hr": "Current procurement staffing is enough for monitoring."
+        }
+      }
+    },
+    "2": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance visibly present on day2. A small first conversion signal is enough and no cash correction is needed."
+          }
+        ],
+        "communications": {
+          "to_sales": "A small first revenue event is positive; preserve cash and fulfillment capacity for later order comparisons.",
+          "to_production": "Production can remain steady because cash is healthy and demand is still narrow.",
+          "to_procurement": "No finance-driven purchasing change is required.",
+          "to_hr": "No payroll correction is needed at this operating scale."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing stable on day2. The first commercial conversion does not justify new hiring."
+          }
+        ],
+        "communications": {
+          "to_production": "Current production staffing remains adequate for the short run.",
+          "to_sales": "Current sales staffing is enough for the first limited conversion signal.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_1"
+              }
+            },
+            "action_reason": "Accept the tiny pilot order so the company gains one real closed-loop revenue event without changing the single-market core pattern.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "The pilot order should remain fully covered by current stock.",
+          "to_production": "Support the pilot order with existing readiness only and do not expand supply aggressively.",
+          "to_procurement": "Current material posture is still sufficient for this limited commercial activity.",
+          "to_hr": "No extra sales staffing is required for the current one-market volume."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Let the day1 rolling plan continue executing on day2. No new plan is needed because production should look continuous rather than impulsive."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods should keep rising through the active rolling plan.",
+          "to_sales": "Production readiness remains ahead of one-market demand.",
+          "to_procurement": "Current material posture remains safe for the ongoing short run.",
+          "to_hr": "Current staffing remains sufficient while the existing plan executes."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory in recording mode on day2. The important signal is that finished goods and materials remain manageable during the first real conversion."
+          }
+        ],
+        "communications": {
+          "to_sales": "Current finished-goods stock still supports selective order acceptance.",
+          "to_production": "Warehouse space remains comfortable during the active run.",
+          "to_procurement": "No inventory pressure justifies a new purchase today.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Remain in quiet support mode on day2. Material coverage is sufficient for the current commitments."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound adjustment is needed today.",
+          "to_production": "Current material stock remains adequate for ongoing execution.",
+          "to_sales": "Demand is still narrow enough that procurement should stay calm.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "3": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance in operating-observer mode on day3. The company is running continuously and cash does not require corrective action."
+          }
+        ],
+        "communications": {
+          "to_sales": "Revenue history remains small; later offers should be compared on contribution and fulfillment feasibility.",
+          "to_production": "Finance supports another short rolling production run without stress.",
+          "to_procurement": "No finance-led replenishment escalation is needed.",
+          "to_hr": "No payroll intervention is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing unchanged on day3. Production is operating continuously, but the current scale does not justify making HR a major storyline."
+          }
+        ],
+        "communications": {
+          "to_production": "Current staffing remains enough for another short rolling plan.",
+          "to_sales": "Sales staffing remains enough for one active market.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "pass_reason": "Introduce no additional prewarm offers on day3 while production builds a bounded supply footprint."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Current stock posture should stay comfortably above committed demand.",
+          "to_production": "Continue steady output without expanding capacity ahead of observed formal commitments.",
+          "to_procurement": "Current commercial pace does not justify new replenishment yet.",
+          "to_hr": "No additional sales staffing is needed."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 200,
+                "daily_capacity": 100
+              }
+            },
+            "action_reason": "Run the second two-day production plan so finished goods build gradually before the formal offer window.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods should continue rising while the market still remains narrow.",
+          "to_procurement": "Raw materials are still safe, so procurement should stay quiet for now.",
+          "to_sales": "Production readiness is increasing faster than the current one-market demand trail.",
+          "to_hr": "Current staffing remains enough for another short rolling plan."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep warehouse posture unchanged on day3. The key signal is rising finished goods without warehouse pressure."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished-goods availability remains above current demand conversion.",
+          "to_production": "Warehouse space remains sufficient for another short run.",
+          "to_procurement": "No inventory pressure justifies extra purchasing yet.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Keep procurement quiet on day3. Material coverage is still safe, so procurement should continue supporting continuity without becoming visible pressure."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound adjustment is needed today.",
+          "to_production": "Materials remain sufficient for the next short run.",
+          "to_sales": "Demand still does not justify aggressive supply-side reaction.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "4": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance calm on day4. The company is now showing both operating cost and small commercial conversion, but cash is still clearly secondary."
+          }
+        ],
+        "communications": {
+          "to_sales": "Selective conversion is positive; preserve resources for later comparisons rather than making a finance-led correction.",
+          "to_production": "Finance supports continued steady production without requiring expansion.",
+          "to_procurement": "A measured replenishment is affordable if it only protects continuity.",
+          "to_hr": "No payroll-driven intervention is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing unchanged on day4. The current operating rhythm remains small enough that HR should stay in maintenance mode."
+          }
+        ],
+        "communications": {
+          "to_production": "Production staffing remains adequate for the current rolling pace.",
+          "to_sales": "Sales staffing remains adequate for selective conversion in one market.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate for one measured replenishment."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_2"
+              }
+            },
+            "action_reason": "Accept the second tiny pilot order so the company has a closed-loop commercial history before formal offers begin.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "The second pilot acceptance should fit comfortably within current finished-goods coverage.",
+          "to_production": "Keep supply ready but do not expand without formal demand evidence.",
+          "to_procurement": "This commercial pace does not justify procurement becoming the lead focus.",
+          "to_hr": "No additional sales staffing is needed for one small regional market."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Do not start a new plan on day4. Let the current supply buildup stay continuous and measured."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Current finished-goods posture remains strong relative to converted demand.",
+          "to_sales": "Production remains ready enough; sales should stay selective before handoff.",
+          "to_procurement": "One measured material top-up is enough if needed.",
+          "to_hr": "No additional production staffing is needed."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory in observation mode on day4. Product stock should be increasing faster than outbound flow, while warehouse pressure stays low."
+          }
+        ],
+        "communications": {
+          "to_sales": "Current stock continues to cover selective conversion comfortably.",
+          "to_production": "Warehouse capacity remains sufficient.",
+          "to_procurement": "A measured replenishment will still fit safely within capacity.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_purchase_order",
+                "action_param": {
+                  "material_id": "MATERIAL_1",
+                  "supplier_id": "SUPPLIER_1",
+                  "quantity": 2000,
+                  "logistics_mode": "rail"
+                }
+              },
+              "action_reason": "Place one measured mid-prewarm replenishment with enough buffer for the corrected day-by-day production semantics and the day7 light rolling plan, without turning raw materials into the dominant issue.",
+            "module_type": "ProcurementManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "This replenishment is still measured enough to keep warehouse pressure low.",
+          "to_production": "Material safety is being maintained without changing the main contradiction.",
+          "to_sales": "Demand remains intentionally narrow; procurement is only preserving operating smoothness.",
+          "to_hr": "No staffing change is needed for procurement."
+        }
+      }
+    },
+    "5": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance visibly present on day5. Revenue is positive but small, and cash remains healthy enough to avoid intervention."
+          }
+        ],
+        "communications": {
+          "to_sales": "Commercial history is now real, but still too narrow relative to the operating footprint.",
+          "to_production": "Finance supports another steady short run without pushing capex or contraction.",
+          "to_procurement": "No further purchasing is needed unless it only protects continuity.",
+          "to_hr": "No payroll correction is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing stable on day5 because current workloads do not establish a labor shortage."
+          }
+        ],
+        "communications": {
+          "to_production": "Current production staffing remains adequate for another short run.",
+          "to_sales": "Current sales staffing remains adequate for one-market conversion.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [],
+        "communications": {
+          "to_inventory": "Finished-goods coverage should remain comfortably above committed demand.",
+          "to_production": "Keep production steady, but do not treat the small pilot history as a reason for expansion.",
+          "to_procurement": "No new commercial signal requires additional purchasing.",
+          "to_hr": "No additional sales staffing is needed."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 200,
+                "daily_capacity": 100
+              }
+            },
+            "action_reason": "Run the third two-day production plan so inventory increases gradually before formal offers arrive.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "Keep building a clear finished-goods buffer without changing the warehouse footprint.",
+          "to_procurement": "The existing replenishment is enough; no further procurement action is needed yet.",
+          "to_sales": "Supply currently exceeds committed pilot demand; later acceptance should compare value with resource use.",
+          "to_hr": "Current production staffing remains sufficient."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory steady on day5. The important signal is that finished goods continue rising while warehouse pressure still stays low."
+          }
+        ],
+        "communications": {
+          "to_sales": "Current stock keeps supporting selective acceptance comfortably.",
+          "to_production": "Warehouse can absorb ongoing output without expansion.",
+          "to_procurement": "No inventory-driven replenishment pressure is present now.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Stay in quiet support mode on day5. The earlier replenishment is enough, and procurement should not become a visible storyline before handoff."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound adjustment is needed today.",
+          "to_production": "Current material stock and the earlier top-up remain adequate.",
+          "to_sales": "Demand remains too narrow to justify more aggressive procurement.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "6": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance calm on day6. The company is operating continuously with healthy cash, so finance should remain an observer rather than a constraint."
+          }
+        ],
+        "communications": {
+          "to_sales": "Another modest conversion is acceptable, but preserve finite resources for the formal offer window.",
+          "to_production": "Production can remain steady because cash is healthy and demand is still not wide enough.",
+          "to_procurement": "No finance-driven change in purchasing posture is needed.",
+          "to_hr": "No payroll correction is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing unchanged on day6. The company is active, but the scale still does not justify turning HR into a major intervention channel."
+          }
+        ],
+        "communications": {
+          "to_production": "Current staffing remains enough for ongoing production.",
+          "to_sales": "Current staffing remains enough for limited one-market conversion.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [],
+        "communications": {
+          "to_inventory": "Current stock remains comfortable even after another modest market-order acceptance.",
+          "to_production": "Keep production steady, but do not treat the visible order pool as a reason for line expansion yet.",
+          "to_procurement": "Material posture remains safe for the current pace.",
+          "to_hr": "No additional sales staffing is needed."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Let the day5 rolling plan continue on day6. Production should look continuous and real without adding unnecessary new plan churn."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished-goods buildup should remain ahead of fulfilled demand.",
+          "to_sales": "Supply remains ready; sales should compare later offers against finite inventory and capacity.",
+          "to_procurement": "Current material coverage remains sufficient.",
+          "to_hr": "Current staffing remains adequate."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory steady on day6. The key signal is that stock remains healthy and finished goods still sit above the narrow demand footprint."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished-goods availability still exceeds current demand conversion needs.",
+          "to_production": "Warehouse space remains comfortable.",
+          "to_procurement": "No inventory pressure requires further replenishment.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Stay in support mode on day6. Material coverage is still safe, so procurement should not create a new supply-side storyline."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound adjustment is needed.",
+          "to_production": "Materials remain safe for the current rolling-output pace.",
+          "to_sales": "Demand remains too narrow to justify more aggressive purchasing.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "7": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance present but quiet on day7. The company has real operations and positive cash health, so no corrective finance action is needed."
+          }
+        ],
+        "communications": {
+          "to_sales": "Hold conversion discipline so the company enters handoff with finite inventory and capacity for later order selection.",
+          "to_production": "A final light rolling plan is affordable and keeps the firm looking continuously operational.",
+          "to_procurement": "No extra purchase is needed beyond current material safety.",
+          "to_hr": "No payroll-driven intervention is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing stable on day7. The goal is to carry a believable operating firm into handoff without creating a new HR storyline."
+          }
+        ],
+        "communications": {
+          "to_production": "Current staffing remains enough for one final light rolling plan.",
+          "to_sales": "Current sales staffing remains enough for one active market.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "pass_reason": "Introduce no extra prewarm demand so the company enters handoff with real transaction history and finite fulfillment resources."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Current finished goods remain comfortably above committed demand.",
+          "to_production": "Support the existing accepted orders with current readiness only.",
+          "to_procurement": "Current material safety remains adequate after the earlier replenishment.",
+          "to_hr": "No additional sales staffing is needed."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 300,
+                "daily_capacity": 100
+              }
+            },
+            "action_reason": "Start one final light four-day production plan so supply keeps moving through day10 and the first takeover-day observation no longer looks fully idle on the production side.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods should remain visibly above the initial baseline by handoff while one light rolling plan still stays active through the first takeover-day observation.",
+          "to_procurement": "The earlier replenishment is enough for this final light run; no extra order is needed.",
+          "to_sales": "Production readiness remains ahead of the current one-market demand trail even with production still running lightly through the first takeover day.",
+          "to_hr": "Current staffing is enough for this final light rolling plan."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory steady on day7. The important signal is rising finished goods with no warehouse stress, not new warehouse actions."
+          }
+        ],
+        "communications": {
+          "to_sales": "Current finished-goods posture remains comfortably above committed demand.",
+          "to_production": "Warehouse capacity remains sufficient for the final light run.",
+          "to_procurement": "No inventory pressure requires further replenishment.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Keep procurement frozen on day7 except for observation. Material safety is already adequate, and procurement should not become the lead contradiction before handoff."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No additional inbound pressure is expected.",
+          "to_production": "Material coverage remains enough for the final light rolling plan.",
+          "to_sales": "Formal commitments should be evaluated before any demand-side or purchasing expansion.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "8": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Keep finance in observation mode on day8. Cash remains healthy and the company already has real operating history, so finance should stay secondary."
+          }
+        ],
+        "communications": {
+          "to_sales": "One more modest acceptance is acceptable, but do not consume resources reserved for formal order comparisons.",
+          "to_production": "Production should stay disciplined; finance sees no reason for additional expansion.",
+          "to_procurement": "No finance-driven purchasing adjustment is needed.",
+          "to_hr": "No payroll intervention is needed."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Keep staffing stable on day8. The company should approach handoff with operational continuity, not with a fresh staffing signal."
+          }
+        ],
+        "communications": {
+          "to_production": "Current staffing remains enough for the active light plan.",
+          "to_sales": "Current staffing remains enough for one-market conversion.",
+          "to_inventory": "Inventory staffing remains adequate.",
+          "to_procurement": "Procurement staffing remains adequate."
+        }
+      },
+      "sales": {
+        "workflow": [],
+        "communications": {
+          "to_inventory": "Keep the finished-goods buffer strong for handoff even after this additional acceptance.",
+          "to_production": "Do not read the current order pool as a reason for fresh expansion.",
+          "to_procurement": "Current material levels remain sufficient for the pilot commitments.",
+          "to_hr": "No extra sales recruitment is needed."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Do not create another production plan right before handoff. The final light rolling plan from day7 should be enough to keep production alive through the first takeover-day observation without creating heavy production pressure."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Current finished goods are already sufficient; preserve balance while the light in-progress plan carries the production signal through the first takeover-day observation.",
+          "to_sales": "Production is ready but finite, so sales should rank later commitments by value and feasibility.",
+          "to_procurement": "No extra replenishment is needed now.",
+          "to_hr": "No further production staffing change is needed."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep inventory steady on day8. Warehouse pressure is still low, and the main role of inventory is to make the stock overhang legible before handoff."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished goods remain strong for handoff even after this additional acceptance.",
+          "to_production": "Warehouse space remains sufficient while the light plan continues.",
+          "to_procurement": "No new inbound material is needed.",
+          "to_hr": "Inventory staffing remains adequate."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Keep procurement in quiet assurance mode on day8. Material safety is still adequate and should not become a visible pre-handoff issue."
+          }
+        ],
+        "communications": {
+          "to_inventory": "No inbound adjustment is needed today.",
+          "to_production": "Current material levels remain sufficient.",
+          "to_sales": "Demand remains too narrow to justify new purchasing pressure.",
+          "to_hr": "No procurement staffing change is needed."
+        }
+      }
+    },
+    "9": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Freeze finance into a clean handoff posture on day9. Cash is healthy and revenue is positive, so no finance correction is required."
+          }
+        ],
+        "communications": {
+          "to_sales": "The next meaningful decision should compare incoming order value and joint fulfillment feasibility rather than tighten finance.",
+          "to_production": "No finance-side constraint blocks current operations at handoff.",
+          "to_procurement": "No finance-side purchasing change is needed before handoff.",
+          "to_hr": "No payroll-side intervention is needed before handoff."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "pass_reason": "Freeze staffing before handoff. This case should not gain a new HR signal at the last moment."
+          }
+        ],
+        "communications": {
+          "to_production": "Current production staffing is enough for the handoff state.",
+          "to_sales": "Current sales staffing is enough for one small market.",
+          "to_procurement": "No HR change is needed for procurement.",
+          "to_inventory": "No HR change is needed for inventory."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "pass_reason": "Hold the existing channel steady and introduce no additional offers immediately before handoff."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Keep current stock posture stable for handoff.",
+          "to_production": "No additional production expansion should be triggered by the weak order signal.",
+          "to_procurement": "No extra replenishment is needed before handoff.",
+          "to_hr": "Do not add sales headcount right before handoff."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Do not create another production plan at the final prewarm day. The day7 light rolling plan should be the only in-progress production signal carried into handoff and through the first takeover-day observation."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods are already sufficient for the handoff state, and the remaining light plan is enough to keep production from looking fully idle at day10.",
+          "to_sales": "Production is ready but finite; later offers should be ranked by value and joint fulfillment feasibility.",
+          "to_procurement": "No urgent material request is needed.",
+          "to_hr": "No additional staffing request is needed."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "pass_reason": "Keep warehouse and stock posture unchanged before handoff. Inventory should remain a memory of earlier supply-side preparation, not a new bottleneck."
+          }
+        ],
+        "communications": {
+          "to_sales": "Finished goods remain available but finite for the upcoming formal offers.",
+          "to_production": "Current stock is enough; no warehouse-driven expansion is needed.",
+          "to_procurement": "No inventory pressure requires new replenishment.",
+          "to_hr": "No staffing change is needed for inventory."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "Freeze procurement before handoff. Material safety is already adequate, and procurement should not become the lead contradiction."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Incoming material posture is already sufficient; avoid creating new warehouse pressure.",
+          "to_production": "Materials are safe enough for the current handoff state.",
+          "to_sales": "At handoff, compare formal offers against available inventory, capacity, deadlines, and expected margin.",
+          "to_hr": "No staffing change is required for procurement."
+        }
+      }
+    }
+  }
+}

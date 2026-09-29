@@ -1,0 +1,226 @@
+{
+  "scene_id": "case_05_cash_pressure",
+  "mode": "scripted_prewarm_then_takeover",
+  "design_profile": "aggressive_expansion_working_capital_pressure_no_artificial_order_rejection",
+  "base_seed_file": "init_action.json",
+  "takeover_day": 10,
+  "handoff_state_semantics": "pre_daily_snapshot_at_start_of_day_10_after_day9_actions",
+  "agent_first_view_semantics": "after_day10_daily_action_before_day10_agent_department_actions",
+  "agent_run_days_after_takeover": 10,
+  "prewarm_goal": "Shape the enterprise into a cash-constrained but still operational day10 takeover using only agent-supported operating actions: early market development creates real demand signals, then staffing, warehouse preparation, production-line buildout, raw-material purchasing, normal order acceptance, and two finite production plans convert cash into working capital and operating readiness. Revenue should exist before handoff, but it should still lag the front-loaded market, labor, warehouse, procurement, and production commitments. Because the takeover workflow runs day10 daily_action before the agent's first analysis, the target state is the agent first view after day10 daily_action: cash should be visibly compressed, further capex or expansion should look financially premature, and the business should still show serviceable orders, completed production output, active production, and manageable warehouse utilization.",
+  "trajectory_style_constraints": {
+    "daily_department_presence": [
+      "finance",
+      "hr",
+      "sales",
+      "production",
+      "inventory",
+      "procurement"
+    ],
+    "minimum_daily_trace_per_department": [
+      "action",
+      "pass",
+      "communication"
+    ],
+    "continuity_requirement": "Every prewarm day must still look like an operating business day rather than a frozen insolvency tableau.",
+    "experiment_priority": "Cash pressure should dominate, but the scene must still retain a live market, visible orders, and enough operating continuity for conservative decision-making to be meaningful."
+  },
+  "milestone_intent": {
+    "day0_to_day2": [
+      "Open a first regional market on day0 and a second regional market on day1 so market demand is real rather than manually seeded.",
+      "Build a small pilot line first, then one larger line after market activation so capacity is available before automatic market orders arrive.",
+      "Recruit only the staff needed to support market order processing, the split production ramp-up, and warehouse handling.",
+      "Start cash compression through ordinary operating commitments rather than direct finance-side costs, while still accepting the earliest serviceable market orders."
+    ],
+    "day3_to_day5": [
+      "Accept early market orders that current finished goods or already-started production can realistically cover.",
+      "Place three high-value raw-material purchase orders and expand warehouse capacity just enough to receive them safely.",
+      "Run two finite production plans: one pilot-line plan that completes before handoff and one larger plan that remains active through takeover at clearly non-idle utilization.",
+      "Stop additional procurement, hiring, warehouse expansion, market development, and production-line expansion after the planned ramp."
+    ],
+    "day6_to_day9": [
+      "Let the company settle into a restrained operating posture.",
+      "Preserve two active markets and keep converting only the orders that current stock or already-started production can fulfill, without reopening expansion.",
+      "Keep the longer production plan running at moderate utilization so day10 does not look like a production stoppage, while leaving only a small visible order pool for cash-repair decisions.",
+      "Stabilize handoff so the first day10 diagnosis should be cash pressure or conservative operating need rather than sales backlog, idle capacity, warehouse pressure, or growth urgency."
+    ],
+    "day10_first_view": [
+      "After day10 daily_action, the agent should see a live market, real order history, positive revenue, and a manageable available-order pool, while cash is visibly compressed.",
+      "After day10 daily_action, one production plan should still be in progress and capacity utilization should be moderate rather than zero.",
+      "After day10 daily_action, total_production and production_efficiency should already be non-zero because the pilot-line prewarm plan has completed.",
+      "The first reasonable move should avoid fresh capex and avoid new market-development spend.",
+      "Selective low-capital monetization from existing demand should look more reasonable than expansion or deliberate inactivity."
+    ]
+  },
+  "hard_constraints": [
+    "Use only agent-supported operating actions; do not use FinanceManager.add_cost as a direct cash shock.",
+    "Do not manually create sales orders; rely on the market mechanism after market activation.",
+    "Keep exactly two active markets by handoff.",
+    "Do not create more than two production lines during prewarm.",
+    "Do not expand warehouse after the planned capacity buffer is complete.",
+    "Do not launch a broad recruitment wave beyond the planned inventory, sales, and production support hires; the production hire count is sized specifically so the two day4 production plans pass backend worker constraints.",
+    "Do not leave pending procurement pressure at handoff.",
+    "Do not use artificial sales rejection as the primary reason cash remains low at handoff.",
+    "Do not let available sales orders accumulate enough to look like the primary problem at the day10 first view.",
+    "Do not let production utilization fall to zero at the day10 first view.",
+    "Do not let warehouse utilization exceed the warning range at the day10 first view.",
+    "Do not let material shortage become the dominant contradiction.",
+    "Do not let capacity shortage become the dominant contradiction.",
+    "Do not let staffing shortage become the dominant contradiction.",
+    "Cash pressure should dominate growth ambition by handoff.",
+    "The company must still look operational rather than fully frozen."
+  ],
+  "target_handoff_signature": {
+    "evaluation_semantics": "agent_first_view_after_day10_daily",
+    "pre_daily_handoff_guardrails": {
+      "sales": {
+        "active_markets_range": [
+          2,
+          2
+        ],
+        "orders_total_range": [
+          14,
+          16
+        ],
+        "available_orders_range": [
+          1,
+          3
+        ],
+        "accepted_orders_range": [
+          9,
+          11
+        ],
+        "completed_orders_range": [
+          2,
+          4
+        ],
+        "rejected_orders_range": [
+          0,
+          1
+        ]
+      },
+      "finance": {
+        "cash_range": [
+          700000,
+          1400000
+        ],
+        "cash_should_already_be_compressed": true
+      },
+      "production": {
+        "production_lines_total_range": [
+          2,
+          2
+        ],
+        "in_progress_plans_range": [
+          1,
+          1
+        ],
+        "completed_plans_min": 1,
+        "total_production_min": 1000,
+        "production_efficiency_min": 0.15,
+        "capacity_utilization_range": [
+          0.55,
+          0.65
+        ]
+      },
+      "procurement": {
+        "pending_orders_upper_bound": 0
+      },
+      "inventory": {
+        "warehouse_utilization_range": [
+          0.6,
+          0.76
+        ]
+      }
+    },
+    "agent_first_view_after_day10_daily": {
+      "sales": {
+        "active_markets_range": [
+          2,
+          2
+        ],
+        "orders_total_range": [
+          16,
+          18
+        ],
+        "available_orders_range": [
+          3,
+          5
+        ],
+        "accepted_orders_range": [
+          8,
+          10
+        ],
+        "completed_orders_range": [
+          3,
+          5
+        ],
+        "rejected_orders_range": [
+          0,
+          1
+        ],
+        "accepted_plus_completed_orders_range": [
+          12,
+          15
+        ]
+      },
+      "finance": {
+        "cash_range": [
+          700000,
+          1400000
+        ],
+        "revenue_should_be_positive": true,
+        "cash_should_be_primary_bottleneck": true,
+        "additional_capex_should_look_hard_to_justify": true
+      },
+      "production": {
+        "production_lines_total_range": [
+          2,
+          2
+        ],
+        "in_progress_plans_range": [
+          1,
+          1
+        ],
+        "completed_plans_min": 1,
+        "total_production_min": 1000,
+        "production_efficiency_min": 0.15,
+        "active_plan_completion_day_range": [
+          11,
+          13
+        ],
+        "capacity_utilization_range": [
+          0.55,
+          0.65
+        ],
+        "capacity_should_not_be_primary_bottleneck": true,
+        "finished_goods_should_remain_above_committed_demand": true
+      },
+      "procurement": {
+        "material_should_not_be_primary_bottleneck": true,
+        "pending_orders_upper_bound": 0
+      },
+      "inventory": {
+        "warehouse_utilization_range": [
+          0.55,
+          0.72
+        ],
+        "finished_goods_should_remain_serviceable": true
+      },
+      "organization": {
+        "all_departments_should_have_daily_trace": true,
+        "no_unbounded_prewarm_expansion": true
+      }
+    }
+  },
+  "agent_first_view_expectation": {
+    "sales": {
+      "lead_department": true,
+      "preferred_primary_action": "accept_order",
+      "acceptable_secondary_actions": [
+        "pass"
+      ]
+    },
+    "interpretation": "At the day10 first view after daily_action, the agent should see two live markets, a real order history from the market mechanism, positive revenue that still lags earlier spending, one completed prewarm production plan, one clearly loaded in-progress production plan, enough raw materials and finished goods to avoid panic procurement or panic production, and cash compressed to a visibly sharp level by ordinary operating commitments. The most reasonable response should be conservative cash repair: avoid fresh capex and procurement, keep monetizing already-visible orders if they can be served from existing stock or active production, and wait for cash recovery before expanding."
+  }
+}

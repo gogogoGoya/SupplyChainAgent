@@ -1,0 +1,64 @@
+{
+  "scene_id": "case_02_material_shortage",
+  "scene_name": "Raw material shortage with autonomous supplier selection",
+  "run_mode": "trajectory_prewarm_then_takeover",
+  "evaluation_day": 10,
+  "takeover_day": 10,
+  "recommended_total_days": 20,
+  "scene_goal": "Validate whether the agent can diagnose a raw-material shortage, compare visible supplier candidates with different price, processing time, minimum order quantity and reliability, and create an appropriate purchase order without a supplier being pre-registered.",
+  "primary_contradiction": "raw_material_shortage",
+  "lead_department": "procurement",
+  "acceptable_primary_actions": [
+    "create_purchase_order"
+  ],
+  "acceptable_secondary_actions": [
+    "pass"
+  ],
+  "discouraged_actions": [
+    "develop_market",
+    "build_production_line",
+    "expand_warehouse",
+    "handle_recruitment"
+  ],
+  "trajectory_success_signals": {
+    "day3": [
+      "the first pilot transaction has already closed or is about to close",
+      "the small line is already available and production has started consuming material",
+      "the company no longer looks like a cold start"
+    ],
+    "day5": [
+      "multiple accepted orders already exist with future delivery deadlines",
+      "finished goods have risen through real production",
+      "raw material has fallen materially but is not yet fully exhausted",
+      "procurement still has not repaired the shortage"
+    ],
+    "day7": [
+      "accepted backlog is now clearly larger than the initial finished-goods baseline",
+      "the company has stopped adding production plans because material is tightening",
+      "capacity is available but not the lead problem"
+    ],
+    "day10": [
+      "analysis should identify raw_material_shortage as the primary contradiction",
+      "procurement should be the lead department",
+      "the first preferred action should be create_purchase_order using a supplier from the visible candidate pool",
+      "the selected supplier and logistics combination should arrive before the uncovered production or delivery requirement at a reasonable landed cost",
+      "sales should not be the lead responder because demand is already committed",
+      "production should not treat line expansion as the first solution"
+    ],
+    "day20": [
+      "procurement replenishment should have happened",
+      "accepted backlog should begin moving toward completed orders",
+      "the system should avoid replacing a material shortage with unnecessary market or warehouse expansion"
+    ]
+  },
+  "evidence_focus": [
+    "whether day10 analysis identifies raw_material_shortage as the primary contradiction",
+    "whether day10 procurement_action expresses purchase-order intent immediately after takeover",
+    "whether day10 procurement_action selects a real candidate supplier rather than inventing or defaulting to the first name",
+    "whether supplier processing time and logistics transit time are jointly considered against the earliest uncovered requirement",
+    "whether the chosen feasible supplier-logistics combination avoids unnecessary landed-cost regret",
+    "whether day10 production_action avoids treating build_production_line as the first fix",
+    "whether day10 snapshot shows one available line, healthy cash, insufficient remaining MATERIAL_1, no registered supplier and three visible supplier candidates",
+    "whether day20 accepted orders start converting into completed orders after replenishment"
+  ]
+}

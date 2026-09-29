@@ -1,0 +1,101 @@
+{
+  "scene_id": "case_04",
+  "takeover_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "primary_contradiction": "staff_shortage",
+  "lead_department": "hr",
+  "checkable_constraints": {
+    "sales": {
+      "active_markets": {
+        "min": 5,
+        "max": 5
+      },
+      "orders_total": {
+        "min": 10,
+        "max": 10
+      },
+      "accepted_orders": {
+        "min": 7,
+        "max": 7
+      },
+      "available_orders": {
+        "min": 0,
+        "max": 0
+      },
+      "completed_orders": {
+        "min": 3,
+        "max": 3
+      }
+    },
+    "production": {
+      "production_lines_total": {
+        "min": 2,
+        "max": 2
+      },
+      "available_capacity": {
+        "min": 500,
+        "max": 500
+      },
+      "in_progress_production_plans": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    "procurement": {
+      "pending_procurement_orders": {
+        "min": 0,
+        "max": 0
+      },
+      "received_procurement_orders": {
+        "min": 1,
+        "max": 1
+      },
+      "day10_first_purchase_order": "should not be the preferred first corrective action because raw material remains sufficient and supplier access is already available."
+    },
+    "inventory": {
+      "warehouse_utilization": {
+        "max": 0.35
+      },
+      "raw_material_signal": "remaining MATERIAL_1 should still be visibly sufficient for the committed backlog under the current recipe",
+      "finished_goods_signal": "finished goods should be operationally real, around the 700-780 band at handoff, but still far below the urgent accepted backlog and therefore unable to clear it immediately"
+    },
+    "finance": {
+      "cash_positive": true,
+      "cash_crisis": false,
+      "revenue_should_be_positive": true
+    },
+    "hr": {
+      "production_headcount": {
+        "min": 1,
+        "max": 1
+      },
+      "production_allocated": {
+        "min": 1,
+        "max": 1
+      },
+      "pending_recruitments": {
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  "qualitative_constraints": [
+    "The company should look like it is already operating rather than still bootstrapping.",
+    "The snapshot should show accepted demand pressure clearly enough that sales does not need to be the lead responder.",
+    "Five seeded markets should already be active, with enough visible demand that market expansion should not be the dominant explanation.",
+    "The visible available-order slack should be near zero by handoff so demand-conversion weakness does not override the staffing signal.",
+    "The raw-material balance plus one already completed procurement cycle should rule out procurement as the first diagnosis.",
+    "The two-line footprint should rule out line-count shortage as the first diagnosis.",
+    "The second line should remain physically usable but operationally stranded by missing labor.",
+    "The first preferred correction should therefore be handle_recruitment for production rather than build_production_line or create_purchase_order.",
+    "If the top-level model wording uses production_capacity_bottleneck, that wording is only acceptable when the evidence clearly points to a staffing-rooted idle-line problem and HR remains the lead correction channel."
+  ],
+  "anti_contamination_rules": [
+    "Do not let the presence of already-open seeded markets turn the case into a market-expansion diagnosis.",
+    "Do not let pending purchase orders weaken the staffing signal.",
+    "Do not let overdue-order chaos dominate the handoff.",
+    "Do not let raw-material shortage become the more visible bottleneck.",
+    "Do not let line-count shortage become the more visible bottleneck.",
+    "Do not let cash pressure dominate the diagnosis."
+  ]
+}

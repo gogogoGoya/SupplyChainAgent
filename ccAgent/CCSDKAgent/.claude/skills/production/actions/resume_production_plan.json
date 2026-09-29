@@ -1,0 +1,12 @@
+{
+  "action_name": "resume_production_plan",
+  "description": "生产计划继续",
+  "description_detail": "在生产计划被中断后，你可以选择继续执行计划",
+  "constraints": [
+    "仅限恢复已中断(interrupted)的计划",
+    "不允许恢复已完成(completed)或已取消(failed)或正在进行中(in_progress)的计划"
+  ],
+  "required_parameters": [
+    "plan_id"
+  ]
+}

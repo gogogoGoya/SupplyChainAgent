@@ -1,0 +1,25 @@
+{
+  "action_name": "accept_order",
+  "description": "接受销售订单",
+  "mode_confirmation": "以 sales.json.policy_context 或 blackboard.policy_context_by_department.sales 中解析出的 is_beer_game_mode 为准；当 is_beer_game_mode 为 true 时，外部 market 订单代表消费者真实需求",
+  "conditions": [
+    "订单状态为 available",
+    "analysis 中支持收入增长或订单完成目标",
+    "当前库存或可用产能足以在交付期前完成履约",
+    "接受该订单不会显著挤占已承诺订单的资源"
+  ],
+  "evaluation_points": [
+    "是否存在可直接交付的库存",
+    "若需生产，是否存在足够的可用产能",
+    "是否会引发生产、采购或库存系统的连锁压力",
+    "若当前库存不足，是否仍能在 delivery_deadline 前通过后续采购、生产或上游交付完成履约"
+  ],
+  "description_detail": "接受订单后，会根据订单中给出的交付日期，在最后的交付日完成履约",
+  "required_parameters": [
+    "order_id"
+  ],
+  "parameter_constraints": [
+    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不可多、不可少",
+    "不要把 product_id、quantity、unit_price、total_amount、source_id、delivery_deadline 等订单详情重复写入 action_param"
+  ]
+}

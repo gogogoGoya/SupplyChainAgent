@@ -1,0 +1,30 @@
+{
+  "scene_id": "case_01_order_selection",
+  "scene_name": "Limited order entry followed by market-bound heterogeneous offers",
+  "design_version": "trajectory_v7_market_bound_order_selection",
+  "handoff_day": 10,
+  "takeover_window": [10, 20],
+  "compatible_execution_file": "executable_prewarm_day0_to_day9.json",
+  "compatible_goal_file": "prewarm_plan_day0_to_day10.json",
+  "primary_contradiction": "limited_order_entry_and_selection",
+  "lead_department": "sales",
+  "trajectory_principle": "Use only two small prewarm orders and one active market to establish an operating history, preserve saleable finished goods at handoff, then expose a sparse deterministic order stream bound to active market slots. The formal decision is to infer whether one additional market is justified and select valuable jointly feasible orders without accepting every visible offer.",
+  "architecture_notes": [
+    "Custom prewarm actions create and accept only the two order ids referenced by the seed.",
+    "Formal orders are generated from formal_market_orders_day10_to_day19.json and are emitted only when their market_slot is active.",
+    "The original market unlocks slot 1; a newly developed and activated market unlocks slot 2 without random generation.",
+    "Each formal offer expires on its configured offer_expiry_day, so delaying a decision has a measurable opportunity cost.",
+    "All departments leave an operating trace, but no prewarm action reveals which formal offers should be accepted."
+  ],
+  "day_segments": {
+    "day0_to_day2": "Create a small operating baseline and complete the first pilot-order loop.",
+    "day3_to_day6": "Maintain restrained production and accept the second pilot order without creating extra demand.",
+    "day7_to_day9": "Stabilize inventory, capacity, staffing, and cash for a clean day10 handoff."
+  },
+  "handoff_success_story": [
+    "The company has enough operating history for feasibility and margin analysis.",
+    "Inventory exceeds the original market's effective order entry, so market-growth reasoning has measurable evidence.",
+    "No market-development target or preferred formal-order id is exposed before takeover.",
+    "Agent and Scripted modes start from the same deterministic offer mechanism; later opportunity differences are endogenous consequences of market-development actions."
+  ]
+}

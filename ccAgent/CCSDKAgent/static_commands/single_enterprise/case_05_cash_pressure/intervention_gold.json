@@ -1,0 +1,59 @@
+{
+  "scene_id": "case_05_cash_pressure",
+  "scene_name": "Aggressive expansion working-capital pressure with conservative cash-repair posture",
+  "run_mode": "trajectory_prewarm_then_takeover",
+  "evaluation_day": 10,
+  "takeover_day": 10,
+  "recommended_total_days": 20,
+  "scene_goal": "Validate whether the agent can diagnose cash pressure when markets are already running and the company is still operational, but cash has been compressed to a sharper level by agent-supported operating actions such as market development, staffing, warehouse preparation, repeated raw-material purchasing, and two finite production plans while revenue still lags the early expansion spend.",
+  "primary_contradiction": "cash_pressure",
+  "lead_department": "sales",
+  "acceptable_primary_actions": [
+    "accept_order"
+  ],
+  "acceptable_secondary_actions": [
+    "pass"
+  ],
+  "discouraged_actions": [
+    "develop_market",
+    "build_production_line",
+    "create_purchase_order",
+    "expand_warehouse",
+    "handle_recruitment"
+  ],
+  "trajectory_success_signals": {
+    "day3": [
+      "the first market-generated orders are already visible",
+      "cash has already been compressed by ordinary operating commitments rather than a direct finance-side shock",
+      "the company still retains enough stock and capacity to keep operating cautiously"
+    ],
+    "day5": [
+      "some real revenue history exists through completed or soon-to-complete accepted orders",
+      "there are exactly two active markets and a visible order pool",
+      "the enterprise has stopped adding new capex after the planned early ramp"
+    ],
+    "day7": [
+      "no further recruitment, warehouse expansion, procurement, or production-line buildout has been introduced after the planned ramp",
+      "the order pool remains visible but serviceable demand continues to be converted",
+      "cash pressure still dominates further-growth ambition"
+    ],
+    "day10": [
+      "analysis should point to working-capital pressure, caution, or conservative cash-repair need",
+      "production KPIs should no longer look empty because one prewarm production plan has completed while another remains active",
+      "the most reasonable day10 response should avoid new capital expenditure",
+      "sales should keep monetizing existing demand, but the system should not treat expansion as the natural next move"
+    ],
+    "day20": [
+      "the system should prefer cash recovery and disciplined operations over impulsive expansion",
+      "if growth resumes later, it should come only after the cash posture has improved"
+    ]
+  },
+  "evidence_focus": [
+    "whether day10 analysis identifies cash pressure or conservative operating need as the lead issue",
+    "whether day10 actions avoid expansionary capex while cash remains compressed",
+    "whether the markets are already live so the scene is not mistaken for a no-demand startup",
+    "whether cash pressure comes from front-loaded operating commitments rather than artificial order rejection",
+    "whether departments behave with restraint instead of continuing broad expansion under low cash",
+    "whether the prewarm uses only agent-supported business actions and avoids direct FinanceManager.add_cost cash shocks"
+  ]
+}

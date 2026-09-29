@@ -1,0 +1,9 @@
+{
+  "scene_id": "case_03",
+  "mode": "scripted_prewarm_then_takeover",
+  "handoff_day": 10,
+  "agent_run_days_after_takeover": 10,
+  "prewarm_goal": "Build one active market, one completed pilot order, five accepted backlog orders totaling 8400 PRODUCT_1 units, four available orders, sufficient raw material, and one occupied small-line plan at day10.",
+  "construction_basis": "Reconstructed from the refreshed case4 init_action, handoff_signature, prewarm_trajectory, trajectory_rationale, and trajectory_gold package. The refreshed package did not include an executable prewarm JSON.",
+  "target_handoff_signature_file": "handoff_signature.json"
+}

@@ -1,0 +1,10 @@
+{
+  "scene_id": "case_02_material_shortage",
+  "mode": "scripted_prewarm_then_takeover",
+  "handoff_day": 10,
+  "agent_run_days_after_takeover": 10,
+  "prewarm_goal": "Build an operating company with accepted demand, ready capacity, healthy cash, and a visible MATERIAL_1 gap, while creating no supplier and no purchase order before day10.",
+  "supplier_choice_goal": "At takeover, procurement must compare the three visible candidates and their logistics modes. The selected candidate is registered only when the first purchase order succeeds.",
+  "target_handoff_signature_file": "handoff_signature.json",
+  "supplier_candidates_file": "supplier_candidates.json"
+}

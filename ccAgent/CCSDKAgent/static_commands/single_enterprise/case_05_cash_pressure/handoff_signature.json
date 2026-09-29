@@ -1,0 +1,165 @@
+{
+  "scene_id": "case_05_cash_pressure",
+  "takeover_day": 10,
+  "handoff_state_semantics": "pre_daily_snapshot_at_start_of_day_10_after_day9_actions",
+  "agent_first_view_semantics": "after_day10_daily_action_before_day10_agent_department_actions",
+  "primary_contradiction": "cash_pressure",
+  "lead_department": "sales",
+  "checkable_constraints": {
+    "agent_first_view_after_day10_daily": {
+      "sales": {
+        "active_markets": {
+          "min": 2,
+          "max": 2
+        },
+        "orders_total": {
+          "min": 16,
+          "max": 18
+        },
+        "available_orders": {
+          "min": 3,
+          "max": 5
+        },
+        "accepted_orders": {
+          "min": 8,
+          "max": 10
+        },
+        "completed_orders": {
+          "min": 3,
+          "max": 5
+        },
+        "rejected_orders": {
+          "min": 0,
+          "max": 1
+        },
+        "accepted_plus_completed_orders": {
+          "min": 12,
+          "max": 15
+        }
+      },
+      "production": {
+        "production_lines_total": {
+          "min": 2,
+          "max": 2
+        },
+        "in_progress_production_plans": {
+          "min": 1,
+          "max": 1
+        },
+        "completed_production_plans": {
+          "min": 1
+        },
+        "total_production": {
+          "min": 1000
+        },
+        "production_efficiency": {
+          "min": 0.15
+        },
+        "active_plan_completion_day": {
+          "min": 11,
+          "max": 13
+        },
+        "capacity_utilization": {
+          "min": 0.55,
+          "max": 0.65
+        }
+      },
+      "procurement": {
+        "pending_procurement_orders": {
+          "min": 0,
+          "max": 0
+        }
+      },
+      "inventory": {
+        "warehouse_utilization": {
+          "min": 0.55,
+          "max": 0.72
+        },
+        "finished_goods_signal": "should remain above committed demand so that cash pressure is not confused with a supply failure"
+      },
+      "finance": {
+        "cash_positive": true,
+        "cash_min": 700000,
+        "cash_max": 1400000,
+        "revenue_should_be_positive": true,
+        "cash_pressure_should_be_visible": true
+      }
+    },
+    "pre_daily_handoff_guardrails": {
+      "sales": {
+        "orders_total": {
+          "min": 14,
+          "max": 16
+        },
+        "available_orders": {
+          "min": 1,
+          "max": 3
+        },
+        "accepted_orders": {
+          "min": 9,
+          "max": 11
+        },
+        "completed_orders": {
+          "min": 2,
+          "max": 4
+        },
+        "rejected_orders": {
+          "min": 0,
+          "max": 1
+        }
+      },
+      "production": {
+        "in_progress_production_plans": {
+          "min": 1,
+          "max": 1
+        },
+        "completed_production_plans": {
+          "min": 1
+        },
+        "total_production": {
+          "min": 1000
+        },
+        "capacity_utilization": {
+          "min": 0.55,
+          "max": 0.65
+        }
+      },
+      "inventory": {
+        "warehouse_utilization": {
+          "min": 0.6,
+          "max": 0.78
+        }
+      },
+      "procurement": {
+        "pending_procurement_orders": {
+          "min": 0,
+          "max": 0
+        }
+      }
+    }
+  },
+  "qualitative_constraints": [
+    "Two active markets should already exist and should already have created a visible order trail through the market mechanism.",
+    "The company should show some completed revenue history before handoff.",
+    "After day10 daily action, the agent's first view should show a controlled available-order pool rather than sales under-acceptance or artificial order suppression.",
+    "After day10 daily action, one production plan should still be in progress with moderate capacity utilization.",
+    "After day10 daily action, at least one production plan should already be completed so total_production and production_efficiency are non-zero.",
+    "Cash should be materially compressed relative to the initial state by ordinary operating actions rather than direct finance-side shock actions.",
+    "The handoff should still look like an operating company rather than a fully frozen crisis.",
+    "Existing stock, active production, and moderate warehouse use should make further capex feel discretionary rather than urgent.",
+    "The day10 diagnosis should lean toward caution, cash preservation, or selective order conversion rather than expansion."
+  ],
+  "anti_contamination_rules": [
+    "Do not let market count exceed two active markets.",
+    "Do not let new market expansion remain the most attractive next step.",
+    "Do not let artificial order rejection become the main reason cash stays low.",
+    "Do not let available sales orders accumulate enough to look like the primary problem.",
+    "Do not let procurement remain pending at handoff.",
+    "Do not let heavy production pressure survive into handoff.",
+    "Do not let production utilization fall to zero at the agent's day10 first view.",
+    "Do not let material shortage dominate the scene.",
+    "Do not let warehouse pressure dominate the scene.",
+    "Do not let staffing shortage dominate the scene.",
+    "Do not let the company look fully insolvent or non-operational."
+  ]
+}

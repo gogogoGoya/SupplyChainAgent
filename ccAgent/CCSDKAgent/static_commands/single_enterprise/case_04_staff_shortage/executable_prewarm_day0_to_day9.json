@@ -1,0 +1,555 @@
+{
+  "scene_id": "case_04",
+  "handoff_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "execution_profile": "trajectory_style_current_runner_compatible_case04_staff_shortage",
+  "scripted_market_orders": {
+    "source_policy": "Orders are deterministic market events injected by the prewarm runner after the seeded markets exist; sales department actions must only accept/reject/pass these orders.",
+    "orders_by_day": {
+      "0": [],
+      "1": [],
+      "2": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 210,
+          "unit_price": 780.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 6
+        }
+      ],
+      "3": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 190,
+          "unit_price": 780.0,
+          "source_id": "market_4",
+          "source_type": "market",
+          "delivery_deadline": 8
+        }
+      ],
+      "4": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 160,
+          "unit_price": 770.0,
+          "source_id": "market_5",
+          "source_type": "market",
+          "delivery_deadline": 9
+        }
+      ],
+      "5": [],
+      "6": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 780,
+          "unit_price": 780.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 11
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 360,
+          "unit_price": 780.0,
+          "source_id": "market_3",
+          "source_type": "market",
+          "delivery_deadline": 12
+        }
+      ],
+      "7": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 780,
+          "unit_price": 780.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 11
+        }
+      ],
+      "8": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 360,
+          "unit_price": 780.0,
+          "source_id": "market_4",
+          "source_type": "market",
+          "delivery_deadline": 12
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 360,
+          "unit_price": 780.0,
+          "source_id": "market_5",
+          "source_type": "market",
+          "delivery_deadline": 12
+        }
+      ],
+      "9": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 360,
+          "unit_price": 780.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 13
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 360,
+          "unit_price": 780.0,
+          "source_id": "market_3",
+          "source_type": "market",
+          "delivery_deadline": 13
+        }
+      ]
+    }
+  },
+  "department_execution_order": [
+    "finance",
+    "hr",
+    "sales",
+    "production",
+    "inventory",
+    "procurement"
+  ],
+  "default_pass_reasons": {
+    "finance": "Keep finance visible every day, but do not let liquidity discipline dominate before handoff because this case is about workforce execution rather than cash.",
+    "hr": "Keep HR visible every day, but do not solve the future staffing bottleneck early. The headcount shock is introduced later and must still be visible at handoff.",
+    "sales": "Open the seeded markets up front, then keep converting deterministic market-originated orders into committed backlog. Do not leave a large available-order pool that would let the handoff drift back into a market-insufficiency story.",
+    "production": "Use short bridge plans to keep the firm visibly operating through day9, then enter handoff with one fully occupied line and one idle line so the visible blocker is labor rather than equipment.",
+    "inventory": "Keep warehouse pressure low and let stock movements tell the staffing story. Inventory should observe rather than expand.",
+    "procurement": "Deliberately avoid creating procurement pressure before takeover. Suppliers should exist, but raw material should still remain sufficient at handoff."
+  },
+  "days": {
+    "0": {
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "build_production_line",
+              "action_param": {
+                "line_type": "small"
+              }
+            },
+            "action_reason": "Build the first small line on day0 so the physical production base exists before any pilot orders arrive, while keeping init compatible with the current server validation rules."
+          }
+        ],
+        "communications": {
+          "to_hr": "The first small line should be in place immediately so day1 can finish the second one and the later bottleneck still reads as staffing rather than asset absence."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case04_regional_channel_alpha",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open the first seeded regional channel on day0 so later urgent backlog has a real market origin instead of a synthetic direct-order shortcut."
+          },
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case04_regional_channel_beta",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open a second seeded market on day0 so demand sufficiency is already broader than a one-market story before takeover."
+          },
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case04_regional_channel_gamma",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open a third seeded market on day0 so day10 no longer reads as a one-market expansion problem."
+          },
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case04_regional_channel_delta",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open a fourth seeded market on day0 so handoff coverage already spans multiple live channels and sales has less reason to seek fresh expansion."
+          },
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case04_regional_channel_epsilon",
+                "assigned_workers": 1
+              }
+            },
+            "action_reason": "Open a fifth seeded market on day0 so half of the possible market footprint is already active before takeover."
+          }
+        ],
+        "communications": {
+          "to_production": "All later orders will come from already-open markets. By handoff, demand should look broadly validated and committed rather than underdeveloped."
+        }
+      }
+    },
+    "1": {
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "build_production_line",
+              "action_param": {
+                "line_type": "small"
+              }
+            },
+            "action_reason": "Finish the second small line before the staffing shock is introduced so day10 shows the enterprise already owns enough equipment."
+          }
+        ],
+        "communications": {
+          "to_hr": "Both small lines should exist before the staffing shock. After that point, line count should not be a credible first diagnosis."
+        }
+      }
+    },
+    "2": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_1"
+              }
+            },
+            "action_reason": "Accept the first pilot order as soon as the seeded markets become active so the company begins real transaction history."
+          }
+        ],
+        "communications": {
+          "to_production": "The first pilot order is intentionally small and near-term so the firm proves it is already operating before the staffing handoff."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+                "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 150,
+                "daily_capacity": 100
+              }
+            },
+            "action_reason": "Run one light two-day pilot first so line_1 stays partially occupied into day3, creating the setup for a forced cross-line pilot on the next day."
+          }
+        ],
+        "communications": {
+          "to_inventory": "The pilot plan should complete quickly and close the first revenue loop before the later staffing squeeze."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_purchase_order",
+              "action_param": {
+                "material_id": "MATERIAL_1",
+                "quantity": 4500,
+                "supplier_id": "SUPPLIER_1",
+                "logistics_mode": "air"
+              }
+            },
+            "action_reason": "Place one intentionally small replenishment early so the company has a real procurement trace before takeover without creating any material urgency."
+          }
+        ],
+        "communications": {
+          "to_inventory": "This is only a trace procurement loop. It should land before handoff and should not become the dominant operating issue."
+        }
+      }
+    },
+      "3": {
+        "sales": {
+          "workflow": [
+            {
+              "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_2"
+              }
+            },
+            "action_reason": "Accept a second small profitable order from another seeded market so demand already looks diversified before takeover."
+          }
+        ],
+        "communications": {
+          "to_production": "Close a second small revenue loop before the larger backlog builds. This keeps day10 from reading as demand-starved."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 450,
+                "daily_capacity": 450
+              }
+            },
+            "action_reason": "Run one strong cross-line secondary pilot while the first pilot still occupies part of line_1, forcing line_2 to participate before the later staffing collapse."
+          }
+        ],
+        "communications": {
+          "to_hr": "Both lines have now produced real output. Any later inability to use line_2 should therefore read as a staffing problem, not an asset-readiness problem."
+        }
+      }
+    },
+      "4": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_3"
+              }
+            },
+            "action_reason": "Accept one more small near-term order from the third market so all seeded channels have already produced real business before takeover."
+          }
+        ],
+        "communications": {
+          "to_hr": "Demand is now visibly validated across all seeded markets. The next missing operating resource should be execution labor, not market reach."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Let the two pilot plans finish naturally on day4. Production has already proven both lines can run, so there is no need to rush another plan before the urgent backlog window opens."
+          }
+        ],
+        "communications": {
+          "to_hr": "Both lines now have real production history. If later output still collapses onto one line, the diagnosis should point to labor rather than to asset readiness."
+        }
+      }
+    },
+      "5": {
+      "sales": {
+        "workflow": [
+          {
+            "pass_reason": "Do not start the urgent backlog too early on day5. The company already has three real completed transaction loops, and this case now needs the committed-demand spike to arrive closer to day9 so the day10 diagnosis reads as a fresh execution-labor break rather than a long-running backlog drift."
+          }
+        ],
+        "communications": {
+          "to_hr": "The market side is already proven. Hold the larger commitment wave slightly later so the upcoming staffing collapse remains the clearest new contradiction."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Do not front-load too much output on day5. The operating trace is already established, and this case now needs more visible production pressure closer to day10 so the staffing collapse reads as recent rather than chronic."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods remain adequate for the early delivery loop. Keep room for a heavier late pre-handoff production trace."
+        }
+      }
+    },
+    "6": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_4"
+              }
+            },
+            "action_reason": "Start the urgent backlog on day6 rather than day5 so the future shortage reads as tightly coupled to the later staffing shock instead of as a chronic older queue."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_5"
+              }
+            },
+            "action_reason": "Accept a second urgent market order on day6 so recent order velocity already looks strong before the labor shock lands."
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "pass_reason": "Do not start another production plan on day6. Keep inventory buildup contained here, then use day7-day8 to leave the recent chart with one clear pre-shock operating trace instead of overfilling finished goods before handoff."
+          }
+        ],
+        "communications": {
+          "to_hr": "The business is approaching an urgent backlog window. Day7 and day8 will still leave visible production activity before the labor shock, but prewarm should avoid pushing finished goods too high too early."
+        }
+      }
+    },
+    "7": {
+      "hr": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "process_employee_attrition",
+              "action_param": {
+                "department_name": "procurement",
+                "num_people": 1,
+                "reason": "The only trace procurement replenishment has already been completed and no near-term raw-material follow-up is required before handoff. Remove the idle procurement role now so day10 does not default to an internal-reassignment story."
+              }
+            },
+            "action_reason": "Eliminate the zero-utilization procurement headcount before takeover so the later production staffing gap reads as a true missing capability rather than a simple internal redeployment choice."
+          }
+        ],
+        "communications": {
+          "to_finance": "The day2 replenishment loop is already closed and procurement has no urgent workload before handoff. Removing this idle seat keeps day10 focused on the real production staffing gap instead of an avoidable internal-reassignment narrative.",
+          "to_production": "Procurement is now fully quiet before handoff. If production still becomes capacity-constrained after day9, the correction path should point to new production labor rather than to reassigning an already-idle buyer."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_6"
+              }
+            },
+            "action_reason": "Convert one moderate later-deadline order on day7 so committed demand keeps building without relying only on near-immediate deliveries that may disappear before takeover."
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 180,
+                "daily_capacity": 180
+              }
+            },
+            "action_reason": "Keep one smaller bridge plan on day7 so recent production history remains visible before the labor break without pushing finished-goods inventory so high that day10 reads mainly as a destocking problem."
+          }
+        ]
+      }
+    },
+    "8": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_7"
+              }
+            },
+            "action_reason": "Continue building committed backlog one day before the labor shock by accepting a later-deadline market order that is more likely to remain visible at takeover."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_8"
+              }
+            },
+            "action_reason": "Accept another later-deadline order on day8 so the demand trail no longer looks thin while reducing the amount of day10-visible slack left in available orders."
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 520,
+                "daily_capacity": 520
+              }
+            },
+            "action_reason": "Run one smaller dual-line pre-shock plan on day8 so the history still shows both lines operating immediately before the staffing collapse, but without manufacturing an oversized finished-goods pile before takeover."
+          }
+        ]
+      }
+    },
+    "9": {
+      "hr": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "process_employee_attrition",
+              "action_param": {
+                "department_name": "production",
+                "num_people": 4,
+                "reason": "Sudden day9 production workforce collapse: four operators become unavailable at once immediately before handoff. This is a fresh shop-floor staffing shock rather than a planned cost optimization, leaving only one production worker and making line_2 unusable for the urgent backlog."
+              }
+            },
+            "action_reason": "Trigger one abrupt production-only staffing shock on day9 so history records a fresh 5-to-1 labor collapse without making it look like HR is already mid-course in a multi-step restructuring program."
+          }
+        ],
+        "communications": {
+          "to_production": "Production headcount has just collapsed from five to one in a single sudden day9 shock. Equipment, supplier access, and raw material remain ready; the visible new blocker for day10 is production labor rather than procurement, market reach, line count, or a planned HR cost-cutting program.",
+          "to_sales": "Do not treat tomorrow as a market-development problem. Commercial demand is already committed across five active markets; the immediate failure point is that only one production worker remains after the day9 shock.",
+          "to_finance": "This day9 production attrition is an emergency labor-loss event, not a cost-optimization program. Day10 should be evaluated as a staffing-recovery problem even though cash remains healthy."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_9"
+              }
+            },
+            "action_reason": "Freeze one fresh later-deadline order immediately before handoff so committed backlog visibly accelerates while still remaining visible after day10 daily processing."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_10"
+              }
+            },
+            "action_reason": "Freeze a second fresh later-deadline order on the same day as the production attrition shock so day10 inherits a fresh and clearly staffing-bound committed backlog rather than a large pool of still-unconverted demand."
+          }
+        ],
+        "communications": {
+          "to_hr": "Commercial demand is already sufficient and broadly distributed across the seeded markets. Seven accepted market orders are already committed, and the visible missing resource at handoff should now be execution labor, not extra market reach.",
+          "to_production": "Accepted backlog is already locked across five active markets with no need for new market development. Tomorrow's delivery risk comes from losing production labor, not from insufficient demand generation."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1000,
+                "daily_capacity": 500
+              }
+            },
+            "action_reason": "Lock one full small line right before handoff so day10 shows one line fully occupied, one line still idle, and the only remaining production worker already committed."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Finished goods remain well below accepted backlog even though material stays ample; the next fix after takeover should come from workforce recovery.",
+          "to_hr": "After the day9 production headcount collapse, only one production worker remains and that worker is fully occupied by PLAN_5 on line_1. Line_2 is physically ready but cannot run tomorrow unless HR restores production staffing immediately.",
+          "to_sales": "The delivery risk for days 11-13 is now staffing-driven: line_2 is ready and material is sufficient, but there is no spare production labor left to launch another plan at day10 handoff."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "action_name": "create_purchase_demand",
+  "description": "创建采购订单需求,并将该需要注册到下游交易所中,执行成功后将等待下游企业响应交易订单",
+  "usage_note": "以 procurement.json.policy_context、trade_decision_card.policy_context 或 blackboard.policy_context_by_department.procurement 中解析出的 is_beer_game_mode 与 action_constraints 为准；当 is_beer_game_mode 为 true 且 create_replenishment_order 允许时，优先使用 create_replenishment_order，仅当已有明确真实采购数量且补货策略动作不适用时使用本动作",
+  "canonical_inputs": {
+    "primary": [
+      "trade_decision_card.delta.pressure_changes",
+      "procurement.self_state.operational_summary.inventory_position_by_material",
+      "blackboard.departments.sales.confirmed_order_backlog_quantity",
+      "blackboard.departments.finance.cash_summary",
+      "procurement.self_state.cash_guard"
+    ]
+  },
+  "conditions": [
+    "analysis 中明确指出 原材料不足、供应风险或需提前备货",
+    "库存水平低于安全阈值，或不足以支撑既定生产计划",
+    "生产部门存在待执行计划，但因原材料不足无法启动",
+    "预测未来需求增长，需要提前锁定原材料供给",
+    "trade_decision_card.delta.pressure_changes 显示某物料 inventory_position 持续下降、backlog 上升，且当前不适合使用 create_replenishment_order"
+  ],
+  "required_parameters": [
+    "material_id",
+    "quantity"
+  ],
+  "parameter_constraints": [
+    "material_id 必须是已有的产品id,可以从库存信息中查看到",
+    "采购的数量(quantity)可以先设置的较小,在后续根据交易情况调整",
+    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏"
+  ],
+  "constraints": [
+    "必须校验采购部门人力是否满足最小要求",
+    "必须确保现金余额覆盖材料成本与物流成本",
+    "仓库容量当前未被系统校验，需避免明显超量采购",
+    "该动作只应在 canonical primary inputs 已确认存在真实缺口、且 create_replenishment_order 不适用时使用",
+    "若 trade_decision_card 已给出同一 material_id 的 recommended_action 为 create_replenishment_order，则优先使用 create_replenishment_order，不要重复改用手工 quantity"
+  ]
+}

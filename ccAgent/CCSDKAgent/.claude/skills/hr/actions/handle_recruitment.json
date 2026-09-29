@@ -1,0 +1,43 @@
+{
+  "action_name": "handle_recruitment",
+  "description": "发起指定部门的招聘动作",
+  "mode_confirmation": "以 hr.json.policy_context 或 blackboard.policy_context_by_department.hr 中解析出的结构化策略、action_constraints 与实时 staffing 状态为准；本动作只用于补足真实受阻部门的人手。",
+  "canonical_inputs": {
+    "primary": [
+      "hr.agent_decision_brief.target",
+      "hr.policy_context.single_enterprise_diagnostic_policy",
+      "hr.self_state.department_staffing",
+      "hr.self_state.employees",
+      "hr.self_state.recruitment_status.pending_by_department"
+    ],
+    "fallback": [
+      "blackboard.departments.production",
+      "blackboard.departments.sales",
+      "blackboard.departments.procurement",
+      "analysis.department_targets.hr"
+    ]
+  },
+  "conditions": [
+    "任一部门的 count、allocated、available 或 utilization 显示真实人手不足，且该缺口会阻断本部门可执行动作",
+    "上一轮或当前 blackboard 暴露人员不足导致生产、销售、采购或履约动作受阻",
+    "待招聘 pending_by_department 尚未覆盖缺口",
+    "现金状态未显示本次保守补员会造成硬性阻断"
+  ],
+  "required_parameters": [
+    "department",
+    "num_people"
+  ],
+  "parameter_constraints": [
+    "department 必须是 PRODUCTION、SALES、PROCUREMENT、INVENTORY、FINANCE、HR 中的一个",
+    "num_people 必须是 1 到 10 的整数",
+    "在读取本动作模板并生成 action.json 时，action_param 只允许包含 required_parameters 中声明的字段；不要额外写入 salary、reason、duration、department_name 等字段",
+    "department 必须写真实受阻部门；采购动作被人手阻断写 PROCUREMENT，生产动作被人手阻断写 PRODUCTION，销售或仓储同理；缺少明确建议时 num_people 使用 2",
+    "若 pending_by_department 中该部门已有足量待招聘，不要重复输出招聘动作"
+  ],
+  "constraints": [
+    "必须先读取 hr.json 中的人员状态与 policy_context",
+    "必须先确认本轮是否存在真实人员硬阻断；不得根据实验标签、场景名称或部门身份预设招聘对象",
+    "不得以普通扩张为理由随意招聘；招聘必须能对应到真实 staffing 缺口、待处理失败或可执行动作阻断",
+    "不得输出当前执行器不支持的 process_employee_attrition"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "action_name": "cancel_order",
+  "description": "取消采购订单",
+  "conditions": [
+    "analysis 中采购或生产目标发生调整",
+    "生产计划被取消或大幅下调",
+    "发现采购材料错误或供应商问题",
+    "成本压力增大，需要中止非必要采购"
+  ],
+  "required_parameters": [
+    "order_id"
+  ],
+  "optional_parameters": [
+    "reason"
+  ],
+  "constraints": [
+    "订单状态为 pending（待到货）",
+    "采购部门人力满足取消操作的最低要求"
+  ]
+}

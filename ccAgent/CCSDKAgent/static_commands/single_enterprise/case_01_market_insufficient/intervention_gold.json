@@ -1,0 +1,55 @@
+{
+  "scene_id": "case_01_order_selection",
+  "scene_name": "Limited order entry with heterogeneous order selection",
+  "run_mode": "trajectory_prewarm_then_takeover",
+  "evaluation_day": 10,
+  "takeover_day": 10,
+  "recommended_total_days": 20,
+  "scene_goal": "Validate whether the enterprise can diagnose insufficient effective order entry, develop one additional market when economically justified, and select advantageous feasible orders from deterministic market-bound offers.",
+  "primary_contradiction": "limited_order_entry_and_selection",
+  "lead_department": "sales",
+  "acceptable_primary_actions": [
+    "develop_market",
+    "accept_order",
+    "reject_order"
+  ],
+  "acceptable_secondary_actions": [
+    "create_production_plan",
+    "create_purchase_order",
+    "pass"
+  ],
+  "discouraged_actions": [
+    "build_production_line",
+    "expand_warehouse",
+    "handle_recruitment"
+  ],
+  "trajectory_success_signals": {
+    "day3": [
+      "only two small pilot orders exist and normal operating capability is established",
+      "cash, material, staffing and production-line states do not dominate the later order-choice task"
+    ],
+    "day5": [
+      "the two pilot orders have formed a small closed-loop sales history",
+      "no additional prewarm market orders have been introduced"
+    ],
+    "day10": [
+      "one deterministic offer from the single active market is visible at takeover",
+      "recent order entry remains small relative to uncommitted finished goods",
+      "sales must infer whether another market is economically justified without a recommended action field"
+    ],
+    "day20": [
+      "at most one additional market is developed and only active markets unlock their bound offers",
+      "accepted orders favor feasible contribution over raw order count",
+      "breach and overcommitment remain controlled",
+      "realized contribution is competitive with the feasible order-combination oracle"
+    ]
+  },
+  "evidence_focus": [
+    "whether Agent and Scripted start from the same deterministic market-bound schedule",
+    "whether market development follows order-entry, inventory, backlog, cost and lead-time evidence",
+    "whether sales accepts high-value feasible orders and rejects dominated or infeasible orders",
+    "whether accepted quantity remains covered by inventory and deadline-adjusted production capacity",
+    "whether realized contribution margin and on-time fulfillment improve without avoidable breach penalties",
+    "whether the decision remains based on observation data rather than hidden case labels"
+  ]
+}

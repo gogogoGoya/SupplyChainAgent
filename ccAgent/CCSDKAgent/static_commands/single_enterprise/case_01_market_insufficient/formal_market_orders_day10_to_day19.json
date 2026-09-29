@@ -1,0 +1,70 @@
+{
+  "schema_version": "single_enterprise_market_bound_order_schedule.v2",
+  "scene_id": "case_01_order_selection",
+  "start_day": 10,
+  "end_day": 18,
+  "order_source_mode": "active_market_slots",
+  "single_enterprise_rules": {
+    "market_development_active_market_soft_cap": 2,
+    "max_market_order_sources_per_round": 2,
+    "market_development_low_order_entry_threshold": 1,
+    "market_development_reference_order_quantity": 200,
+    "market_development_inventory_order_multiple": 3,
+    "market_development_surplus_inventory_multiplier": 2.0,
+    "market_development_workers": 1,
+    "market_development_cost": 50000,
+    "market_development_lead_time_rounds": 1,
+    "order_selection_reference_unit_cost": 500,
+    "order_selection_low_margin_ratio": 0.15,
+    "order_selection_low_margin_unit_threshold": 80,
+    "order_selection_large_commitment_ratio": 0.45,
+    "agent_market_growth_recommendation_mode": "evidence_only"
+  },
+  "orders_by_day": {
+    "10": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 180, "unit_price": 920, "delivery_deadline": 13, "offer_expiry_day": 11, "breach_penalty_enabled": true, "breach_penalty_per_unit": 180}
+    ],
+    "11": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 720, "unit_price": 525, "delivery_deadline": 12, "offer_expiry_day": 11, "breach_penalty_enabled": true, "breach_penalty_per_unit": 280}
+    ],
+    "12": [],
+    "13": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 220, "unit_price": 860, "delivery_deadline": 16, "offer_expiry_day": 14, "breach_penalty_enabled": true, "breach_penalty_per_unit": 150},
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 680, "unit_price": 540, "delivery_deadline": 15, "offer_expiry_day": 13, "breach_penalty_enabled": true, "breach_penalty_per_unit": 320},
+      {"market_slot": 2, "product_id": "PRODUCT_1", "quantity": 160, "unit_price": 1080, "delivery_deadline": 15, "offer_expiry_day": 14, "breach_penalty_enabled": true, "breach_penalty_per_unit": 220}
+    ],
+    "14": [
+      {"market_slot": 2, "product_id": "PRODUCT_1", "quantity": 320, "unit_price": 660, "delivery_deadline": 17, "offer_expiry_day": 15, "breach_penalty_enabled": true, "breach_penalty_per_unit": 150}
+    ],
+    "15": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 150, "unit_price": 1120, "delivery_deadline": 16, "offer_expiry_day": 15, "breach_penalty_enabled": true, "breach_penalty_per_unit": 240},
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 520, "unit_price": 515, "delivery_deadline": 16, "offer_expiry_day": 15, "breach_penalty_enabled": true, "breach_penalty_per_unit": 360},
+      {"market_slot": 2, "product_id": "PRODUCT_1", "quantity": 260, "unit_price": 860, "delivery_deadline": 18, "offer_expiry_day": 16, "breach_penalty_enabled": true, "breach_penalty_per_unit": 160}
+    ],
+    "16": [],
+    "17": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 620, "unit_price": 520, "delivery_deadline": 19, "offer_expiry_day": 18, "breach_penalty_enabled": true, "breach_penalty_per_unit": 300},
+      {"market_slot": 2, "product_id": "PRODUCT_1", "quantity": 180, "unit_price": 980, "delivery_deadline": 19, "offer_expiry_day": 18, "breach_penalty_enabled": true, "breach_penalty_per_unit": 210}
+    ],
+    "18": [
+      {"market_slot": 1, "product_id": "PRODUCT_1", "quantity": 220, "unit_price": 900, "delivery_deadline": 19, "offer_expiry_day": 19, "breach_penalty_enabled": true, "breach_penalty_per_unit": 180},
+      {"market_slot": 2, "product_id": "PRODUCT_1", "quantity": 480, "unit_price": 530, "delivery_deadline": 19, "offer_expiry_day": 19, "breach_penalty_enabled": true, "breach_penalty_per_unit": 260}
+    ],
+    "19": []
+  },
+  "evaluation_metrics": [
+    "effective_order_coverage_ratio",
+    "market_development_response_rounds",
+    "incremental_market_order_quantity",
+    "market_development_roi",
+    "advantageous_order_acceptance_rate",
+    "risky_order_rejection_rate",
+    "order_portfolio_quality",
+    "dominated_or_infeasible_acceptance_rate",
+    "realized_contribution_margin",
+    "profit_capture_vs_feasible_oracle",
+    "on_time_fulfillment_rate",
+    "breach_quantity",
+    "overcommitment_quantity"
+  ]
+}

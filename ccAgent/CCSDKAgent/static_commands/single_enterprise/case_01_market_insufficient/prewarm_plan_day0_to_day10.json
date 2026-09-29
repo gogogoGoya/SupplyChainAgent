@@ -1,0 +1,74 @@
+{
+  "scene_id": "case_01_order_selection",
+  "mode": "scripted_prewarm_then_takeover",
+  "design_profile": "limited_order_history_then_market_bound_sparse_offers",
+  "base_seed_file": "init_action.json",
+  "takeover_day": 10,
+  "handoff_state_semantics": "day10_observation_after_daily_fixed_offer_injection",
+  "agent_run_days_after_takeover": 10,
+  "prewarm_goal": "Create a normally operating enterprise with only two small completed pilot orders, moderate finished-goods coverage, one ready production line and no dominant supply, staffing, cash or warehouse blocker before deterministic heterogeneous offers begin on day10.",
+  "trajectory_style_constraints": {
+    "daily_department_presence": ["finance", "hr", "sales", "production", "inventory", "procurement", "analyst"],
+    "continuity_requirement": "Every prewarm day remains an operating business day, while no additional demand beyond the two pilot orders is created.",
+    "decision_isolation": "The formal phase evaluates evidence-based market development and order selection, without introducing a supply-side shock."
+  },
+  "milestone_intent": {
+    "day0_to_day4": [
+      "Create and accept two small pilot orders to establish a limited commercial history.",
+      "Keep one stable market channel available without creating additional prewarm offers.",
+      "Run bounded production and one measured material replenishment."
+    ],
+    "day5_to_day9": [
+      "Create no new sales orders.",
+      "Keep saleable inventory above the original market's expected effective order entry.",
+      "Preserve healthy cash, staffing, raw material and warehouse conditions."
+    ],
+    "day10_first_view": [
+      "Inject exactly one deterministic slot-1 offer before the observation is generated.",
+      "Expose order, inventory, backlog, market cost and lead-time evidence without a recommended action.",
+      "Require sales to assess market growth and order economics from current state."
+    ]
+  },
+  "hard_constraints": [
+    "Prewarm must create exactly two sales orders.",
+    "No formal fixed offer may be injected before day10.",
+    "No random market order generator may supplement the market-bound schedule.",
+    "A slot-2 offer may be injected only after a second market becomes active.",
+    "Do not add production lines or create a staffing, cash or warehouse crisis during prewarm.",
+    "Every formal offer must have a stable external_demand_id and offer_expiry_day."
+  ],
+  "target_handoff_signature": {
+    "sales": {
+      "prewarm_orders_total_range": [2, 2],
+      "active_markets_range": [1, 1],
+      "day10_available_market_bound_offers_range": [1, 1],
+      "formal_offer_schedule_is_deterministic": true,
+      "agent_growth_recommendation_is_evidence_only": true
+    },
+    "finance": {
+      "cash_should_be_healthy": true,
+      "revenue_should_be_positive": true,
+      "cash_should_not_be_primary_bottleneck": true
+    },
+    "production": {
+      "capacity_should_not_be_primary_bottleneck": true,
+      "production_lines_total_range": [1, 1]
+    },
+    "procurement": {
+      "material_should_not_be_primary_bottleneck": true,
+      "pending_orders_upper_bound": 0
+    },
+    "inventory": {
+      "warehouse_utilization_upper_bound": 0.4,
+      "finished_goods_range": [700, 1400]
+    }
+  },
+  "agent_first_view_expectation": {
+    "sales": {
+      "lead_department": true,
+      "candidate_primary_actions": ["develop_market", "accept_order", "reject_order"],
+      "selection_basis": ["unit_price", "quantity", "offer_expiry_day", "delivery_deadline", "cumulative_fulfillment_coverage", "breach_penalty"]
+    },
+    "interpretation": "The first formal observation should present one expiring offer, one active market and saleable inventory that exceeds recent effective order entry. The rational response must be inferred from market cost, lead time, backlog, inventory and order economics rather than a supplied recommendation."
+  }
+}

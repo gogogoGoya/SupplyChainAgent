@@ -1,0 +1,8 @@
+{
+  "action_name": "interrupt_production_plan",
+  "description": "生产计划中断",
+  "description_detail": "生产计划在被创建后就会在每一个工作日被持续执行，如果出现产能分配、原料消耗等问题，你可以在某个特定时间点中断生产计划",
+  "required_parameters": [
+    "plan_id"
+  ]
+}

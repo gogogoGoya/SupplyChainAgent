@@ -1,0 +1,153 @@
+{
+  "scene_id": "case_04",
+  "mode": "scripted_prewarm_then_takeover",
+  "design_profile": "trajectory_style_multi_department_prewarm_case04_staff_shortage",
+  "base_seed_file": "init_action.json",
+  "takeover_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "agent_run_days_after_takeover": 10,
+  "prewarm_goal": "Shape the enterprise into a stable staffing-bottleneck handoff by start-of-day10: five seeded markets are already active, several pilot orders have already completed, seven urgent accepted market-originated orders remain in backlog, almost no order-conversion slack remains, two small lines already exist, raw material remains sufficient, and production headcount has dropped to one already-occupied worker so the second line cannot be used and HR becomes the lead correction channel.",
+  "trajectory_style_constraints": {
+    "daily_department_presence": [
+      "finance",
+      "hr",
+      "sales",
+      "production",
+      "inventory",
+      "procurement",
+      "analyst"
+    ],
+    "minimum_daily_trace_per_department": [
+      "action",
+      "pass",
+      "communication"
+    ],
+    "continuity_requirement": "Every prewarm day should look like a real operating day with multi-department traces rather than a sparse single-department setup script.",
+    "experiment_5_priority": "The day10 handoff must make staffing shortage directly legible from the current snapshot without relying on hidden historical inference."
+  },
+  "milestone_intent": {
+    "day0_to_day2": [
+      "Start from a staffed, funded company with one small line under construction and one external supplier available.",
+      "Open five seeded markets on day0, let them activate, then finish a second small line by day2 so the company visibly owns enough physical production assets before the staffing bottleneck is introduced.",
+      "Accept small pilot orders across those seeded markets and complete one short real production plan so the firm already has more than one closed-loop transaction before the staffing handoff."
+    ],
+    "day3_to_day5": [
+      "Use a forced cross-line secondary pilot while line_1 is still partially occupied so both lines are already proven to run before handoff.",
+      "Keep day4-day5 relatively calm after the early pilots, but do not let the recent history become too sparse; the last-five-day chart should still look like a normal operating factory rather than a stop-start planning pattern.",
+      "Keep adding urgent market-originated accepted orders with future delivery deadlines so backlog is real, diversified, and not yet overdue at handoff."
+    ],
+    "day6_to_day9": [
+      "Keep procurement non-urgent after one earlier small completed replenishment, so supplier linkage is already real but no pending procurement pressure remains at handoff.",
+      "Remove the now-idle procurement seat before handoff so the day10 staffing picture does not collapse into a simple internal-reassignment story; the remaining visible labor gap should sit on production itself.",
+      "Rebuild one clearer medium-utilization bridge on day7 before the final labor shock, so the recent history still shows a factory that was operating coherently just before headcount collapsed without overfilling finished goods too early.",
+      "Run one final dual-line pre-shock production plan on day8 so the recent history still shows both lines operating at meaningful scale immediately before the labor break.",
+      "Introduce a single sudden production-only attrition shock on day9, collapsing production headcount from five to one only at the very end of prewarm so day10 reads as a fresh staffing collapse rather than a long low-utilization phase, an ongoing HR restructuring process, or a diffuse organization-wide disruption.",
+      "Keep one idle small line physically available at handoff while free production labor remains zero and the other line is fully occupied.",
+      "End prewarm with five active demand-sufficient markets, healthy cash, no pending purchase orders, sufficient raw material, and an HR-led staffing gap that blocks use of existing equipment."
+    ],
+    "day10_first_view": [
+      "The agent should see HR as the lead correction channel.",
+      "The first reasonable move should be handle_recruitment for production rather than build_production_line or create_purchase_order.",
+      "Production, procurement, inventory, finance, and sales should all appear secondary but operationally coherent."
+    ]
+  },
+  "hard_constraints": [
+    "Keep seeded markets active through handoff; do not let market expansion become the lead narrative before handoff.",
+    "Do not let raw-material shortage dominate the scene; raw material should remain sufficient at handoff.",
+    "Do not let cash pressure dominate the scene.",
+    "Do not create pending procurement orders by handoff; one earlier completed replenishment is acceptable, but procurement should still not need to act first after takeover.",
+    "Do not let accepted orders become overdue before day10; the handoff should show staffing bottleneck rather than deadline chaos.",
+    "Two small production lines should already exist by handoff; do not let missing line count dominate the diagnosis.",
+    "One in-progress production plan should still be active at handoff so the only remaining production worker is visibly occupied.",
+    "Production headcount should be reduced to one by handoff, and production free workers should effectively be zero.",
+    "Every prewarm day must leave a full-enterprise trace."
+  ],
+  "target_handoff_signature": {
+    "sales": {
+      "active_markets_range": [
+        5,
+        5
+      ],
+      "orders_total_range": [
+        10,
+        10
+      ],
+      "accepted_orders_range": [
+        7,
+        7
+      ],
+      "available_orders_range": [
+        0,
+        0
+      ],
+      "completed_orders_range": [
+        3,
+        3
+      ]
+    },
+    "finance": {
+      "cash_should_be_healthy": true,
+      "revenue_should_be_positive": true,
+      "cash_should_not_be_primary_bottleneck": true
+    },
+    "production": {
+      "production_lines_total_range": [
+        2,
+        2
+      ],
+      "available_capacity_range": [
+        500,
+        500
+      ],
+      "in_progress_plans_range": [
+        1,
+        1
+      ],
+      "line_count_should_not_be_primary_bottleneck": true
+    },
+    "procurement": {
+      "pending_orders_upper_bound": 0,
+      "supplier_should_be_available": true,
+      "material_should_be_sufficient": true,
+      "received_orders_range": [
+        1,
+        1
+      ]
+    },
+    "inventory": {
+      "warehouse_utilization_upper_bound": 0.35,
+      "raw_material_lower_bound": 30000,
+      "finished_goods_range": [
+        700,
+        780
+      ]
+    },
+    "organization": {
+      "all_departments_should_have_daily_trace": true,
+        "production_headcount_range": [
+          1,
+          1
+        ],
+        "production_allocated_range": [
+          1,
+          1
+        ],
+        "hr_should_be_primary_bottleneck_owner": true
+      }
+    },
+  "agent_first_view_expectation": {
+    "hr": {
+      "lead_department": true,
+      "preferred_primary_action": "handle_recruitment",
+      "preferred_primary_department": "production",
+      "acceptable_primary_observable_labels": [
+        "staff_shortage",
+        "production_capacity_bottleneck"
+      ],
+      "acceptable_secondary_actions": [
+        "pass"
+      ]
+    },
+    "interpretation": "The first takeover observation should show an operating company with five already active seeded markets, three already completed pilot orders, one already completed small procurement replenishment, seven urgent accepted market-originated orders still waiting, almost no available-order conversion slack left before day10 auto-generation, two already-built small lines, clearly sufficient but not excessive raw material, and one in-progress plan that fully occupies the only remaining production worker. The intended root contradiction is still staff shortage; in practice the observable top-level label may surface either as staff_shortage or as a staffing-rooted production_capacity_bottleneck, but it should not drift back to market insufficiency, raw-material shortage, warehouse pressure, or cash pressure."
+  }
+}

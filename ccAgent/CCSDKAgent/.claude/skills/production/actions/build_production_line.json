@@ -1,0 +1,41 @@
+{
+  "action_name": "build_production_line",
+  "description": "产能相关决策 - 建设生产线",
+  "canonical_inputs": {
+    "primary": [
+      "production.self_state.recovery_guard",
+      "production.self_state.cash_guard",
+      "production.self_state.margin_guard",
+      "blackboard.departments.sales.confirmed_order_backlog_quantity",
+      "blackboard.departments.finance.cash_summary"
+    ],
+    "fallback": [
+      "blackboard.departments.sales.backlog_by_product",
+      "production.self_state.production_lines"
+    ]
+  },
+  "conditions": [
+    "analysis 中生产目标明确指出 产能不足、交付风险、扩产需求",
+    "available_capacity < 计划需求量",
+    "预测需求增长，且现金余额满足建设条件",
+    "持续出现 提高产能利用率 的指标，但是当前产能利用率提升空间有限时，要多考虑能否扩充产线来满足产能需求",
+    "若 recovery_guard.summary.should_recover_any=true 且候选产品持续存在恢复需求，但 available_capacity 长期不足，可考虑建线",
+    "production.json.self_state.cash_guard.affordable_line_types 中包含目标 line_type，且 blackboard.departments.finance.cash_summary 未显示现金进入 critical",
+    "若当前没有任何已完工可用产线，可允许建设首条基础产线",
+    "若当前已存在可用产线，则 production.json.self_state.margin_guard.summary.has_capacity_expansion_candidate = true"
+  ],
+  "required_parameters": [
+    "line_type"
+  ],
+  "parameter_constraints": [
+    "line_type 必须是 small, medium, large 中的一个, 分别能提供500,1000,2000的产能,请根据需求选择"
+  ],
+  "constraints": [
+    "必须先读取 production.json.self_state.cash_guard 与 blackboard.departments.finance.cash_summary",
+    "若 cash_guard.guard_level = hard_blocked，不得建设新产线",
+    "若当前没有任何已完工可用产线，可先建设首条基础产线；此时不要求 margin_guard 扩产候选成立",
+    "若当前已存在可用产线，必须先读取 production.json.self_state.margin_guard；若不存在满足毛利护栏的扩产候选产品，不得继续扩产",
+    "应优先依据 recovery_guard 中持续存在的恢复需求判断扩产，不要把多个 backlog 字段重复叠加后再放大建线需求",
+    "必须严格校验现金余额与参数合法性"
+  ]
+}

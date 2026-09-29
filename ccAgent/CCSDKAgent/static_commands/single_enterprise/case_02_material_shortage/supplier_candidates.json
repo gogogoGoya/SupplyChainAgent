@@ -1,0 +1,59 @@
+{
+  "schema_version": "single_enterprise_supplier_candidates.v1",
+  "scene_id": "case_02_material_shortage",
+  "selection_mode": "register_on_first_purchase",
+  "candidate_suppliers": [
+    {
+      "supplier_name": "Supplier_Fast",
+      "supplier_type": "external",
+      "materials": {
+        "MATERIAL_1": {
+          "unit_price": 13,
+          "quantity": 12000,
+          "min_order_quantity": 300
+        }
+      },
+      "processing_time": 0,
+      "quality_level": "high",
+      "reliability_score": 0.99
+    },
+    {
+      "supplier_name": "Supplier_Balanced",
+      "supplier_type": "external",
+      "materials": {
+        "MATERIAL_1": {
+          "unit_price": 10,
+          "quantity": 20000,
+          "min_order_quantity": 500
+        }
+      },
+      "processing_time": 1,
+      "quality_level": "standard",
+      "reliability_score": 0.96
+    },
+    {
+      "supplier_name": "Supplier_Economy",
+      "supplier_type": "external",
+      "materials": {
+        "MATERIAL_1": {
+          "unit_price": 8,
+          "quantity": 30000,
+          "min_order_quantity": 1000
+        }
+      },
+      "processing_time": 3,
+      "quality_level": "standard",
+      "reliability_score": 0.9
+    }
+  ],
+  "evaluation_metrics": [
+    "deadline_feasible_supplier_selection_rate",
+    "landed_cost_regret",
+    "logistics_mode_accuracy",
+    "material_stockout_rounds",
+    "production_stall_rounds",
+    "procurement_overbuy_rate",
+    "order_fulfillment_rate",
+    "shortage_to_purchase_latency"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "action_name": "create_replenishment_order",
+  "description": "根据本企业局部库存、在途采购、销售需求与欠交情况计算补货量，并向上游交易所提交采购需求",
+  "mode_confirmation": "以 procurement.json.policy_context、trade_decision_card.policy_context 或 blackboard.policy_context_by_department.procurement 中解析出的 is_beer_game_mode 与 action_constraints 为准；仅当 is_beer_game_mode 为 true 且 create_replenishment_order 允许时，按 beer_game 补货策略优先使用本动作",
+  "canonical_inputs": {
+    "primary": [
+      "trade_decision_card.delta.pressure_changes",
+      "procurement.self_state.operational_summary.inventory_position_by_material",
+      "procurement.self_state.recipe_recovery_signal_by_material",
+      "blackboard.departments.sales.confirmed_order_backlog_quantity",
+      "blackboard.departments.sales.stale_backlog_quantity",
+      "blackboard.departments.production.recovery_material_shortages",
+      "blackboard.departments.finance.cash_summary",
+      "procurement.self_state.cash_guard"
+    ],
+    "supplemental_only": [
+      "procurement.self_state.operational_summary.latest_replenishment_by_material",
+      "procurement.self_state.replenishment.pending_by_material"
+    ]
+  },
+  "conditions": [
+    "当前处于 beer_game 模式，需要将下游需求逐级转化为上游订货",
+    "trade_decision_card.delta.pressure_changes、procurement.self_state.operational_summary.inventory_position_by_material 或 blackboard.departments.sales.confirmed_order_backlog_quantity / stale_backlog_quantity 显示存在下游需求、欠交、库存位置不足或近期需求上升",
+    "若 procurement.self_state.recipe_recovery_signal_by_material 或 blackboard.departments.production.recovery_material_shortages 指向某关键原料，该物料及同配方关键原料应优先进入补货候选",
+    "若 blackboard.departments.sales.confirmed_order_backlog_quantity 或 stale_backlog_quantity 明显升高，应优先考虑补货",
+    "库存位置低于目标库存，或需要维持交期内的安全库存"
+  ],
+  "required_parameters": [
+    "material_id"
+  ],
+  "optional_parameters": [
+    "target_inventory_days",
+    "safety_stock",
+    "expected_daily_demand",
+    "max_price",
+    "expected_due_round"
+  ],
+  "parameter_constraints": [
+    "material_id 必须优先来自 procurement.self_state.operational_summary.inventory_position_by_material；仅在主输入不足时，才回退到本企业真实库存/销售需求中的产品ID",
+    "target_inventory_days 建议取 1 到 3，除非真实 backlog 明显升高",
+    "safety_stock 必须基于真实需求、欠交或库存风险推导，不得凭空放大",
+    "expected_daily_demand 应优先来自 canonical primary inputs；仅在主输入不足时，才补充参考历史订单、analysis 或 operational_summary.latest_replenishment_by_material",
+    "在读取本动作模板并生成 action.json 时，action_param 只能包含 required_parameters 与 optional_parameters 中列出的字段，不能多加和缺漏",
+    "严禁添加 supplier_id、supplier_name、supplier_type、supplier 或 supplier_reference；本动作会由系统根据企业上游交易所和供应商矩阵处理供应商选择"
+  ],
+  "constraints": [
+    "该动作只使用本企业局部信息，不得使用其它企业真实库存或全局需求序列",
+    "优先使用该动作替代手工猜测 create_purchase_demand.quantity",
+    "若已存在 operational_summary.inventory_position_by_material，则优先使用其中的 on_hand / incoming / backlog / inventory_position 来判断是否补货",
+    "若已存在 trade_decision_card.delta.pressure_changes，则应优先读取其中与目标 material_id 相关的 inventory_position、backlog、incoming 变化来确认是否补货",
+    "若 procurement.self_state.recipe_recovery_signal_by_material[material_id] 存在，且显示 linked_products / critical_bottleneck_products 非空，应把该信号视为高优先级恢复补货依据",
+    "若 blackboard.departments.production.recovery_material_shortages 指向该 material_id，应允许在同等条件下提高其补货优先级",
+    "对同一成品配方中的多种原料，应围绕同一恢复目标同步补货，避免只补单一最短缺料后再次卡在另一种原料上",
+    "若 backlog 相关信号已经拆分为 confirmed_order_backlog / proposal_backlog / stale_backlog，应优先把 confirmed 与 stale backlog 视为更强的真实补货压力",
+    "不要把非 canonical 的 backlog 明细字段重新当成主压力信号重复加权",
+    "若补货建议为 0，该动作会成功返回无需补货，不会创建交易所请求"
+  ]
+}

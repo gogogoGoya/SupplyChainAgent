@@ -1,0 +1,374 @@
+{
+  "scene_id": "case_03",
+  "handoff_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "agent_first_view_semantics": "after_day10_daily_action_before_day10_agent_department_actions",
+  "execution_profile": "stable_market_accepted_backlog_capacity_bottleneck",
+  "market_order_mode": "static_actions",
+  "department_execution_order": [
+    "finance",
+    "hr",
+    "sales",
+    "production",
+    "inventory",
+    "procurement"
+  ],
+  "default_pass_reasons": {
+    "finance": "Cash remains healthy; preserve operating continuity without adding unrelated spending.",
+    "hr": "Staffing is stable and no hiring is needed during the capacity-bottleneck prewarm.",
+    "sales": "Keep the single active market and convert only the scripted orders required for the handoff.",
+    "production": "Keep the only small line running and defer capacity expansion until takeover.",
+    "inventory": "Monitor stock and warehouse utilization without expanding the warehouse.",
+    "procurement": "Raw material remains sufficient; do not place a purchase order before takeover."
+  },
+  "days": {
+    "0": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "case03_main_market",
+                "assigned_workers": 6
+              }
+            },
+            "action_reason": "Open exactly one fully staffed market before creating market-originated orders.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "1": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 50,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 3,
+                "external_demand_id": "case03_pilot_1"
+              }
+            },
+            "action_reason": "Create one small market-originated pilot order after the market activates.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 500,
+                "daily_capacity": 250
+              }
+            },
+            "action_reason": "Start the first rolling plan while retaining only one small production line.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "2": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_1"}
+            },
+            "action_reason": "Accept the pilot order to establish one completed operating loop.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1200,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 11,
+                "external_demand_id": "case03_backlog_1"
+              }
+            },
+            "action_reason": "Add the first future-dated market-originated demand order.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "3": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_2"}
+            },
+            "action_reason": "Commit the first backlog order while its deadline remains future-dated.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1500,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 12,
+                "external_demand_id": "case03_backlog_2"
+              }
+            },
+            "action_reason": "Add a second future-dated order while the single line continues its first plan.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "4": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_3"}
+            },
+            "action_reason": "Commit another backlog order without opening another market.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1600,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 13,
+                "external_demand_id": "case03_backlog_3"
+              }
+            },
+            "action_reason": "Add the third accepted-backlog candidate with a near-term deadline.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 500,
+                "daily_capacity": 250
+              }
+            },
+            "action_reason": "Continue the one-line rolling plan without expanding capacity before takeover.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "5": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_4"}
+            },
+            "action_reason": "Gradually build the accepted backlog while preserving future deadlines.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1800,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 14,
+                "external_demand_id": "case03_backlog_4"
+              }
+            },
+            "action_reason": "Add the fourth accepted-backlog candidate without changing the fixed market count.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "6": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_5"}
+            },
+            "action_reason": "Commit the fourth backlog order while material remains sufficient.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 2300,
+                "unit_price": 500,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 15,
+                "external_demand_id": "case03_backlog_5"
+              }
+            },
+            "action_reason": "Add the fifth backlog candidate; the target accepted backlog is 8400 units once accepted.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "7": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {"order_id": "SALE_ORDER_6"}
+            },
+            "action_reason": "Complete the five-order accepted backlog without adding capacity before takeover.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 400,
+                "unit_price": 450,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 18,
+                "external_demand_id": "case03_available_1"
+              }
+            },
+            "action_reason": "Leave a later-deadline order available as a secondary opportunity.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "8": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 400,
+                "unit_price": 450,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 19,
+                "external_demand_id": "case03_available_2"
+              }
+            },
+            "action_reason": "Keep a visible available demand pool without accepting another commitment.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          },
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 400,
+                "unit_price": 450,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 20,
+                "external_demand_id": "case03_available_3"
+              }
+            },
+            "action_reason": "Keep later demand available so capacity remains the dominant handoff issue.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    },
+    "9": {
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_order",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 400,
+                "unit_price": 450,
+                "source_id": "market_1",
+                "source_type": "market",
+                "delivery_deadline": 21,
+                "external_demand_id": "case03_available_4"
+              }
+            },
+            "action_reason": "Finish the four-order available pool and leave it unaccepted before takeover.",
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 9000,
+                "daily_capacity": 500
+              }
+            },
+            "action_reason": "Leave one long in-progress 500-per-day plan occupying the only small line at takeover.",
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+          }
+        ]
+      }
+    }
+  }
+}

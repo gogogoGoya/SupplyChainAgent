@@ -1,0 +1,779 @@
+{
+  "scene_id": "case_05_cash_pressure",
+  "handoff_day": 10,
+  "handoff_state_semantics": "pre_daily_snapshot_at_start_of_day_10_after_day9_actions",
+  "agent_first_view_semantics": "after_day10_daily_action_before_day10_agent_department_actions",
+  "execution_profile": "aggressive_expansion_working_capital_pressure_no_artificial_order_rejection",
+  "scripted_market_orders": {
+    "source_policy": "Orders are deterministic market-originated events injected by the single-case prewarm runner after the two seeded markets exist; sales actions then accept the generated SALE_ORDER sequence instead of relying on non-deterministic market timing.",
+    "orders_by_day": {
+      "0": [],
+      "1": [],
+      "2": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 5
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 6
+        }
+      ],
+      "3": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 7
+        }
+      ],
+      "4": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 8
+        }
+      ],
+      "5": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 11
+        }
+      ],
+      "6": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 11
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 12
+        }
+      ],
+      "7": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 12
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 13
+        }
+      ],
+      "8": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 13
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 14
+        }
+      ],
+      "9": [
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 14
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 14
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 15
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_1",
+          "source_type": "market",
+          "delivery_deadline": 15
+        },
+        {
+          "product_id": "PRODUCT_1",
+          "quantity": 80,
+          "unit_price": 800.0,
+          "source_id": "market_2",
+          "source_type": "market",
+          "delivery_deadline": 15
+        }
+      ]
+    }
+  },
+  "department_execution_order": [
+    "finance",
+    "hr",
+    "sales",
+    "production",
+    "inventory",
+    "procurement"
+  ],
+  "default_pass_reasons": {
+    "finance": "Protect cash and working capital. Approve spend only when it directly supports committed deliveries or completion of work already underway.",
+    "hr": "Do not add headcount after the initial ramp-up. Current staffing should support the more cautious operating rhythm.",
+    "sales": "Work from the active markets and the current order book. Accept only orders that can be covered by finished goods on hand or production already in progress. Do not open additional markets once liquidity is visibly tighter.",
+    "production": "Keep existing lines and active production plans running. Do not add new lines or new plans once liquidity is visibly tighter.",
+    "inventory": "Monitor capacity and stock levels. Do not expand warehouse space further unless inbound materials would otherwise be delayed or turned away.",
+    "procurement": "Use the raw-material buffer already on hand. Do not place new purchase orders unless a committed shipment would otherwise be put at risk."
+  },
+  "days": {
+    "0": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Initial cash is healthy, so finance supports a controlled commercial launch rather than open-ended spending."
+          }
+        ],
+        "communications": {
+          "to_sales": "Open one regional channel first so demand is real before any larger operating commitment.",
+          "to_production": "Start with a small pilot line; do not commit all capacity before market orders appear.",
+          "to_inventory": "Prepare for moderate inbound material and finished-goods movement.",
+          "to_procurement": "Wait for the market signal before placing a large raw-material order."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "handle_recruitment",
+              "action_param": {
+                "department": "INVENTORY",
+                "num_people": 3
+              }
+            },
+            "action_reason": "The launch plan expects larger inbound material and finished-goods flow, so inventory staffing is increased from 2 to 5 before warehouse expansion begins."
+          },
+          {
+            "action": {
+              "action_name": "handle_recruitment",
+              "action_param": {
+                "department": "SALES",
+                "num_people": 5
+              }
+            },
+            "action_reason": "Two staffed regional markets would otherwise absorb nearly all current sales capacity, so five hires are added to preserve order intake and customer follow-up."
+          }
+        ],
+        "communications": {
+          "to_inventory": "Three additional inventory staff will arrive after one day to support warehouse expansion and higher stock movement.",
+          "to_sales": "Five additional sales staff will arrive after one day, allowing two regional markets to run while keeping enough people available for order processing.",
+          "to_finance": "This is a small operating ramp cost, not a broad hiring wave."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "regional_working_capital_alpha",
+                "assigned_workers": 5
+              }
+            },
+            "action_reason": "Open the first regional market with enough sales coverage to produce a real order signal, while keeping the launch narrower than a broad expansion."
+          }
+        ],
+        "communications": {
+          "to_production": "Expect the first market-generated orders after activation; keep production staged rather than speculative.",
+          "to_procurement": "Do not buy major raw-material volume until the first market is active.",
+          "to_finance": "This first market is the commercial basis for the later operating ramp."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "build_production_line",
+              "action_param": {
+                "line_type": "small"
+              }
+            },
+            "action_reason": "Build a small pilot line so the company has active capacity before the market starts generating orders; this avoids a capacity-zero launch."
+          }
+        ],
+        "communications": {
+          "to_sales": "The pilot line gives enough capacity for early order validation.",
+          "to_procurement": "Large procurement should wait until market demand is visible.",
+          "to_inventory": "Initial production capacity is small, so no warehouse stress should appear today."
+        }
+      }
+    },
+    "1": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Cash still supports the expansion plan, but finance expects this round of commitments to be the last major growth spend before the business shifts to tighter cash discipline."
+          }
+        ],
+        "communications": {
+          "to_sales": "Complete the second regional launch today if the market signal is still constructive, then stop opening channels.",
+          "to_production": "Use the second market as the basis for a single capacity step-up rather than a continuing capex cycle.",
+          "to_procurement": "If raw material is purchased, size it to the planned production ramp instead of speculative volume."
+        }
+      },
+      "hr": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "handle_recruitment",
+              "action_param": {
+                "department": "PRODUCTION",
+                "num_people": 10
+              }
+            },
+            "action_reason": "The company is preparing one larger production line and a defined volume run, so production staffing is increased enough to support the planned production ramp without creating workforce constraints."
+          }
+        ],
+        "communications": {
+          "to_production": "Ten production hires will arrive after one day, enough to support the larger line and the planned main production run.",
+          "to_finance": "This staffing addition is tied to the specific production ramp and should not continue after the ramp is complete."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "develop_market",
+              "action_param": {
+                "market_type": "regional",
+                "market_name": "regional_working_capital_beta",
+                "assigned_workers": 5
+              }
+            },
+            "action_reason": "After the first channel is committed, open one second regional market to validate whether demand can support the planned inventory build. Stop market expansion after this."
+          }
+        ],
+        "communications": {
+          "to_finance": "This is the final planned market-development spend; later days should focus on converting demand from the markets already opened.",
+          "to_production": "Two regional markets may justify a controlled capacity ramp, but not unlimited production.",
+          "to_procurement": "Use the two-market signal to size raw-material purchasing conservatively."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "build_production_line",
+              "action_param": {
+                "line_type": "large"
+              }
+            },
+            "action_reason": "Build one larger line after the first regional market is activated, creating capacity for the expected two-market order flow without repeatedly adding lines."
+          }
+        ],
+        "communications": {
+          "to_finance": "This is a single scale-up investment, not a continuing capex program.",
+          "to_inventory": "Expect higher finished-goods output later in the week, so warehouse capacity should be prepared before raw materials arrive."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "expand_warehouse",
+              "action_param": {
+                "size": 5000
+              }
+            },
+            "action_reason": "Expand capacity before the first large raw-material order arrives, preventing warehouse capacity from becoming the main operating bottleneck."
+          }
+        ],
+        "communications": {
+          "to_procurement": "The first 5000-unit expansion is ready for inbound raw material.",
+          "to_finance": "Warehouse expansion is sized to the procurement plan and should stop once sufficient buffer exists."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_purchase_order",
+              "action_param": {
+                "material_id": "MATERIAL_1",
+                "quantity": 16000,
+                "supplier_id": "SUPPLIER_1",
+                "logistics_mode": "rail"
+              }
+            },
+            "action_reason": "Place the first large raw-material order after market activation and warehouse preparation. The order is sized to the planned production ramp and immediately converts cash into working capital."
+          }
+        ],
+        "communications": {
+          "to_production": "This order supports the planned ramp but should not be followed by open-ended replenishment.",
+          "to_inventory": "The order will arrive in several days, so capacity expansion must finish before inbound receipt.",
+          "to_finance": "This is the first major working-capital commitment and will materially reduce cash."
+        }
+      }
+    },
+    "2": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Cash has started to fall as the expansion commitments stack up, but the business should keep converting serviceable market demand instead of stepping away from revenue."
+          }
+        ],
+        "communications": {
+          "to_sales": "Accept orders that existing stock or already-planned production can support; do not slow revenue conversion unnecessarily.",
+          "to_inventory": "Add only the warehouse buffer needed to receive the final planned raw-material order safely.",
+          "to_procurement": "If a second purchase is placed today, treat it as the final safety-stock commitment before the cash posture tightens."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_1"
+              }
+            },
+            "action_reason": "Accept the first market-generated order because initial finished goods can cover the commitment and early revenue conversion is operationally healthy."
+          }
+        ],
+        "communications": {
+          "to_production": "The first market order is committed; keep the production ramp aligned with real shipment demand rather than speculative capacity growth.",
+          "to_finance": "Sales is converting the earliest serviceable demand instead of relying on backlog accumulation."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "expand_warehouse",
+              "action_param": {
+                "size": 5000
+              }
+            },
+            "action_reason": "Add the second warehouse buffer before the second raw-material purchase arrives, keeping warehouse utilization from becoming the main issue."
+          }
+        ],
+        "communications": {
+          "to_procurement": "Capacity buffer is being added before the second order is placed.",
+          "to_finance": "This expansion is a support action for inbound material, not a signal to keep expanding."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_purchase_order",
+              "action_param": {
+                "material_id": "MATERIAL_1",
+                "quantity": 10000,
+                "supplier_id": "SUPPLIER_1",
+                "logistics_mode": "rail"
+              }
+            },
+            "action_reason": "Place one final raw-material order to cover the large-line ramp and near-term safety stock. This is the last aggressive procurement move before the company freezes new buying."
+          },
+          {
+            "action": {
+              "action_name": "create_purchase_order",
+              "action_param": {
+                "material_id": "MATERIAL_1",
+                "quantity": 7000,
+                "supplier_id": "SUPPLIER_1",
+                "logistics_mode": "air"
+              }
+            },
+            "action_reason": "Pull the last raw-material commitment forward with faster logistics so it is already on hand when the high-load day4 production plan is created, keeping the cash squeeze sharp without breaking plan feasibility."
+          }
+        ],
+        "communications": {
+          "to_finance": "After these final purchase commitments, procurement should stop adding new commitments because working capital will already be heavily occupied.",
+          "to_production": "These purchases cover the planned production program with a remaining raw-material buffer; do not ask for additional buying after this.",
+          "to_inventory": "The warehouse buffer added by today should be enough to absorb the accelerated final inbound receipt and subsequent finished-goods build."
+        }
+      }
+    },
+    "3": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Market development, hiring, line construction, warehouse spend, and procurement have begun to occupy working capital, but the company should keep moving serviceable customer demand."
+          }
+        ],
+        "communications": {
+          "to_sales": "Continue accepting the earliest serviceable orders so the revenue cycle starts naturally.",
+          "to_production": "Use the pilot line to begin a modest production program before the larger line comes online.",
+          "to_procurement": "No further buying is needed after yesterday's planned second order."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_2"
+              }
+            },
+            "action_reason": "Accept the next visible order because the current finished-goods position and incoming material program can support it without straining fulfillment."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is keeping the revenue loop active while finance monitors the growing working-capital load.",
+          "to_production": "Demand is now real enough to justify a modest pilot-line production run ahead of the larger line ramp."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 1500,
+                "daily_capacity": 500
+              }
+            },
+            "action_reason": "Start a pilot-line production plan that turns the first wave of raw material into finished goods before the larger line begins the main volume run."
+          }
+        ],
+        "communications": {
+          "to_inventory": "The pilot-line plan will add finished goods gradually while consuming raw material, so warehouse pressure should remain manageable.",
+          "to_finance": "Production spend is now moving from capex into working-capital conversion; no further line construction should be needed.",
+          "to_sales": "A modest flow of additional finished goods will start arriving before the main line reaches full rhythm."
+        }
+      },
+      "inventory": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "expand_warehouse",
+              "action_param": {
+                "size": 2000
+              }
+            },
+            "action_reason": "Add one final small warehouse buffer before the last inbound raw-material receipt so a deeper cash-compression program does not turn warehouse pressure into the dominant contradiction."
+          }
+        ],
+        "communications": {
+          "to_procurement": "The final 2000-unit buffer is meant to safely absorb one more planned inbound receipt, not to reopen ongoing warehouse expansion.",
+          "to_finance": "This is the last warehouse spend in the ramp and exists only to protect a cash-pressure seed from becoming a warehouse-pressure seed."
+        }
+      },
+      "procurement": {
+        "workflow": [
+          {
+            "pass_reason": "The final raw-material commitment was intentionally pulled forward so the day4 high-load production plan can be created without a material shortfall. No further buying is needed."
+          }
+        ],
+        "communications": {
+          "to_finance": "Procurement is now closed and should only monitor receipts and existing stock coverage.",
+          "to_production": "The raw-material position should already support the bounded production program; do not request another order.",
+          "to_inventory": "Today's warehouse buffer exists to keep the pulled-forward inbound material from turning into a storage bottleneck."
+        }
+      }
+    },
+    "4": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "The company now has meaningful cash tied up in market development, staffing, warehouse expansion, raw materials, and line construction. Further spending should be limited to executing the committed ramp."
+          }
+        ],
+        "communications": {
+          "to_sales": "Continue accepting only orders that current finished goods or already-started production can cover.",
+          "to_production": "Use the newly available large line for the main production run, then stop adding fresh production commitments.",
+          "to_procurement": "The procurement program is complete; preserve cash from here."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_3"
+              }
+            },
+            "action_reason": "Accept the first order from the second regional market because the business now has enough stock, inbound material, and planned capacity to support it."
+          }
+        ],
+        "communications": {
+          "to_finance": "Orders are being accepted on real serviceability grounds while finance tracks the fact that revenue is still lagging the expansion spend.",
+          "to_production": "The second market is now contributing committed demand, so the main production plan can be justified commercially."
+        }
+      },
+      "production": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "create_production_plan",
+              "action_param": {
+                "product_id": "PRODUCT_1",
+                "quantity": 12000,
+                "daily_capacity": 1500
+              }
+            },
+            "action_reason": "Launch the main large-line production plan at a high but still bounded daily loading so the large line is clearly in use at takeover, warehouse pressure eases through raw-material conversion, and cash remains tied up without inviting another expansion cycle."
+          }
+        ],
+        "communications": {
+          "to_inventory": "The large-line plan will steadily convert raw material into finished goods while staying inside the warehouse buffer already approved.",
+          "to_finance": "This is the last major production commitment in the current expansion cycle; after today, production should only execute the existing plans.",
+          "to_sales": "Use the enlarged finished-goods outlook to support existing orders, not to justify another market-opening cycle."
+        }
+      }
+    },
+    "5": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "The front-loaded expansion program has now compressed cash materially. From this point, the company should freeze non-essential spend and rely on shipment conversion to repair liquidity."
+          }
+        ],
+        "communications": {
+          "to_sales": "Keep converting orders that the current stock position can serve; do not open new markets.",
+          "to_production": "Execute the two existing plans only; do not start another run.",
+          "to_hr": "The hiring ramp is complete and should stay frozen."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_4"
+              }
+            },
+            "action_reason": "Accept a near-term order that can be covered by current finished goods, reinforcing that the business is still trading normally while cash tightens."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is continuing to convert serviceable demand instead of sacrificing revenue while cash is tight.",
+          "to_production": "Current accepted demand remains within the coverage of finished goods plus the two started production plans."
+        }
+      }
+    },
+    "6": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Cash is now under clear working-capital pressure because market development, hiring, line construction, warehouse expansion, procurement, and production costs were all front-loaded. Freeze non-essential spend and prioritize fulfillment-driven cash recovery."
+          }
+        ],
+        "communications": {
+          "to_sales": "Prioritize orders that existing stock and the active production plans can fulfill; do not open more markets.",
+          "to_procurement": "No new purchasing unless a committed delivery would otherwise fail.",
+          "to_production": "Let the existing finite production program run; do not start another build-ahead cycle.",
+          "to_hr": "No additional hiring under the current liquidity position."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_5"
+              }
+            },
+            "action_reason": "Accept another serviceable order because the finished-goods buffer and active production schedule can absorb it without adding new capital spend."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_6"
+              }
+            },
+            "action_reason": "Accept a near-dated order that current inventory can still honor, because preserving commercial credibility matters even while finance tightens the operating posture."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is pushing normal order conversion so cash repair can come from shipments rather than from further expansion.",
+          "to_production": "No extra production plan is requested; accepted demand stays inside the coverage of finished goods and the active line schedule."
+        }
+      }
+    },
+    "7": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Maintain restraint. The company still has stock, raw material, and capacity, but cash recovery is lagging the early expansion spend, so no department should restart growth investment."
+          }
+        ],
+        "communications": {
+          "to_sales": "Continue converting only the orders that existing stock and already-started production can cover.",
+          "to_inventory": "Keep capacity visible; do not expand further.",
+          "to_procurement": "Hold purchasing at zero."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_7"
+              }
+            },
+            "action_reason": "Accept a later-dated order because the company already has enough inventory and in-progress production to serve it without restarting procurement."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_8"
+              }
+            },
+            "action_reason": "Accept an additional order that fits inside the current fulfillment envelope, keeping the sales pipeline active without asking other departments to spend more."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is supporting cash recovery through normal order conversion rather than by taking on new expansion costs.",
+          "to_inventory": "Accepted commitments remain comfortably inside the finished-goods buffer and active production coverage."
+        }
+      }
+    },
+    "8": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Continue cash preservation while the existing production plans and already-purchased material carry the business. No additional capex, hiring, procurement, or market spend is justified."
+          }
+        ],
+        "communications": {
+          "to_production": "Finish the current plan and avoid new production spend.",
+          "to_sales": "Use existing markets and keep converting serviceable orders; avoid paid expansion.",
+          "to_procurement": "No further procurement is justified because the planned raw-material buffer is already in place."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_9"
+              }
+            },
+            "action_reason": "Accept another visible order because the business can still fulfill it from current stock and in-progress production without taking on new spending."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_10"
+              }
+            },
+            "action_reason": "Accept a second serviceable order so the commercial pipeline stays active instead of allowing avoidable backlog to build."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is converting demand that the current operating footprint can already support, helping revenue catch up with the earlier investment cycle.",
+          "to_production": "No extra production plan is requested; accepted demand remains serviceable under the active line schedule."
+        }
+      }
+    },
+    "9": {
+      "finance": {
+        "workflow": [
+          {
+            "pass_reason": "Enter a strict cash-preservation phase: no new capex, no procurement, no hiring, and no warehouse expansion while the company works through inventory and accepted orders."
+          }
+        ],
+        "communications": {
+          "to_sales": "From here, the right posture is to keep converting existing demand with the current asset base rather than reopening expansion.",
+          "to_production": "Capacity exists; do not add lines.",
+          "to_inventory": "Warehouse capacity is sufficient.",
+          "to_procurement": "Raw materials are sufficient; do not buy more."
+        }
+      },
+      "sales": {
+        "workflow": [
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_11"
+              }
+            },
+            "action_reason": "Accept another later-dated order because the existing finished-goods buffer and active production plan still cover it without further expansion."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_12"
+              }
+            },
+            "action_reason": "Accept a recent open order so the business carries a normal revenue pipeline rather than avoidable uncommitted demand."
+          },
+          {
+            "action": {
+              "action_name": "accept_order",
+              "action_param": {
+                "order_id": "SALE_ORDER_13"
+              }
+            },
+            "action_reason": "Accept one more serviceable order from the current queue while keeping a manageable amount of open demand for the team to work through under tighter cash discipline."
+          }
+        ],
+        "communications": {
+          "to_finance": "Sales is keeping the pipeline active while the cash squeeze remains driven by earlier operating investment rather than weak demand.",
+          "to_inventory": "No inventory expansion is needed for the retained available orders."
+        }
+      }
+    }
+  }
+}

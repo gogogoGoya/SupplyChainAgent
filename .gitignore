@@ -1,0 +1,55 @@
+# Local environments and editor state
+.venv/
+venv/
+env/
+upgrade/
+ENV_DIR/
+.vscode/
+.idea/
+.codex/
+.agents/
+.claude/settings.local.json
+*.swp
+*.swo
+.DS_Store
+
+# Credentials and local settings
+.env
+.env.local
+.env.*.local
+scripts/.env
+*.pem
+*.key
+
+# Build products and caches
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+coverage.xml
+*.egg-info/
+build/
+dist/
+node_modules/
+visualization/.vite/
+
+# Simulation artifacts, model messages, and databases
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-*
+simulate/results/
+ccAgent/logs/
+ccAgent/CCSDKAgent/history/
+ccAgent/CCSDKAgent/simulation_runs/
+ccAgent/CCSDKAgent/workspace_multi/
+ccAgent/CCSDKAgent/workspace_jobs/
+ccAgent/CCSDKAgent/workspace/*
+!ccAgent/CCSDKAgent/workspace/business_templates.md
+!ccAgent/CCSDKAgent/workspace/daily_action.json
+!ccAgent/CCSDKAgent/workspace/init_action.json
+!ccAgent/CCSDKAgent/workspace/re_action_plan.json
+ccAgent/CCSDKAgent/static_commands/*
+!ccAgent/CCSDKAgent/static_commands/single_enterprise/
+!ccAgent/CCSDKAgent/static_commands/single_enterprise/**

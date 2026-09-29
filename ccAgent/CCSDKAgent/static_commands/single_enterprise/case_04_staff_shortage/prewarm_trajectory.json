@@ -1,0 +1,60 @@
+{
+  "scene_id": "case_04",
+  "trajectory_type": "fixed_multi_department_prewarm_then_takeover",
+  "scene_name": "Accepted backlog under healthy cash and sufficient material, but existing lines cannot be fully used because production labor collapses before handoff",
+  "core_business_logic": {
+    "what_the_company_already_has": [
+      "healthy cash reserves",
+      "one fully staffed main market that is activated early in prewarm",
+      "two small production lines that both become available before the staffing shock",
+      "one external supplier that can replenish later if needed",
+      "one completed pilot order proving the business is already operating",
+      "enough raw material to cover the committed backlog"
+    ],
+    "what_the_company_lacks": [
+      "enough executable production headcount to use the second line once backlog accumulates"
+    ],
+    "what_the_scene_must_not_turn_into": [
+      "raw_material_shortage",
+      "market_insufficient",
+      "capacity_bottleneck",
+      "cash_pressure",
+      "warehouse_pressure"
+    ]
+  },
+  "day_segments": {
+    "day0_to_day2": {
+      "goal": "Establish a live business baseline by activating one fully staffed market first, finishing two small lines, and completing the first pilot acceptance and production cycle.",
+      "must_show": [
+        "one fully staffed main market exists before the first order appears",
+        "two small lines exist by day2",
+        "one pilot order exists and is accepted",
+        "the company is not a cold startup anymore"
+      ]
+    },
+    "day3_to_day5": {
+      "goal": "Accumulate real operating history while converting the bottleneck from assets to labor.",
+      "must_show": [
+        "one short pilot plan completes",
+        "one longer low-rate plan starts and remains active",
+        "production headcount has already dropped to one after line assets already exist"
+      ]
+    },
+    "day6_to_day9": {
+      "goal": "Freeze the bottleneck instead of repairing it before takeover.",
+      "must_show": [
+        "accepted backlog remains future-dated rather than already breached",
+        "no purchase order has been placed yet",
+        "one fully staffed main market remains active but is not the lead problem",
+        "one second line remains idle because labor, not equipment, is missing"
+      ]
+    }
+  },
+  "handoff_success_story": [
+    "HR should read the snapshot as a recruitment problem.",
+    "Production should not ask for another line first because line count already exists.",
+    "Procurement should not ask for immediate replenishment first because material still is sufficient.",
+    "Sales should not be the first responder because committed demand is already present.",
+    "Inventory should confirm that storage is not the gating resource."
+  ]
+}

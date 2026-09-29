@@ -1,0 +1,46 @@
+{
+  "scene_id": "case_02_material_shortage",
+  "takeover_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "primary_contradiction": "raw_material_shortage_with_supplier_choice",
+  "lead_department": "procurement",
+  "checkable_constraints": {
+    "sales": {
+      "active_markets": {"min": 1, "max": 1},
+      "accepted_orders": {"min": 1}
+    },
+    "production": {
+      "production_lines_total": {"min": 1, "max": 1},
+      "in_progress_production_plans": {"min": 0, "max": 0}
+    },
+    "procurement": {
+      "pending_procurement_orders": {"min": 0, "max": 0},
+      "received_procurement_orders": {"min": 0, "max": 0},
+      "registered_suppliers": {"min": 0, "max": 0},
+      "visible_supplier_candidates": {"min": 3, "max": 3},
+      "first_purchase_order": "must choose one visible candidate and one available logistics mode using material need, deadline feasibility, landed cost, processing time, transit time, MOQ, and reliability"
+    },
+    "inventory": {
+      "warehouse_utilization": {"max": 0.3},
+      "raw_material_signal": "remaining MATERIAL_1 is below the recipe requirement for the accepted demand gap"
+    },
+    "finance": {
+      "cash_positive": true,
+      "cash_crisis": false
+    }
+  },
+  "qualitative_constraints": [
+    "The company is already operating and has visible committed demand.",
+    "Capacity, staffing, cash, and warehouse space must not dominate the diagnosis.",
+    "No supplier is registered during initialization or prewarm.",
+    "All configured supplier candidates and logistics choices are visible to procurement at takeover.",
+    "The first valid purchase order atomically registers its selected candidate; no separate hidden registration action is required.",
+    "The expected choice is determined from the current deadline and quantity, not from a hard-coded supplier or logistics answer."
+  ],
+  "anti_contamination_rules": [
+    "Do not place a purchase order before handoff.",
+    "Do not expose a preferred supplier name in Agent prompts.",
+    "Do not force air logistics when a slower option still meets the deadline.",
+    "Do not let extra line construction, staffing, cash, or warehouse pressure become the primary bottleneck."
+  ]
+}

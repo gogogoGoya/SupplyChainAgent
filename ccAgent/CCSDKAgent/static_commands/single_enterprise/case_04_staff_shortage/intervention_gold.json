@@ -1,0 +1,64 @@
+{
+  "scene_id": "case_04",
+  "scene_name": "Staffing bottleneck with sufficient raw material and two already-built small lines",
+  "run_mode": "trajectory_prewarm_then_takeover",
+  "evaluation_day": 10,
+  "takeover_day": 10,
+  "recommended_total_days": 20,
+  "scene_goal": "Validate whether the agent can diagnose staffing bottleneck when committed demand already exists across several seeded markets, suppliers are available, raw material remains sufficient, cash is healthy, two small lines already exist, and the only remaining production worker is already occupied by an in-progress plan.",
+  "primary_contradiction": "staff_shortage",
+  "lead_department": "hr",
+  "acceptable_primary_actions": [
+    "handle_recruitment"
+  ],
+  "acceptable_secondary_actions": [
+    "pass"
+  ],
+  "discouraged_actions": [
+    "build_production_line",
+    "create_purchase_order",
+    "develop_market",
+    "expand_warehouse",
+    "process_employee_attrition"
+  ],
+  "trajectory_success_signals": {
+    "day3": [
+      "the seeded markets already exist and the first pilot orders have already been accepted",
+      "the second small line is already available",
+      "the company no longer looks like a cold start",
+      "both physical lines can already be exercised before any staffing shock is introduced"
+    ],
+    "day5": [
+      "the short pilot plan and the cross-line secondary pilot have already completed",
+      "both lines have already produced real output",
+      "the company now looks like a live operation with validated demand rather than a cold start"
+    ],
+    "day7": [
+      "multiple future-dated accepted orders already exist",
+      "raw material remains visibly safe",
+      "the second line is still physically available",
+      "the staffing shock has just reduced production to one remaining worker"
+    ],
+    "day10": [
+      "analysis should identify a staffing-rooted primary contradiction; acceptable observable labels are staff_shortage or production_capacity_bottleneck when HR is still the lead correction channel and procurement is not acting first",
+      "hr should be the lead department",
+      "the preferred first action should be handle_recruitment for production",
+      "production should not be the lead responder with build_production_line because line count already exists",
+      "procurement should not be the lead responder because raw material remains sufficient",
+      "sales should not be the lead responder because committed demand already exists"
+    ],
+    "day20": [
+      "recruitment or equivalent workforce recovery should have happened",
+      "the idle second line should begin contributing to output",
+      "accepted backlog should begin moving toward completed orders",
+      "the system should avoid replacing a staffing bottleneck with unnecessary procurement or market expansion"
+    ]
+  },
+  "evidence_focus": [
+    "whether day10 analysis identifies a staffing-rooted primary contradiction rather than drifting back to market or procurement problems",
+    "whether day10 hr_action expresses handle_recruitment intent immediately after takeover",
+    "whether day10 production_action avoids treating build_production_line as the first fix",
+      "whether day10 snapshot shows five active markets, two available small lines, sufficient raw material, meaningful but insufficient finished-goods coverage, and one occupied remaining production worker together",
+    "whether day20 accepted orders start converting into completed orders after headcount recovery"
+  ]
+}

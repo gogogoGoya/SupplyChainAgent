@@ -1,0 +1,95 @@
+{
+  "scene_id": "case_05_cash_pressure",
+  "scene_name": "Working-capital pressure from aggressive early expansion and lagging cash recovery",
+  "design_version": "trajectory_v8_aggressive_expansion_working_capital_case05",
+  "handoff_day": 10,
+  "takeover_window": [
+    10,
+    20
+  ],
+  "compatible_execution_file": "executable_prewarm_day0_to_day9.json",
+  "compatible_goal_file": "prewarm_plan_day0_to_day10.json",
+  "primary_contradiction": "cash_pressure",
+  "lead_department": "sales",
+  "trajectory_principle": "Use only agent-supported operating actions to create cash pressure. The company opens two regional markets, staffs the operating ramp, prepares warehouse capacity, builds one pilot line and one larger line, purchases high-value raw material in three bounded waves, accepts serviceable market-generated orders, and runs two finite production plans: one completes before handoff while one remains actively loaded through takeover. By day10, cash is low because it has been converted into working capital and operating readiness faster than revenue has caught up, not because of an artificial finance-side shock or deliberate sales rejection.",
+  "architecture_notes": [
+    "The current engine creates roughly one market order per active market per day during the daily step.",
+    "Those market orders are ultimately materialized through SalesManager.create_order, so market activation is the upstream lever and create_order is the downstream order-record primitive.",
+    "Cash pressure in this case is introduced through ordinary agent-supported operating actions: market development, recruitment, warehouse expansion, production-line construction, raw-material procurement, order acceptance, and two finite production plans.",
+    "The case deliberately avoids FinanceManager.add_cost as a scripted shock and avoids SalesManager.create_order as a manual order seed; market orders must come from the market mechanism."
+  ],
+  "department_role_contract": {
+    "finance": "Tracks the cash compression caused by operating commitments and pushes a shift from expansion mode into cash-repair mode after the early ramp.",
+    "hr": "Adds only targeted inventory, sales, and production support staff needed to make the operating ramp executable; production staffing is sized so the two day4 plans can be created in the same department turn.",
+    "sales": "Opens two regional markets, accepts the serviceable automatically generated orders, and stops further market expansion once cash is visibly compressed.",
+    "production": "Builds one pilot line, one larger line, and two finite production plans; the shorter plan completes before handoff while the longer plan remains active, then production stops additional prewarm spend.",
+    "inventory": "Expands warehouse only enough to receive the planned raw-material purchases and finished-goods buildup without becoming the dominant bottleneck.",
+    "procurement": "Places three high-value raw-material orders that create working-capital pressure, then freezes new purchasing."
+  },
+  "day_scripts": {
+    "0": "hire targeted inventory and sales support, open the first regional market, and build a small pilot line",
+    "1": "hire enough production support for the split production ramp, open a second regional market, build one larger line, expand warehouse, and place the first high-value raw-material order",
+    "2": "accept the first automatic market order, add another warehouse buffer, and place the second high-value raw-material order",
+    "3": "accept one more automatic market order, add one last small warehouse buffer, place the final high-value raw-material order, and start the pilot-line production plan",
+    "4": "accept another market order and launch the main large-line production plan at a firmer daily loading",
+    "5": "continue normal order conversion, then stop broad operating expansion",
+    "6": "freeze discretionary spend while accepted orders and existing production keep moving",
+    "7": "hold a conservative posture with no new procurement or capex while still converting serviceable orders",
+    "8": "let the production program continue without new spend and keep the sales pipeline active",
+    "9": "handoff cleanly with no new capex, procurement, hiring, or warehouse expansion"
+  },
+  "phases": [
+    {
+      "phase_id": "A",
+      "phase_name": "market_activation_and_operating_ramp",
+      "day_range": [
+        0,
+        2
+      ],
+      "intent": "Create real market demand and begin the operating ramp using only agent-supported actions.",
+      "expected_signature": {
+        "active_markets_exact": 2,
+        "cash_trend": "down_from_operating_commitments",
+        "orders_total_min": 1,
+        "daily_full_department_trace": true
+      }
+    },
+    {
+      "phase_id": "B",
+      "phase_name": "working_capital_build",
+      "day_range": [
+        3,
+        5
+      ],
+      "intent": "Convert cash into raw materials, warehouse buffer, capacity, and finished goods while continuing normal order acceptance.",
+      "expected_signature": {
+        "completed_orders_min": 1,
+        "new_capex": "planned_only",
+        "procurement_pressure": "resolved_by_handoff",
+        "daily_full_department_trace": true
+      }
+    },
+    {
+      "phase_id": "C",
+      "phase_name": "restrained_handoff_stabilization",
+      "day_range": [
+        6,
+        9
+      ],
+      "intent": "Preserve a clean day10 diagnosis in which caution and cash preservation dominate.",
+      "expected_signature": {
+        "active_markets_exact": 2,
+        "cash_primary_constraint": true,
+        "major_expansion_actions": "none",
+        "daily_full_department_trace": true
+      }
+    }
+  ],
+  "checkpoints": {
+    "day0": "the first market and pilot line are launched using ordinary business actions",
+    "day3": "two markets are active, order flow is visible, and cash has started falling due to planned procurement and warehouse preparation",
+    "day5": "the company has committed market orders, received raw materials, and started converting working capital into finished goods",
+    "day9": "handoff stabilized with two active markets, positive revenue history, no pending procurement, one completed short-cycle production plan, one in-progress long-cycle production plan, and visibly restrained behavior across departments",
+    "day10": "takeover confirmation"
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "scene_id": "case_03",
+  "trajectory_type": "fixed_multi_department_prewarm_then_takeover",
+  "scene_name": "Accepted backlog under healthy cash and sufficient material, but one small line is too small at handoff",
+  "core_business_logic": {
+    "what_the_company_already_has": [
+      "healthy cash reserves",
+      "stable staffing across all departments",
+      "one fully staffed main market that is activated early in prewarm",
+      "one small production line that becomes available early in prewarm",
+      "one external supplier that can replenish later if needed",
+      "one completed pilot order proving the business is already operating",
+      "enough raw material to cover the committed backlog"
+    ],
+    "what_the_company_lacks": [
+      "enough effective line capacity to digest the committed delivery rhythm"
+    ],
+    "what_the_scene_must_not_turn_into": [
+      "raw_material_shortage",
+      "market_insufficient",
+      "staff_shortage",
+      "cash_pressure",
+      "warehouse_pressure"
+    ]
+  },
+  "day_segments": {
+    "day0_to_day1": {
+      "goal": "Establish a live business baseline by activating one fully staffed main market first and then activating the first real production cycle once the small line becomes available.",
+      "must_show": [
+        "one fully staffed main market exists before the first order appears",
+        "one pilot order exists and then becomes accepted",
+        "the company is not a cold startup anymore",
+        "the small line moves from construction to availability"
+      ]
+    },
+    "day2_to_day5": {
+      "goal": "Accumulate future-dated accepted backlog while keeping production real and raw material clearly safe.",
+      "must_show": [
+        "accepted backlog grows across several days",
+        "finished goods rise through real production",
+        "raw materials remain visibly sufficient"
+      ]
+    },
+    "day6_to_day9": {
+      "goal": "Freeze the bottleneck instead of repairing it before takeover.",
+      "must_show": [
+        "accepted backlog remains future-dated rather than already breached",
+        "no purchase order has been placed yet",
+        "one fully staffed main market remains active but is not the lead problem",
+        "the only small line remains occupied or fully committed at handoff"
+      ]
+    }
+  },
+  "handoff_success_story": [
+    "Production should read the snapshot as an expansion problem.",
+    "Procurement should not ask for immediate replenishment first because material still is sufficient.",
+    "Sales should not be the first responder because committed demand is already present.",
+    "Inventory should confirm that line throughput is the gating resource rather than warehouse pressure."
+  ]
+}

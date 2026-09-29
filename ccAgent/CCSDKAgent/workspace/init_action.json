@@ -1,0 +1,91 @@
+[
+    {
+        "action": {
+            "action_name": "initialize_staffing",
+            "action_param": {
+                "initial_staffing": {
+                    "finance": 5,
+                    "hr": 5,
+                    "procurement": 5,
+                    "production": 10,
+                    "sales": 10,
+                    "inventory": 3
+                }
+            }
+        },
+        "executor_id": "Manufacturer",
+        "module_type": "HRManager"
+    },
+    {
+        "action": {
+            "action_name": "set_capacity",
+            "action_param": {"capacity": 50000}
+        },
+        "module_type": "InventoryManager",
+        "executor_id": "Manufacturer"
+    },
+    {
+        "action": {
+            "action_name": "add_inventory",
+            "action_param": {
+                "item_id": "MATERIAL_1",
+                "quantity": 5000,
+                "purchase_price": 10,
+                "item_type": "raw_material"
+            }
+        },
+        "module_type": "InventoryManager",
+        "executor_id": "Manufacturer"
+    },
+    {
+        "action": {
+            "action_name": "add_inventory",
+            "action_param": {
+                "item_id": "PRODUCT_1",
+                "quantity": 10000,
+                "purchase_price": 500,
+                "item_type": "product"
+            }
+        },
+        "module_type": "InventoryManager",
+        "executor_id": "Manufacturer"
+    },
+    {
+        "action": {
+            "action_name": "set_product_recipe",
+            "action_param": {
+                "product_id": "PRODUCT_1",
+                "raw_materials": {"MATERIAL_1": 2.0},
+                "production_time": 1,
+                "labor_cost_per_unit": 10,
+                "equipment_cost_per_unit": 5
+            }
+        },
+        "module_type": "ProductionManager",
+        "executor_id": "Manufacturer"
+    },
+    {
+        "action": {
+            "action_name": "initialize_suppliers",
+            "action_param": {
+                "suppliers_data": [
+                    {
+                        "supplier_name": "供应商A",
+                        "supplier_type": "external",
+                        "materials": {
+                            "MATERIAL_1": {
+                                "unit_price": 10,
+                                "quantity": 10000
+                            }
+                        },
+                        "processing_time": 1,
+                        "quality_level": "standard",
+                        "reliability_score": 0.95
+                    }
+                ]
+            }
+        },
+        "module_type": "ProcurementManager",
+        "executor_id": "Manufacturer"
+    }
+]

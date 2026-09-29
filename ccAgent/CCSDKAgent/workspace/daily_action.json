@@ -1,0 +1,55 @@
+[
+        {
+            "action": {
+                "action_name": "process_recruitment_completion",
+                "action_param": {}
+            },
+            "module_type": "HRManager",
+            "executor_id": "Manufacturer"
+        },
+        {
+            "action": {
+                "action_name": "check_arrived_orders",
+                "action_param": {
+                }
+            },
+            "module_type": "ProcurementManager",
+            "executor_id": "Manufacturer"
+        },
+        {
+            "action": {
+                "action_name": "check_construction_completion",
+                "action_param": {
+                }
+            },
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+        },
+        {
+            "action": {
+                "action_name": "check_completed_plans",
+                "action_param": {
+                }
+            },
+            "module_type": "ProductionManager",
+            "executor_id": "Manufacturer"
+        },
+        {
+            "action": {
+                "action_name": "check_market_development_completion",
+                "action_param": {
+                }
+            },
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+        },
+        {
+            "action": {
+                "action_name": "check_deliverable_orders",
+                "action_param": {
+                }
+            },
+            "module_type": "SalesManager",
+            "executor_id": "Manufacturer"
+        }
+    ]

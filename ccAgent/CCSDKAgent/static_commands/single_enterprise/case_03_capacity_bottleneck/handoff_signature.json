@@ -1,0 +1,93 @@
+{
+  "scene_id": "case_03",
+  "takeover_day": 10,
+  "handoff_state_semantics": "start_of_day_10_after_day9_actions",
+  "primary_contradiction": "acute_demand_capacity_collapse",
+  "lead_department": "production",
+  "checkable_constraints": {
+    "sales": {
+      "active_markets": {
+        "min": 1,
+        "max": 1
+      },
+      "orders_total": {
+        "min": 10,
+        "max": 10
+      },
+      "accepted_orders": {
+        "min": 5,
+        "max": 5
+      },
+      "accepted_backlog_quantity": {
+        "min": 8400,
+        "max": 8400
+      },
+      "available_orders": {
+        "min": 4,
+        "max": 4
+      },
+      "completed_orders": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    "production": {
+      "production_lines_total": {
+        "min": 1,
+        "max": 1
+      },
+      "available_capacity": {
+        "min": 0,
+        "max": 250
+      },
+      "in_progress_production_plans": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    "procurement": {
+      "pending_procurement_orders": {
+        "min": 0,
+        "max": 0
+      },
+      "received_procurement_orders": {
+        "min": 0,
+        "max": 0
+      },
+      "day10_first_purchase_order": "should not be the preferred first corrective action because raw material remains sufficient and supplier access is already available."
+    },
+    "inventory": {
+      "warehouse_utilization": {
+        "max": 0.25
+      },
+      "raw_material_signal": "remaining MATERIAL_1 should still be visibly sufficient for the committed backlog under the current recipe",
+      "finished_goods_signal": "finished goods should be operationally real but still insufficient to clear the accepted backlog immediately"
+    },
+    "day10_charts": {
+      "order_fulfillment_coverage": "cumulative coverage gap should already be negative on day11 and should worsen sharply through day15",
+      "demand_capacity_gap": "required output should exceed planned output immediately after takeover while free capacity is zero"
+    },
+    "finance": {
+      "cash_positive": true,
+      "cash_crisis": false,
+      "revenue_should_be_positive": true
+    }
+  },
+  "qualitative_constraints": [
+    "The company should look like it is already operating rather than still bootstrapping.",
+    "The snapshot should show accepted demand pressure collapsing against current capacity clearly enough that sales does not need to be the lead responder.",
+    "Exactly one fully staffed main market should already be active, with enough visible demand that market expansion should not be the dominant explanation.",
+    "The visible available orders should remain secondary opportunities with later deadlines and weaker economics than the already accepted backlog.",
+    "The raw-material balance should rule out procurement as the first diagnosis.",
+    "The line-count footprint should make one-line throughput the most visible bottleneck.",
+    "The first preferred correction should therefore be build_production_line rather than create_purchase_order or develop_market.",
+    "Suppliers should already exist so procurement could legally act, but it should not be the clean first fix."
+  ],
+  "anti_contamination_rules": [
+    "Do not let the presence of one stable market turn the case into a market-expansion diagnosis.",
+    "Do not let pending purchase orders weaken the capacity signal.",
+    "Do not let overdue-order chaos dominate the handoff.",
+    "Do not let raw-material shortage become the more visible bottleneck.",
+    "Do not let cash or staffing pressure dominate the diagnosis."
+  ]
+}
