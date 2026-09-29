@@ -3,7 +3,7 @@ import React from 'react';
 const CompanySelector = ({ companies, companyNameMap = {}, currentCompany, onCompanyChange }) => {
   return (
     <div className="company-selector">
-      <h3>选择企业</h3>
+      <h3>Select enterprise</h3>
       <div className="company-buttons">
         {companies.map(company => (
           <button

@@ -3,7 +3,7 @@ import React from 'react';
 const DaySelector = ({ availableDays, currentDay, onDayChange }) => {
   return (
     <div className="day-selector">
-      <h3>选择轮次</h3>
+      <h3>Select round</h3>
       <div className="day-buttons">
         {availableDays.map(day => (
           <button

@@ -19,13 +19,13 @@ const CompanyInfo = ({ company, day, dataRoot }) => {
         buildDataUrl(dataRoot, `enterprises/${company}/observations/observation_day${day}.txt`)
       );
       if (!text) {
-        throw new Error('无法加载观察数据');
+        throw new Error('Unable to load observation data');
       }
       const data = JSON.parse(text);
       setInfo(data);
     } catch (error) {
-      console.error('加载公司信息失败:', error);
-      setError('加载公司信息失败: ' + error.message);
+      console.error('Failed to load enterprise information:', error);
+      setError('Failed to load enterprise information: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -43,7 +43,7 @@ const CompanyInfo = ({ company, day, dataRoot }) => {
   };
 
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
@@ -51,7 +51,7 @@ const CompanyInfo = ({ company, day, dataRoot }) => {
   }
 
   if (!info) {
-    return <div className="loading">暂无数据</div>;
+    return <div className="loading">No data available</div>;
   }
 
   const finance = info.finance?.self_state || info.finance || {};
@@ -60,24 +60,24 @@ const CompanyInfo = ({ company, day, dataRoot }) => {
   return (
     <div className="company-info">
       <div className="metric-card">
-        <div className="metric-label">企业名称</div>
+        <div className="metric-label">Enterprise</div>
         <div className="metric-value">{company}</div>
       </div>
       <div className="metric-card">
-        <div className="metric-label">现金余额</div>
+        <div className="metric-label">Cash balance</div>
         <div className="metric-value">{formatCurrency(finance.cash || 0)}</div>
       </div>
       <div className="metric-card">
-        <div className="metric-label">总收入</div>
+        <div className="metric-label">Total revenue</div>
         <div className="metric-value">{formatCurrency(finance.total_revenue || 0)}</div>
       </div>
       <div className="metric-card">
-        <div className="metric-label">总成本</div>
+        <div className="metric-label">Total cost</div>
         <div className="metric-value">{formatCurrency(finance.total_cost || 0)}</div>
       </div>
       {Object.keys(financialIndicators).length > 0 && (
         <div className="metric-card">
-          <div className="metric-label">净利润</div>
+          <div className="metric-label">Net profit</div>
           <div className="metric-value">{formatCurrency(financialIndicators.net_profit || 0)}</div>
         </div>
       )}
