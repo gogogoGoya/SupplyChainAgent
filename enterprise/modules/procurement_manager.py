@@ -643,8 +643,8 @@ class ProcurementManager(EnhancedBaseModule):
         for import_path, attr_name in (
             ("multi_tenant_utils", "WORKSPACE"),
             ("static_utils", "Config"),
-            ("ccAgent.CCSDKAgent.static_utils", "Config"),
-            ("ccAgent.CCSDKAgent.multi_tenant_utils", "WORKSPACE"),
+            ("agent.static_utils", "Config"),
+            ("agent.multi_tenant_utils", "WORKSPACE"),
         ):
             try:
                 module = sys.modules.get(import_path)

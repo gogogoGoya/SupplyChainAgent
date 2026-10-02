@@ -12,7 +12,7 @@ from copy import deepcopy
 import shutil
 import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.environment_config import EnvironmentConfig
 from config.simulation_preset_config import (
     get_active_enterprise_configs,
@@ -21,16 +21,16 @@ from config.simulation_preset_config import (
 )
 from config.module_config import ProcurementConfig
 from runtime.simulation_session_context import get_simulation_session_id
-from policy_context import build_department_policy_context, build_enterprise_policy_context
+from agent.policy_context import build_department_policy_context, build_enterprise_policy_context
 
 # =========================
 # 1. Config 配置类
 # =========================
 class Config:
     BASE_URL = EnvironmentConfig.SIMULATION_API_BASE_URL
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR = Path(__file__).resolve().parent
 
-    WORKSPACE = BASE_DIR / "CCSDKAgent" / "workspace"
+    WORKSPACE = BASE_DIR / "workspace"
 
     ACTION_PLAN = WORKSPACE / "action_plan.json"
     HR_ACTION = WORKSPACE / "hr_action.json"

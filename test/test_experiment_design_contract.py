@@ -2,11 +2,11 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
-from ccAgent.CCSDKAgent.scripted_rule_runner import ScriptedRuleRunner
-from ccAgent.CCSDKAgent.policy_context import build_department_policy_context
-from ccAgent.CCSDKAgent.skill_runner import SkillRunner
-from ccAgent.CCSDKAgent.static_utils import StaticUtils
-from ccAgent.CCSDKAgent.multi_tenant_utils import (
+from agent.scripted_rule_runner import ScriptedRuleRunner
+from agent.policy_context import build_department_policy_context
+from agent.skill_runner import SkillRunner
+from agent.static_utils import StaticUtils
+from agent.multi_tenant_utils import (
     Config as MultiTenantConfig,
     MultiTenantUtils,
 )

@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-import multi_tenant_utils
-from multi_tenant_utils import MultiTenantUtils
+import agent.multi_tenant_utils as multi_tenant_utils
+from agent.multi_tenant_utils import MultiTenantUtils
 
 
 def _write_json(path: Path, payload):

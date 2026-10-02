@@ -21,7 +21,8 @@ RUNTIME_ROOTS = (
     "simulate",
     "visualization/src",
 )
-ACTIVE_SKILLS_ROOT = PROJECT_ROOT / "ccAgent" / "CCSDKAgent" / ".claude" / "skills"
+ACTIVE_SKILLS_ROOT = PROJECT_ROOT / "agent" / ".claude" / "skills"
+ACTIVE_AGENT_ROOT = PROJECT_ROOT / "agent"
 
 
 def _runtime_files():
@@ -37,6 +38,9 @@ def _runtime_files():
         yield vite_config
     if ACTIVE_SKILLS_ROOT.is_dir():
         yield from ACTIVE_SKILLS_ROOT.glob("*/SKILL.md")
+    if ACTIVE_AGENT_ROOT.is_dir():
+        yield from ACTIVE_AGENT_ROOT.glob("*.py")
+        yield from (ACTIVE_AGENT_ROOT / "static_commands" / "single_enterprise").rglob("*.json")
 
 
 def main() -> int:

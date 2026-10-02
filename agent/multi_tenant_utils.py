@@ -8,9 +8,9 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from typing import Any, List, Dict, Optional
-from static_utils import StaticUtils
+from agent.static_utils import StaticUtils
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.environment_config import EnvironmentConfig
 from config.simulation_preset_config import (
     get_active_enterprise_configs,
@@ -35,9 +35,9 @@ from persistence.sql_mirror import (
     mirror_topology_projection,
 )
 from persistence.sql_mirror_runtime import get_sql_mirror_repository
-from export_chart_data import export_chart_data_file
-BASE_DIR = Path(__file__).resolve().parent.parent
-ROOT_DIR = BASE_DIR / "CCSDKAgent"
+from agent.export_chart_data import export_chart_data_file
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR
 STATIC_COMMANDS_DIR = ROOT_DIR / "static_commands"
 WORKSPACE = ROOT_DIR / "workspace_multi"
 SIMULATION_RUNS_DIR = ROOT_DIR / "simulation_runs"

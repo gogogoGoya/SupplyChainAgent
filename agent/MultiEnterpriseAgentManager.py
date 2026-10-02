@@ -9,16 +9,16 @@ import re
 import shutil
 import sys
 from datetime import datetime
-from static_utils import Config as StaticConfig, StaticUtils
-from EnterpriseRuntime import EnterpriseRuntime
+from agent.static_utils import Config as StaticConfig, StaticUtils
+from agent.EnterpriseRuntime import EnterpriseRuntime
 from pathlib import Path
 from typing import Dict, List, Callable, Any, Optional
-from SessionRegistry import SessionRegistry
-from multi_tenant_utils import MultiTenantUtils
-from data_config import DepartmentSpec, EnterpriseSpec
-from GlobalDepartmentLockManager import GlobalDepartmentLockManager
+from agent.SessionRegistry import SessionRegistry
+from agent.multi_tenant_utils import MultiTenantUtils
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.GlobalDepartmentLockManager import GlobalDepartmentLockManager
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.simulation_preset_config import (
     DEFAULT_AGENT_MODEL_NAME_LIST,
     DEFAULT_AGENT_RUN_STEPS,

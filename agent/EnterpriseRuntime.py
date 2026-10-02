@@ -1,6 +1,6 @@
 from struct import pack
-from data_config import DepartmentSpec, EnterpriseSpec
-from SessionRegistry import SessionRegistry
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.SessionRegistry import SessionRegistry
 import anyio
 import json
 import time
@@ -14,8 +14,8 @@ import sys
 from datetime import datetime
 from urllib.parse import urlparse
 
-from static_utils import StaticUtils
-from multi_tenant_utils import MultiTenantUtils
+from agent.static_utils import StaticUtils
+from agent.multi_tenant_utils import MultiTenantUtils
 from claude_agent_sdk import (
     ClaudeAgentOptions,
     query,
@@ -23,12 +23,12 @@ from claude_agent_sdk import (
     TextBlock,
     ResultMessage
 )
-from data_config import DepartmentSpec, EnterpriseSpec
-from GlobalDepartmentLockManager import GlobalDepartmentLockManager
-from skill_runner import SkillRunner
-from scripted_rule_runner import ScriptedRuleRunner
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.GlobalDepartmentLockManager import GlobalDepartmentLockManager
+from agent.skill_runner import SkillRunner
+from agent.scripted_rule_runner import ScriptedRuleRunner
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from coordination import EnterpriseCommunicationCoordinator
 from config.environment_config import EnvironmentConfig
 from config.simulation_preset_config import get_runtime_injection_config
@@ -269,7 +269,7 @@ class EnterpriseRuntime:
 
     def _build_stderr_callback(self, role: str):
         """Capture Claude CLI stderr so subprocess failures keep concrete diagnostics."""
-        log_dir = self.client_dir.parent / "logs"
+        log_dir = self.client_dir / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
         log_path = log_dir / f"claude_stderr_{datetime.now().strftime('%Y%m%d')}.log"
 

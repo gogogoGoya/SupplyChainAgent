@@ -100,7 +100,7 @@ class EnvironmentConfig:
 
     使用范围：
     - `core/async_time_manager.py`：读取时间推进常量
-    - `ccAgent/CCSDKAgent/*`：读取服务地址、模型网关地址与默认模型连接参数
+    - `agent/*`：读取服务地址、模型网关地址与默认模型连接参数
     - `simulate/*`：通过环境服务 URL 对接本地仿真服务
 
     设计边界：

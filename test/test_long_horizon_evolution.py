@@ -3,11 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-import ccAgent.CCSDKAgent.multi_tenant_utils as multi_tenant_utils_module
-from ccAgent.CCSDKAgent.policy_context import build_department_policy_context
-from ccAgent.CCSDKAgent.EnterpriseRuntime import EnterpriseRuntime
-from ccAgent.CCSDKAgent.skill_runner import SkillRunner
-from ccAgent.CCSDKAgent.multi_tenant_utils import (
+import agent.multi_tenant_utils as multi_tenant_utils_module
+from agent.policy_context import build_department_policy_context
+from agent.EnterpriseRuntime import EnterpriseRuntime
+from agent.skill_runner import SkillRunner
+from agent.multi_tenant_utils import (
     Config as MultiTenantConfig,
     MultiTenantUtils,
 )
@@ -450,7 +450,7 @@ def test_resilient_multi_enterprise_run_can_generate_auditable_fallback_analysis
     )
     monkeypatch.setattr(MultiTenantConfig, "ENTERPRISE_DIR", workspace / "enterprises")
     monkeypatch.setattr(
-        "ccAgent.CCSDKAgent.multi_tenant_utils.WORKSPACE",
+        "agent.multi_tenant_utils.WORKSPACE",
         workspace,
     )
 

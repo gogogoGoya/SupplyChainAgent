@@ -9,7 +9,7 @@ from typing import Optional, Union
 
 PathLike = Union[str, os.PathLike]
 PROJECT_ROOT_ENV = "SUPPLY_CHAIN_PROJECT_ROOT"
-AGENT_ROOT_ENV = "CCSDKAGENT_ROOT"
+AGENT_ROOT_ENV = "SUPPLY_CHAIN_AGENT_ROOT"
 
 _SOURCE_PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -35,7 +35,7 @@ PROJECT_ROOT = _configured_root(
 )
 AGENT_ROOT = _configured_root(
     AGENT_ROOT_ENV,
-    PROJECT_ROOT / "ccAgent" / "CCSDKAgent",
+    PROJECT_ROOT / "agent",
     relative_to=PROJECT_ROOT,
 )
 WORKSPACE_JOBS_ROOT = AGENT_ROOT / "workspace_jobs"
@@ -63,8 +63,9 @@ def resolve_project_path(
         return path.resolve(strict=False)
 
     parts = path.parts
-    for index in range(max(0, len(parts) - 1)):
-        if parts[index:index + 2] == ("ccAgent", "CCSDKAgent"):
+    project_markers = {PROJECT_ROOT.name, "SupplyChainAgent"}
+    for index in range(len(parts) - 1):
+        if parts[index] in project_markers and parts[index + 1] == "agent":
             return AGENT_ROOT.joinpath(*parts[index + 2:]).resolve(strict=False)
 
     for marker in (PROJECT_ROOT.name, "SupplyChainAgent"):

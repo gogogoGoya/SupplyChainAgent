@@ -129,7 +129,7 @@ def default_simulation_manager_factory(context: SimulationRunContext) -> Any:
             herding_config=simulation_config.get("herding_config"),
         )
 
-    from MultiEnterpriseAgentManager import (  # noqa: WPS433
+    from agent.MultiEnterpriseAgentManager import (  # noqa: WPS433
         MultiEnterpriseClaudeManager,
         build_demo_specs,
     )

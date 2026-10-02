@@ -7,8 +7,8 @@ from enterprise.modules.hr_manager import HRManager
 from enterprise.modules.inventory_manager import InventoryManager
 from enterprise.modules.procurement_manager import ProcurementManager
 from enterprise.modules.sales_manager import SalesManager
-from scripted_rule_runner import ScriptedRuleRunner
-from static_utils import StaticUtils
+from agent.scripted_rule_runner import ScriptedRuleRunner
+from agent.static_utils import StaticUtils
 
 
 def test_procurement_runtime_config_prefers_enterprise_active_config():

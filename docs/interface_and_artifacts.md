@@ -6,9 +6,9 @@ The frontend proxies `/operations` requests to the FastAPI service. During local
 
 | Ignored local path | Contents |
 | --- | --- |
-| `ccAgent/CCSDKAgent/workspace_jobs/` | Job metadata, per-firm output, public snapshots, and archives |
-| `ccAgent/CCSDKAgent/workspace_multi/` | Active multi-enterprise working state |
-| `ccAgent/CCSDKAgent/simulation_runs/` | Legacy local archives, when present |
-| `ccAgent/CCSDKAgent/workspace_jobs/_operations/` | SQLite operations mirror |
+| `agent/workspace_jobs/` | Job metadata, per-firm output, public snapshots, and archives |
+| `agent/workspace_multi/` | Active multi-enterprise working state |
+| `agent/simulation_runs/` | Legacy local archives, when present |
+| `agent/workspace_jobs/_operations/` | SQLite operations mirror |
 
 A fresh checkout contains source and executable templates, but no completed experiments, checkpoints, conversations, or operational databases.

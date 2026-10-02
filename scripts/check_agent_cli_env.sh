@@ -110,13 +110,13 @@ fi
 if [[ ! -d "$SUPPLY_CHAIN_PROJECT_ROOT" ]]; then
   export SUPPLY_CHAIN_PROJECT_ROOT="$ROOT_DIR"
 fi
-if [[ -z "${CCSDKAGENT_ROOT:-}" ]]; then
-  export CCSDKAGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/ccAgent/CCSDKAgent"
-elif [[ "$CCSDKAGENT_ROOT" != /* ]]; then
-  export CCSDKAGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/$CCSDKAGENT_ROOT"
+if [[ -z "${SUPPLY_CHAIN_AGENT_ROOT:-}" ]]; then
+  export SUPPLY_CHAIN_AGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/agent"
+elif [[ "$SUPPLY_CHAIN_AGENT_ROOT" != /* ]]; then
+  export SUPPLY_CHAIN_AGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/$SUPPLY_CHAIN_AGENT_ROOT"
 fi
-if [[ ! -d "$CCSDKAGENT_ROOT" ]]; then
-  export CCSDKAGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/ccAgent/CCSDKAgent"
+if [[ ! -d "$SUPPLY_CHAIN_AGENT_ROOT" ]]; then
+  export SUPPLY_CHAIN_AGENT_ROOT="$SUPPLY_CHAIN_PROJECT_ROOT/agent"
 fi
 PYTHON_BIN="$(detect_python_bin)"
 
@@ -220,4 +220,4 @@ PY
 
 echo
 echo "Claude stderr log path used by runtime:"
-echo "  $ROOT_DIR/ccAgent/logs/claude_stderr_$(date +%Y%m%d).log"
+echo "  $ROOT_DIR/agent/logs/claude_stderr_$(date +%Y%m%d).log"

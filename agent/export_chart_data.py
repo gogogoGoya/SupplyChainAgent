@@ -1447,7 +1447,7 @@ def main() -> None:
         "--workspace-dir",
         type=Path,
         default=default_workspace_dir,
-        help="CCSDKAgent workspace 根目录，默认使用当前脚本目录下的 workspace",
+        help="Agent workspace root (defaults to the workspace beside this script)",
     )
     parser.add_argument(
         "--output",

@@ -176,8 +176,7 @@ SINGLE_ENTERPRISE_CASE_ALIASES = {
 
 SINGLE_ENTERPRISE_STATIC_COMMAND_ROOT = (
     Path(__file__).resolve().parents[1]
-    / "ccAgent"
-    / "CCSDKAgent"
+    / "agent"
     / "static_commands"
     / "single_enterprise"
 )
@@ -1551,7 +1550,7 @@ def _build_initial_action_batches_from_specs(
     构造两批初始化动作。
 
     使用范围：
-    - `ccAgent/CCSDKAgent/multi_tenant_utils.py` 生成 `static_commands/*.json`
+    - `agent/multi_tenant_utils.py` 生成 `static_commands/*.json`
     - `StaticUtils.execute_action(...)` 在模拟启动前真正送入环境端执行
     """
     init_action_1: List[Dict[str, Any]] = []
@@ -2245,7 +2244,7 @@ def _load_single_enterprise_source_json(
     *,
     required: bool = True,
 ) -> Any:
-    """只从 CCSDKAgent 静态命令包读取单企业运行时 JSON。"""
+    """Read single-enterprise runtime JSON from the Agent command templates."""
     static_case_dir = SINGLE_ENTERPRISE_STATIC_CASE_DIRS.get(case_id)
     if not static_case_dir:
         raise KeyError(f"Unknown single enterprise source case_id: {case_id}")
@@ -2446,7 +2445,7 @@ def _build_single_case_prewarm_execution_plan(
         return {}
     normalized = deepcopy(prewarm)
     normalized["source"] = (
-        "ccAgent/CCSDKAgent/static_commands/single_enterprise/"
+        "agent/static_commands/single_enterprise/"
         f"{SINGLE_ENTERPRISE_STATIC_CASE_DIRS.get(case_id, case_id)}"
     )
     normalized["prewarm_kind"] = "custom_json_actions_not_scripted_decision_policy"
@@ -6506,7 +6505,7 @@ def get_auto_policy_config() -> Dict[str, Dict[str, Any]]:
     返回 Auto 部门启发式策略。
 
     使用范围：
-    - `ccAgent/CCSDKAgent/multi_tenant_utils.py`
+    - `agent/multi_tenant_utils.py`
     """
     auto_policy = get_scenario_config()["auto_policy"]
     return {

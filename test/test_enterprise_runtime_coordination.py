@@ -1,7 +1,7 @@
 import json
 
-from data_config import DepartmentSpec, EnterpriseSpec
-from EnterpriseRuntime import EnterpriseRuntime
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.EnterpriseRuntime import EnterpriseRuntime
 
 
 def _write_json(path, payload):

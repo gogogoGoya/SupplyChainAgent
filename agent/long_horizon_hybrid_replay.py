@@ -9,7 +9,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from multi_tenant_utils import MultiTenantUtils
+from agent.multi_tenant_utils import MultiTenantUtils
 
 
 class LongHorizonHybridReplayRunner:

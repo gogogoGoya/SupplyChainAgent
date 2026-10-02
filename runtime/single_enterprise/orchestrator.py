@@ -13,17 +13,17 @@ from typing import Any, Dict, List, Optional
 
 
 ROOT = Path(__file__).resolve().parents[2]
-AGENT_ROOT = ROOT / "ccAgent" / "CCSDKAgent"
+AGENT_ROOT = ROOT / "agent"
 for value in (str(ROOT), str(AGENT_ROOT)):
     if value not in sys.path:
         sys.path.insert(0, value)
 
-from data_config import DepartmentSpec, EnterpriseSpec  # noqa: E402
-from EnterpriseRuntime import EnterpriseRuntime  # noqa: E402
-from SessionRegistry import SessionRegistry  # noqa: E402
-from static_utils import StaticUtils  # noqa: E402
-from multi_tenant_utils import MultiTenantUtils  # noqa: E402
-from GlobalDepartmentLockManager import GlobalDepartmentLockManager  # noqa: E402
+from agent.data_config import DepartmentSpec, EnterpriseSpec  # noqa: E402
+from agent.EnterpriseRuntime import EnterpriseRuntime  # noqa: E402
+from agent.SessionRegistry import SessionRegistry  # noqa: E402
+from agent.static_utils import StaticUtils  # noqa: E402
+from agent.multi_tenant_utils import MultiTenantUtils  # noqa: E402
+from agent.GlobalDepartmentLockManager import GlobalDepartmentLockManager  # noqa: E402
 
 from config.environment_config import EnvironmentConfig  # noqa: E402
 from config.integration_profiles import resolve_integration_profiles  # noqa: E402

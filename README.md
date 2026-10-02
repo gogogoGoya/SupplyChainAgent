@@ -35,7 +35,7 @@ The final response should report `status: completed` and `completed_steps: 2`. J
 | Directory | Purpose |
 | --- | --- |
 | `config/` | Scenario registry, firm specifications, policies, and environment settings |
-| `ccAgent/CCSDKAgent/` | Agent orchestration, Skills, scripted decisions, and run handling |
+| `agent/` | Agent orchestration, Skills, scripted decisions, and run handling |
 | `core/`, `enterprise/`, `network/` | Economic rules, department operations, and B2B exchange |
 | `simulate/` | Simulation API and environment adapter |
 | `runtime/`, `persistence/` | Job control, run archives, checkpoints, and the SQLite operations mirror |
@@ -45,7 +45,7 @@ The final response should report `status: completed` and `completed_steps: 2`. J
 
 The active scenario is selected through the experiment interface or `SIMULATION_SCENARIO_ID`. The default is `architecture_linear_chain_short`; the registry also contains bullwhip, cobweb, herding, shared-resource, long-horizon, and single-enterprise cases. The scenario sent to the Agent runtime must match the scenario loaded by the simulation service.
 
-Run artifacts, model messages, logs, and local SQLite files are written below `ccAgent/CCSDKAgent/workspace_jobs/` and are excluded from Git. This repository contains executable templates but no completed simulation data.
+Run artifacts, model messages, logs, and local SQLite files are written below `agent/workspace_jobs/` and are excluded from Git. This repository contains executable templates but no completed simulation data.
 
 ## Documentation
 

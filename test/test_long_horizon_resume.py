@@ -2,8 +2,8 @@ import json
 import pickle
 from types import SimpleNamespace
 
-from ccAgent.CCSDKAgent.MultiEnterpriseAgentManager import MultiEnterpriseClaudeManager
-from ccAgent.CCSDKAgent.static_utils import StaticUtils
+from agent.MultiEnterpriseAgentManager import MultiEnterpriseClaudeManager
+from agent.static_utils import StaticUtils
 from message.message_manager import MessageManager
 from network.exchange_manager import (
     get_next_id_counter_value,

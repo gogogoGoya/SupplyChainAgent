@@ -6,10 +6,10 @@ import { fileURLToPath } from 'node:url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const projectRootDir = path.resolve(__dirname, '..')
-const ccSdkAgentDir = path.resolve(projectRootDir, 'ccAgent', 'CCSDKAgent')
-const workspaceMultiDir = path.resolve(ccSdkAgentDir, 'workspace_multi')
-const simulationRunsDir = path.resolve(ccSdkAgentDir, 'simulation_runs')
-const workspaceJobsDir = path.resolve(ccSdkAgentDir, 'workspace_jobs')
+const agentDir = path.resolve(projectRootDir, 'agent')
+const workspaceMultiDir = path.resolve(agentDir, 'workspace_multi')
+const simulationRunsDir = path.resolve(agentDir, 'simulation_runs')
+const workspaceJobsDir = path.resolve(agentDir, 'workspace_jobs')
 const operationsApiTarget = process.env.OPERATIONS_API_PROXY_TARGET || 'http://127.0.0.1:8000'
 
 const contentTypes = {

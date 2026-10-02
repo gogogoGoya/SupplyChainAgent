@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-from data_config import DepartmentSpec, EnterpriseSpec
-from multi_tenant_utils import MultiTenantUtils
-from skill_runner import SkillRunner, SkillRunSpec
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.multi_tenant_utils import MultiTenantUtils
+from agent.skill_runner import SkillRunner, SkillRunSpec
 
 
 def _runner(tmp_path):

@@ -16,8 +16,7 @@ POSTGRES_DSN_ENV = "SIMULATION_POSTGRES_DSN"
 SQL_MIRROR_DISABLED_ENV = "SIMULATION_SQL_MIRROR_DISABLED"
 DEFAULT_SQL_MIRROR_PATH = (
     PROJECT_ROOT
-    / "ccAgent"
-    / "CCSDKAgent"
+    / "agent"
     / "workspace_jobs"
     / "_operations"
     / "supplychain_integrated.sqlite"

@@ -10,19 +10,40 @@ from persistence.sql_mirror_runtime import get_default_sqlite_mirror_path
 
 def test_relative_runtime_path_resolves_from_project_root():
     resolved = resolve_project_path(
-        "ccAgent/CCSDKAgent/workspace_jobs/run_example"
+        "agent/workspace_jobs/run_example"
     )
 
     assert resolved == AGENT_ROOT / "workspace_jobs" / "run_example"
+
+
+def test_agent_runtime_assets_share_one_root(monkeypatch):
+    monkeypatch.delenv("SIMULATION_SQL_MIRROR_PATH", raising=False)
+    assert AGENT_ROOT == PROJECT_ROOT / "agent"
+    assert (AGENT_ROOT / ".claude" / "skills" / "analyst" / "SKILL.md").is_file()
+    assert (
+        AGENT_ROOT
+        / "static_commands"
+        / "single_enterprise"
+        / "case_01_market_insufficient"
+        / "init_action.json"
+    ).is_file()
+    assert get_default_sqlite_mirror_path() == (
+        AGENT_ROOT / "workspace_jobs" / "_operations" / "supplychain_integrated.sqlite"
+    )
 
 
 def test_stale_agent_artifact_path_is_rebased_to_current_checkout():
     resolved = resolve_project_path(
-        "/srv/legacy/SupplyChainAgent/ccAgent/CCSDKAgent/"
+        "/srv/legacy/SupplyChainAgent/agent/"
         "workspace_jobs/run_example"
     )
 
     assert resolved == AGENT_ROOT / "workspace_jobs" / "run_example"
+
+
+def test_unrelated_agent_directory_is_not_rebased(tmp_path):
+    missing = tmp_path / "other-project" / "agent" / "archive.json"
+    assert resolve_project_path(missing) == missing
 
 
 def test_stale_project_path_is_rebased_to_current_checkout():
@@ -43,7 +64,7 @@ def test_existing_absolute_path_is_preserved(tmp_path):
 def test_sqlite_mirror_accepts_project_relative_path(monkeypatch):
     monkeypatch.setenv(
         "SIMULATION_SQL_MIRROR_PATH",
-        "ccAgent/CCSDKAgent/workspace_jobs/_operations/test.sqlite",
+        "agent/workspace_jobs/_operations/test.sqlite",
     )
 
     assert get_default_sqlite_mirror_path() == (
@@ -60,7 +81,7 @@ def test_root_environment_overrides_are_resolved_in_fresh_process(tmp_path):
         {
             "PYTHONPATH": str(PROJECT_ROOT),
             "SUPPLY_CHAIN_PROJECT_ROOT": str(project_root),
-            "CCSDKAGENT_ROOT": "runtime-agent",
+            "SUPPLY_CHAIN_AGENT_ROOT": "runtime-agent",
         }
     )
 

@@ -12,17 +12,17 @@ from pathlib import Path
 import sys
 from typing import Any, Callable, Dict, List, Optional
 
-from data_config import DepartmentSpec, EnterpriseSpec
-from multi_tenant_utils import MultiTenantUtils
-from GlobalDepartmentLockManager import GlobalDepartmentLockManager
-from scripted_rule_runner import ScriptedRuleRunner
-from long_horizon_hybrid_replay import LongHorizonHybridReplayRunner
+from agent.data_config import DepartmentSpec, EnterpriseSpec
+from agent.multi_tenant_utils import MultiTenantUtils
+from agent.GlobalDepartmentLockManager import GlobalDepartmentLockManager
+from agent.scripted_rule_runner import ScriptedRuleRunner
+from agent.long_horizon_hybrid_replay import LongHorizonHybridReplayRunner
 from claude_agent_sdk import query
 from claude_agent_sdk._errors import ProcessError
 
-from SessionRegistry import SessionRegistry
+from agent.SessionRegistry import SessionRegistry
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.environment_config import EnvironmentConfig
 from config.integration_profiles import resolve_integration_profiles
 from config.simulation_preset_config import get_active_scenario_id
@@ -1743,7 +1743,7 @@ class SkillRunner:
         return summary
 
     def _claude_stderr_tail(self, role: str, max_lines: int = 8) -> List[str]:
-        log_dir = self.client_dir.parent / "logs"
+        log_dir = self.client_dir / "logs"
         if not log_dir.exists():
             return []
         paths = sorted(

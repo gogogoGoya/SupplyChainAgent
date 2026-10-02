@@ -14,7 +14,7 @@ from pathlib import Path
 original_exists = Path.exists
 
 def exists_without_single_case_assets(path):
-    if "ccAgent/CCSDKAgent/static_commands/single_enterprise" in path.as_posix():
+    if "agent/static_commands/single_enterprise" in path.as_posix():
         return False
     return original_exists(path)
 

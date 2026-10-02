@@ -1,4 +1,4 @@
-from MultiEnterpriseAgentManager import MultiEnterpriseClaudeManager
+from agent.MultiEnterpriseAgentManager import MultiEnterpriseClaudeManager
 
 
 def test_model_assignment_never_truncates_dynamic_enterprise_counts():
