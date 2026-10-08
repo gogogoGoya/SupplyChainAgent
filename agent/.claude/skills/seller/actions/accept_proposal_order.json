@@ -1,21 +1,21 @@
 {
   "action_name": "accept_proposal_order",
-  "description": "接收来自交易所帮助拟定的订单提案, 提案内容与此前发起的销售需求相关",
+  "description": "Accept an exchange-generated order proposal related to a previously advertised sales offer.",
   "conditions": [
-    "有执行过adjust_sales_demand方法向上游交易所建立需求,此时反馈的提案符合需求",
-    "trade_decision_card.review_queue 中存在真实待决策 proposal，或部门信息中的 proposals_list 含有状态为 pending 的 proposal",
-    "企业当前现货、可在交期内承诺的供给能力、当前已确认 backlog 风险共同判断后，认为该 proposal 可以安全承接"
+    "An offer was posted through adjust_sales_demand and the returned proposal matches it.",
+    "trade_decision_card.review_queue contains a real proposal awaiting a decision, or the department's proposals_list contains a pending proposal.",
+    "Available stock, supply that can be committed by the delivery date, and confirmed backlog risk together show that the proposal can be accepted safely."
   ],
   "required_parameters": [
     "proposal_id"
   ],
   "parameter_constraints": [
-    "proposal_id 必须是已有的提案id，应优先从 trade_decision_card.review_queue 查看到；若决策卡未覆盖，再从部门信息中的 proposals_list 查看",
-    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏"
+    "proposal_id must identify an existing proposal. Prefer trade_decision_card.review_queue; consult the department's proposals_list only if the decision card does not include it.",
+    "When creating action.json from this template, action_param must contain exactly the fields listed in required_parameters, with none added or omitted."
   ],
   "constraints": [
-    "不要只因为 proposal.quantity 大于当前 on_hand 就机械拒绝；若 confirmed_order_backlog_quantity 与 stale_backlog_quantity 很低、fill_rate 稳定、且 proposed_delivery_round 仍给未来履约留出空间，可以接受",
-    "若当前库存不足，但可在 proposed_delivery_round 前通过后续采购、生产或上游交付补齐，也应视为可接受提案",
-    "若 trade_decision_card.review_queue 中该 proposal 的 recommended_action 为 accept_proposal_order，或 reason_codes 显示 FUTURE_SERVICE_CAPABLE，且没有明显 confirmed/stale backlog 风险时，默认优先接受"
+    "Do not reject mechanically just because proposal.quantity exceeds current on_hand. Accepting can be feasible when confirmed_order_backlog_quantity and stale_backlog_quantity are low, fill_rate is stable, and proposed_delivery_round leaves time to fulfill.",
+    "If current stock is insufficient but procurement, production, or upstream delivery can cover the gap before proposed_delivery_round, treat the proposal as potentially acceptable.",
+    "Prefer acceptance when trade_decision_card.review_queue recommends accept_proposal_order or reason_codes contains FUTURE_SERVICE_CAPABLE, provided confirmed or stale backlog risk is not material."
   ]
 }

@@ -6689,7 +6689,7 @@ body {
   display: block;
 }
 
-/* 动作详情样式 */
+/* Action details */
 .action-details {
   display: flex;
   flex-direction: column;
@@ -6785,7 +6785,7 @@ body {
   line-height: 1.4;
 }
 
-/* 未执行原因样式 */
+/* Reasons for skipped actions */
 .pass-reason-item {
   background: #fff8e6;
   border: 1px solid #ffd7b3;
@@ -6840,7 +6840,7 @@ body {
   font-weight: bold;
 }
 
-/* 交易所信息样式 */
+/* Exchange information */
 .exchange-info {
   display: flex;
   flex-direction: column;
@@ -6932,7 +6932,7 @@ body {
   gap: 20px;
 }
 
-/* 轮次分组样式 */
+/* Turn groups */
 .round-section {
   margin-bottom: 15px;
   border: 1px solid #e8e8e8;
@@ -6949,7 +6949,7 @@ body {
   border-bottom: 1px solid #e8e8e8;
 }
 
-/* 请求、提案、订单样式 */
+/* Requests, proposals, and orders */
 .requests-section, .proposals-section, .orders-section {
   margin-bottom: 15px;
 }
@@ -6981,7 +6981,7 @@ body {
   border-bottom: none;
 }
 
-/* 订单字段网格 */
+/* Order field grid */
 .order-field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -7019,7 +7019,7 @@ body {
   margin: 10px 0;
 }
 
-/* 产品统计样式 */
+/* Product statistics */
 .product-statistics-section {
   margin-top: 20px;
 }
@@ -7050,7 +7050,7 @@ body {
   border-bottom: 1px solid #e8e8e8;
 }
 
-/* ExchangeEnterprisePanel 样式 */
+/* ExchangeEnterprisePanel */
 .exchange-enterprise-panel {
   display: flex;
   flex-direction: column;
@@ -7323,7 +7323,7 @@ body {
   word-break: break-all;
 }
 
-/* 新的整合样式 */
+/* Consolidated panel styles */
 .exchange-enterprise-panel {
   display: flex;
   flex-direction: column;
@@ -7796,7 +7796,7 @@ body {
   padding: 18px 8px;
 }
 
-/* 响应式调整 */
+/* Responsive adjustments */
 @media (max-width: 1200px) {
   .three-column-layout {
     grid-template-columns: 1fr;

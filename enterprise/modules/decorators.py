@@ -8,43 +8,43 @@ from enterprise.modules.response_model import ModuleResponse, ResponseStatus
 
 def skip_dry_run_validation(func: Callable) -> Callable:
     """
-    标记该动作在 dry_run 校验阶段无需真实调用。
-    """
+    Marks that the action does not require a real call at the dry_run verification stage.
+        """
     setattr(func, "_skip_dry_run_validation", True)
     return func
 
 
 def with_response(action_type: str = None):
     """
-    自动创建和处理ModuleResponse的装饰器
-    
-    功能：
-    1. 自动创建响应对象
-    2. 自动注入响应对象到方法参数
-    3. 统一异常处理
-    4. 自动添加警告信息
-    
-    Args:
-        action_type: 操作类型名称，默认使用方法名
+    Autocreate and process ModuleResponse decorators
         
-    使用示例：
+    Function:
+    1. Automatically create responding objects
+    2. Automatic injection of responding objects into method parameters
+    Harmonization of anomalies
+    Automatically add warning messages
+        
+    Args:
+        action_type: Operation type name; defaults to the method name.
+                
+    Example used:
         @with_response("add_revenue")
         def add_revenue(self, amount, source, response: ModuleResponse = None):
-            # response 已经自动创建并注入
+            # Response has been created and injected
             if amount <= 0:
                 return self.error_response(response, "INVALID_AMOUNT", "Amount must be positive")
-            
-            # ... 业务逻辑 ...
-            
+                        
+            Business logic
+                        
             return self.success_response(response, "Revenue added", {...})
-    """
+        """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            # 确定操作类型
+            # Determine type of operation
             _action_type = action_type or func.__name__
             
-            # 创建响应对象
+            # Create Response Object
             response = self.create_response(_action_type)
             
             try:
@@ -52,7 +52,7 @@ def with_response(action_type: str = None):
                 bound_args = sig.bind(self, *args, **kwargs)
                 bound_args.apply_defaults()
 
-                # 去掉 self 和 response（如果有）
+                # Remove self and response (if any)
                 input_params = {
                     k: v for k, v in bound_args.arguments.items()
                     if k not in ('self', 'response')
@@ -60,21 +60,21 @@ def with_response(action_type: str = None):
 
                 response.params = input_params
             except Exception:
-                # 参数记录失败不应影响主流程
+                # Parameter log failure should not affect the main process
                 response.params = {
                     "args": args,
                     "kwargs": kwargs
                 }
             try:
-                # 执行方法，将response注入到kwargs中
+                # Implementation method to inject response into kwargs
                 kwargs['response'] = response
                 result = func(self, *args, **kwargs)
                 
-                # 如果方法返回ModuleResponse，直接返回
+                # If the method returns ModeuleResponse, go straight back
                 if isinstance(result, ModuleResponse):
                     return result
                 
-                # 如果方法返回字典，包装为成功响应
+                # If the method returns to the dictionary, package it as a successful sound Response
                 if isinstance(result, dict):
                     return self.success_response(
                         response, 
@@ -82,11 +82,11 @@ def with_response(action_type: str = None):
                         result
                     )
                 
-                # 其他情况，返回原始结果（不推荐）
+                # Other cases, return original results (not recommended)
                 return result
                 
             except ValueError as e:
-                # 参数验证错误
+                # Parameter Authentication Error
                 return self.error_response(
                     response, 
                     "VALIDATION_ERROR", 
@@ -94,7 +94,7 @@ def with_response(action_type: str = None):
                     f"Validation failed for {_action_type}"
                 )
             except KeyError as e:
-                # 键不存在错误
+                # Key does not contain error
                 return self.error_response(
                     response,
                     "KEY_ERROR",
@@ -116,37 +116,37 @@ def with_response(action_type: str = None):
 
 def validate_positive(param_name: str):
     """
-    验证参数为正数的装饰器
-    
-    Args:
-        param_name: 需要验证的参数名
+    Decorators with positive parameters
         
-    使用示例：
+    Args:
+        param_name: Name of the parameter to validate.
+                
+    Example used:
         @validate_positive("amount")
         def add_revenue(self, amount, source):
-            # amount 已经被验证为正数
+            # Amount has been certified as positive
             ...
-    """
+        """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            # 获取参数值
+            # Fetch Parameter Value
             value = kwargs.get(param_name)
             
-            # 如果在kwargs中没有找到，尝试从args中获取
+            # If not found in kwargs, try to get from args
             if value is None and len(args) > 0:
-                # 获取函数签名，找到参数位置
+                # Fetch function signature, find parameter position
                 import inspect
                 sig = inspect.signature(func)
                 param_names = list(sig.parameters.keys())
                 
                 if param_name in param_names:
                     param_index = param_names.index(param_name)
-                    # 注意：self占用第一个位置，所以需要-1
+                    # Note: Self takes the first position, so it's needed-1
                     if param_index <= len(args):
                         value = args[param_index - 1]
             
-            # 验证
+            # Authentication
             if value is not None and value <= 0:
                 raise ValueError(f"{param_name} must be positive, got {value}")
             
@@ -158,22 +158,22 @@ def validate_positive(param_name: str):
 
 def validate_choice(param_name: str, valid_choices_attr: str):
     """
-    验证参数在有效选项中的装饰器
-    
-    Args:
-        param_name: 需要验证的参数名
-        valid_choices_attr: self.config中有效选项列表的属性名
+    Decorator to verify parameters in a valid option
         
-    使用示例：
+    Args:
+        param_name: Name of the parameter to validate.
+        valid_choices_attr: Name of the valid-choice list on `self.config`.
+                
+    Example used:
         @validate_choice("source", "REVENUE_SOURCES")
         def add_revenue(self, amount, source):
-            # source 已经被验证在 self.config.REVENUE_SOURCES 中
+            # `source` has been validated against the configured choices.
             ...
-    """
+        """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            # 获取有效选项列表
+            # Get a list of valid options
             if not hasattr(self, 'config'):
                 raise AttributeError("Instance must have 'config' attribute")
             
@@ -181,10 +181,10 @@ def validate_choice(param_name: str, valid_choices_attr: str):
             if valid_choices is None:
                 raise AttributeError(f"Config has no attribute '{valid_choices_attr}'")
             
-            # 获取参数值
+            # Fetch Parameter Value
             value = kwargs.get(param_name)
             
-            # 如果在kwargs中没有找到，尝试从args中获取
+            # If not found in kwargs, try to get from args
             if value is None and len(args) > 0:
                 import inspect
                 sig = inspect.signature(func)
@@ -195,7 +195,7 @@ def validate_choice(param_name: str, valid_choices_attr: str):
                     if param_index <= len(args):
                         value = args[param_index - 1]
             
-            # 验证
+            # Authentication
             if value is not None and value not in valid_choices:
                 raise ValueError(
                     f"Invalid {param_name}: '{value}'. "
@@ -210,18 +210,18 @@ def validate_choice(param_name: str, valid_choices_attr: str):
 
 def validate_date_range(start_param: str = "start_date", end_param: str = "end_date"):
     """
-    验证日期范围的装饰器
-    
-    Args:
-        start_param: 开始日期参数名
-        end_param: 结束日期参数名
+    Decorator to verify date range
         
-    使用示例：
+    Args:
+        start_param: Name of the start-date parameter.
+        end_param: Name of the end-date parameter.
+                
+    Example used:
         @validate_date_range()
         def generate_report(self, start_date, end_date):
-            # 日期范围已经被验证
+            # Date range verified
             ...
-    """
+        """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -254,17 +254,17 @@ def validate_date_range(start_param: str = "start_date", end_param: str = "end_d
 
 def performance_monitor(log_slow_threshold: float = 1.0):
     """
-    性能监控装饰器
-    记录方法执行时间，如果超过阈值则记录警告
-    
-    Args:
-        log_slow_threshold: 慢查询阈值（秒）
+    Performance Monitor Decorator
+    Record the execution time of the method and the warning if the threshold is exceeded
         
-    使用示例：
+    Args:
+        log_slow_threshold: Slow query threshold (sec)
+                
+    Example used:
         @performance_monitor(log_slow_threshold=2.0)
         def complex_calculation(self):
             ...
-    """
+        """
     def decorator(func: Callable) -> Callable:
         @wraps(func)
         def wrapper(self, *args, **kwargs):

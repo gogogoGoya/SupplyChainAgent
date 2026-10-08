@@ -1,15 +1,15 @@
 {
   "action_name": "develop_market",
-  "description": "市场开发决策",
+  "description": "Develop a new market.",
   "conditions": [
-    "analysis 中明确提出 销售增长、市场扩展或订单不足",
-    "生产与库存能力充足，但当前可接受订单数量有限",
-    "企业处于扩张阶段，现金状况允许前期投入"
+    "analysis calls for sales growth, market expansion, or relief from insufficient orders.",
+    "Production and inventory capacity are adequate, but few acceptable orders are available.",
+    "The enterprise is expanding and has enough cash for the initial investment."
   ],
   "guidelines": [
-    "优先开发 regional 市场，风险与成本较低",
-    "在产能与供应链稳定后，再考虑 international 市场",
-    "不得在现金紧张或履约能力不足时盲目扩张"
+    "Prioritize lower-risk, lower-cost regional markets.",
+    "Consider international markets only after capacity and supply chains are stable.",
+    "Do not expand indiscriminately when cash is tight or fulfillment capacity is inadequate."
   ],
   "required_parameters": [
     "market_type",
@@ -19,7 +19,7 @@
     "market_name"
   ],
   "parameter_constraints": [
-    "market_type 必须是 regional 或 international",
-    "assigned_workers 必须大于等于 1，投入的人员数量将影响从后续该市场获取到的订单数量"
+    "market_type must be regional or international.",
+    "assigned_workers must be at least 1; staffing affects the number of orders subsequently obtained from that market."
   ]
 }

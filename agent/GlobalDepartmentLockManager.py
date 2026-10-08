@@ -5,9 +5,9 @@ from threading import Lock
 
 class GlobalDepartmentLockManager:
     """
-    全局部门锁管理器
-    确保同一时间只有一个企业的特定部门在运行
-    """
+    Global department Lock Manager
+    Make sure that only one specific enterprise department is running at the same time
+        """
     
     _instance = None
     _lock = Lock()
@@ -26,36 +26,36 @@ class GlobalDepartmentLockManager:
     
     def get_lock(self, department_role: str) -> asyncio.Lock:
         """
-        获取特定部门角色的锁
-        :param department_role: 部门角色名称，如 "HR", "Sales", "Procurement" 等
-        :return: 对应的异步锁
-        """
+        Get a lock on specific department roles
+        : paramdepartment_role: department role names such as "HR", "Sales", "Procurement" etc.
+        :return: The asynchronous lock for the department role.
+                """
         if department_role not in self._locks:
             self._locks[department_role] = asyncio.Lock()
         return self._locks[department_role]
     
     async def acquire_department_lock(self, department_role: str) -> None:
         """
-        获取并等待特定部门的锁
-        :param department_role: 部门角色名称
-        """
+        Get and wait for a specific lock department
+        : paramdepartment_role: department Role name
+                """
         lock = self.get_lock(department_role)
         await lock.acquire()
     
     def release_department_lock(self, department_role: str) -> None:
         """
-        释放特定部门的锁
-        :param department_role: 部门角色名称
-        """
+        Release specific lock department
+        : paramdepartment_role: department Role name
+                """
         lock = self.get_lock(department_role)
         if lock.locked():
             lock.release()
     
     def is_department_locked(self, department_role: str) -> bool:
         """
-        检查特定部门是否已被锁定
-        :param department_role: 部门角色名称
-        :return: 是否被锁定
-        """
+        Check if specific department is locked
+        : paramdepartment_role: department Role name
+        :return: Locked
+                """
         lock = self.get_lock(department_role)
         return lock.locked()

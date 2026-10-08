@@ -2,13 +2,13 @@ from pathlib import Path
 from typing import Dict, List, Callable, Any, Optional
 import json
 # ============================================================
-# Session 注册器
+# Session Registrar
 # ============================================================
 
 class SessionRegistry:
     """
-    管理企业 + 角色级 session_id
-    结构：
+    Manage parameter + role level session_id
+    Structure:
     {
         "enterprise_A": {
             "Analyst": "session_xxx",
@@ -17,7 +17,7 @@ class SessionRegistry:
         },
         ...
     }
-    """
+        """
 
     def __init__(self, persist_path: Optional[Path] = None):
         self.persist_path = persist_path

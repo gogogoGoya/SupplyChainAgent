@@ -72,19 +72,19 @@ def _materialize_market_config_snapshot(
     return materialized
 
 # ============================================================
-# 多企业总管理器
+# multi-enterprise Master Manager
 # ============================================================
 
 class MultiEnterpriseClaudeManager:
     """
-    多企业总管理器
+    multi-enterprise Master Manager
 
-    核心职责：
-    - 持有多个 EnterpriseRuntime
-    - 统一推进 world day
-    - 并发调度多个企业工作流
-    - 管理 session_registry / workspace 
-    """
+    Core functions:
+    - Holds multiple Enterprise Runtime
+    World day
+    - and dispatch multiple enterprisex3/>
+    - Manage parameter / workspace 
+        """
 
     def __init__(
         self,
@@ -128,10 +128,10 @@ class MultiEnterpriseClaudeManager:
 
         self.session_registry = SessionRegistry(self.workspace_dir / "session_registry.json")
 
-        # 企业级并发控制信号量
+        # Co-control enterprise
         self.enterprise_semaphore = asyncio.Semaphore(max_enterprise_concurrency)
 
-        # 初始化全局部门锁管理器（确保单例被创建）
+        # Initialize global department lock manager (ensure that individual cases are created)
         GlobalDepartmentLockManager()
 
         self.runtimes: Dict[str, EnterpriseRuntime] = {
@@ -172,7 +172,7 @@ class MultiEnterpriseClaudeManager:
         return resolved[:enterprise_count]
 
     # ----------------------------
-    # World 调度
+    # World Schedule
     # ----------------------------
 
     async def run_one_day(self, round_id: int) -> Dict[str, List[dict]]:
@@ -193,11 +193,11 @@ class MultiEnterpriseClaudeManager:
 
         # MultiTenantUtils.handle_test()
         async def run_enterprise_with_semaphore(enterprise_id, runtime):
-            async with self.enterprise_semaphore:  # 使用信号量控制并发
+            async with self.enterprise_semaphore:  # Use semaphore to control co-production
                 return await runtime.run_workflow(round_id)
 
         async def run_trade_with_semaphore(enterprise_id, runtime):
-            async with self.enterprise_semaphore:  # 使用信号量控制并发
+            async with self.enterprise_semaphore:  # Use semaphore to control co-production
                 return await runtime.run_trade(
                     round_id,
                     observation_already_refreshed=True,
@@ -209,7 +209,7 @@ class MultiEnterpriseClaudeManager:
         }
         await asyncio.gather(*tasks.values()) 
 
-        # 在都运行过至少一次后，在该轮再次校验订单情况，让销售/采购部门确认订单需求反馈
+        # Recheck the order once again during the round after all operations have been performed at least once, allowing department sales/procurement to confirm feedback on the order requirement
         StaticUtils.check_orders()
         if retain_intermediate_exchange:
             MultiTenantUtils.save_exchange_info(round_id, "after_check_orders")
@@ -221,7 +221,7 @@ class MultiEnterpriseClaudeManager:
             for enterprise_id, rt in self.runtimes.items()
         }
         await asyncio.gather(*trade_tasks.values()) 
-        # 调用交易所进行统计
+        # Call exchange for statistics
         StaticUtils.statistics_orders()
         MultiTenantUtils.save_exchange_info(round_id, "end_of_day")
         if retention.get("deduplicate_end_of_day_exchange_alias", False):
@@ -1087,8 +1087,8 @@ class MultiEnterpriseClaudeManager:
                 stop_reason = {
                     "type": "agent_timeout_circuit_breaker",
                     "message": (
-                        "连续完整轮次的全部 Agent 调用均耗尽超时重试，"
-                        "已在完整 checkpoint 边界自动暂停，等待模型服务或提示上下文优化后继续。"
+                        "All agent calls exhausted their timeout retries for consecutive complete rounds. "
+                        "The run was paused at a complete checkpoint and can resume after the model service or prompt context is corrected."
                     ),
                     "policy": "seal_last_complete_round",
                     "completed_steps": effective_total_steps,
@@ -1351,7 +1351,7 @@ def build_demo_specs() -> List[EnterpriseSpec]:
     return enterprise_specs
 
 # ============================================================
-# 运行入口
+# Run Entry
 # ============================================================
 
 def resolve_agent_run_steps(default_steps: int) -> int:

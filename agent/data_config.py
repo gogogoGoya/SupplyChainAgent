@@ -2,12 +2,12 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Callable, Any
 
 # ============================================================
-# 数据结构
+# Data structure
 # ============================================================
 
 @dataclass
 class DepartmentSpec:
-    """部门配置"""
+    """department Configuration"""
     dept_id: str
     role: str
     name: str
@@ -22,7 +22,7 @@ class DepartmentSpec:
 
 @dataclass
 class EnterpriseSpec:
-    """企业配置"""
+    """enterprise Configuration"""
     enterprise_id: str
     enterprise_name: str
     analyst_skill_name: str = "analyst"

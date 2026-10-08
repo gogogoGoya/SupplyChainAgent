@@ -89,12 +89,12 @@ class RunJobRequest(BaseModel):
 
 
 DEPARTMENT_LABELS = {
-    "finance": "财务",
-    "hr": "人力",
-    "inventory": "库存",
-    "procurement": "采购",
-    "production": "生产",
-    "sales": "销售",
+    "finance": "Finance",
+    "hr": "Human Resources",
+    "inventory": "Inventory",
+    "procurement": "Procurement",
+    "production": "Production",
+    "sales": "Sales",
 }
 
 
@@ -468,7 +468,7 @@ def _extract_action_items(payload: Any, department: str) -> List[Dict[str, Any]]
         controls = payload.get("recommended_controls") or []
         return [{
             "action_name": "finance_advice",
-            "reason": payload.get("risk_summary") or "财务建议已生成",
+            "reason": payload.get("risk_summary") or "Financial recommendations generated",
             "detail": " / ".join(str(item) for item in controls[:3]),
         }]
     raw_items = payload if isinstance(payload, list) else [payload]
@@ -527,7 +527,7 @@ def _department_execution_status(day_dir: Path, department: str) -> Dict[str, An
             }
     if _collect_department_day_artifacts(day_dir, department, "_result"):
         return {"status": "success", "success": True, "message": ""}
-    return {"status": "generated", "success": None, "message": "动作已生成，未读取到执行结果"}
+    return {"status": "generated", "success": None, "message": "Action generated; no execution result was found"}
 
 
 def _cash_from_finance(day_dir: Path) -> Optional[float]:
@@ -607,9 +607,9 @@ def _job_round_summary(job: Dict[str, Any]) -> Dict[str, Any]:
         "planned_total_steps": planned_total_steps,
         "last_complete_round": last_complete_round,
         "current_round_label": (
-            f"第 {int(last_complete_round) + 1} 轮"
+            f"Round {int(last_complete_round) + 1}"
             if last_complete_round is not None and int(last_complete_round) >= 0
-            else "尚未完成首轮"
+            else "First round not completed"
         ),
         "artifact_root": str(artifact_root) if artifact_root else "",
         "enterprises": [],
@@ -617,14 +617,14 @@ def _job_round_summary(job: Dict[str, Any]) -> Dict[str, Any]:
         "message": "",
     }
     if artifact_root is None:
-        summary["message"] = "任务尚未写入运行目录。"
+        summary["message"] = "The run directory has not been created yet."
         return summary
     enterprises_root = artifact_root / "enterprises"
     if last_complete_round is None or int(last_complete_round) < 0:
-        summary["message"] = "任务尚未完成可汇总轮次。"
+        summary["message"] = "No completed round is available for summary."
         return summary
     if not enterprises_root.exists():
-        summary["message"] = "未读取到企业运行目录。"
+        summary["message"] = "The enterprise run directory was not found."
         return summary
     round_id = int(last_complete_round)
     enterprises = [

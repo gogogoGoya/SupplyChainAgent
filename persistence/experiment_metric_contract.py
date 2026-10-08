@@ -14,8 +14,8 @@ DECISION_GROUPS = ("C1", "C2", "C3")
 
 FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
     "bullwhip": {
-        "name": "牛鞭效应",
-        "research_question": "订单、库存和缺货压力是否沿供应链纵向放大，以及开放利润目标是否缓冲放大。",
+        "name": "Bullwhip Effect",
+        "research_question": "Do order, inventory, and shortage pressures amplify upstream, and can an open profit objective reshape that amplification?",
         "headline_metrics": [
             "mechanism_strength",
             "operating_performance",
@@ -37,14 +37,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "total_cost",
         ],
         "expected_direction": {
-            "C1": "固定规则应产生可解释的订单放大或履约压力轨迹。",
-            "C2": "约束 Agent 应在库存、履约和补货语境中表达机制性放大。",
-            "C3": "盈利目标 Agent 可以降低无利润补货、平滑需求或牺牲部分服务水平换取现金安全。",
+            "C1": "Fixed rules should produce an interpretable order-amplification or fulfillment-pressure trajectory.",
+            "C2": "A mechanism-constrained agent should express amplification through inventory, fulfillment, and replenishment decisions.",
+            "C3": "A profit-oriented agent may avoid unprofitable replenishment, smooth demand, or trade some service level for cash safety.",
         },
     },
     "herding": {
-        "name": "羊群效应",
-        "research_question": "同业可见性是否提高同步扩产和过度生产，盈利目标是否削弱无效跟随。",
+        "name": "Herding Effect",
+        "research_question": "Does peer visibility increase synchronized expansion and overproduction, and does a profit objective reduce unproductive following?",
         "headline_metrics": [
             "mechanism_strength",
             "operating_performance",
@@ -66,14 +66,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "cash",
         ],
         "expected_direction": {
-            "C1": "固定同业跟随规则应使 peer-visible 组高于 no-peer 组。",
-            "C2": "约束 Agent 在同业摘要可见时更容易同步计划或放大市场热度。",
-            "C3": "盈利目标 Agent 可以忽略低收益同业信号，降低同步度或过度生产。",
+            "C1": "A fixed peer-following rule should produce stronger synchronization in the peer-visible group than in the peer-hidden group.",
+            "C2": "A mechanism-constrained agent should synchronize plans more readily when aggregate peer signals are visible.",
+            "C3": "A profit-oriented agent may discount low-return peer signals and reduce synchronization or overproduction.",
         },
     },
     "commons": {
-        "name": "公地悲剧",
-        "research_question": "共享资源局部获取是否导致资源退化和财务反噬，长期利润目标是否促成克制。",
+        "name": "Tragedy of the Commons",
+        "research_question": "Does locally rational shared-resource acquisition cause resource degradation and financial feedback, and does a long-term profit objective encourage restraint?",
         "headline_metrics": [
             "mechanism_strength",
             "operating_performance",
@@ -94,16 +94,16 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "inventory_pressure",
         ],
         "expected_direction": {
-            "C1": "固定局部收益规则应能验证资源退化和获取折损方程。",
-            "C2": "约束 Agent 在共享资源语境中应展示过度获取、质量下降或现金反噬。",
-            "C3": "盈利目标 Agent 可以降低短期获取强度，延缓资源退化或改善长期利润。",
+            "C1": "A fixed local-return rule should validate the resource degradation and acquisition-loss equations.",
+            "C2": "A mechanism-constrained agent should exhibit over-acquisition, quality decline, or adverse cash feedback in the shared-resource setting.",
+            "C3": "A profit-oriented agent may reduce short-term acquisition, delay degradation, or improve long-term profit.",
         },
     },
     "cobweb": {
-        "name": "蛛网模型",
+        "name": "Cobweb Model",
         "research_question": (
-            "滞后价格和产量决策是否产生预设稳定性轨迹，以及盈利目标 Agent "
-            "能否在发散压力下改善经营稳定性。"
+            "Do lagged price and output decisions produce the configured stability trajectory, and can a profit-oriented agent "
+            "improve operating stability under divergent pressure?"
         ),
         "headline_metrics": [
             "mechanism_strength",
@@ -133,14 +133,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "action_failure_count",
         ],
         "expected_direction": {
-            "C1": "理论供给函数应分别复现收敛、近似等幅和有界发散轨迹。",
-            "C2": "发散压力下，约束 Agent 应主要根据价格与蛛网信号内生形成供给计划。",
-            "C3": "发散压力下，盈利目标 Agent 应将价格视为经营证据，并在利润、现金、服务和生产调整风险之间权衡。",
+            "C1": "The theoretical supply function should reproduce convergent, approximately constant-amplitude, and bounded-divergent trajectories.",
+            "C2": "Under divergent pressure, a mechanism-constrained agent should form supply plans endogenously from price and cobweb signals.",
+            "C3": "Under divergent pressure, a profit-oriented agent should treat price as operating evidence and balance profit, cash, service, and production-adjustment risk.",
         },
     },
     "financial_constraint": {
-        "name": "财务约束传导",
-        "research_question": "现金、授信和采购失败是否向履约链路传导。",
+        "name": "Financial-Constraint Propagation",
+        "research_question": "Do cash, credit, and procurement failures propagate into the fulfillment chain?",
         "headline_metrics": [
             "mechanism_strength",
             "operating_performance",
@@ -160,14 +160,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "lost_sales_quantity",
         ],
         "expected_direction": {
-            "C1": "固定规则叠加预算约束应触发可解释的履约阻断。",
-            "C2": "约束 Agent 应在现金和授信语境下调整采购和销售。",
-            "C3": "盈利目标 Agent 可以主动缩单、延后采购或调整组合。",
+            "C1": "Fixed rules combined with budget constraints should trigger interpretable fulfillment blockage.",
+            "C2": "A mechanism-constrained agent should adjust procurement and sales under cash and credit constraints.",
+            "C3": "A profit-oriented agent may reduce order size, defer procurement, or rebalance its portfolio.",
         },
     },
     "topology": {
-        "name": "复杂拓扑",
-        "research_question": "链状、分支和网状结构下交易边、履约和结算是否稳定。",
+        "name": "Complex Topology",
+        "research_question": "Are trading edges, fulfillment, and settlement stable in chain, branching, and networked structures?",
         "headline_metrics": [
             "mechanism_strength",
             "operating_performance",
@@ -186,14 +186,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "on_time_delivery_rate",
         ],
         "expected_direction": {
-            "C1": "固定路由应验证拓扑交易和结算链路。",
-            "C2": "约束 Agent 应能在拓扑结构内完成稳定交易。",
-            "C3": "盈利目标 Agent 可选更可靠或更高利润交易边。",
+            "C1": "Fixed routing should validate topological trading and settlement paths.",
+            "C2": "A mechanism-constrained agent should complete stable trades within the topology.",
+            "C3": "A profit-oriented agent may select more reliable or profitable trading edges.",
         },
     },
     "single_enterprise": {
-        "name": "单企业理性能力校验",
-        "research_question": "Agent 是否能识别单企业经营问题并采取合理纠偏动作。",
+        "name": "Single-Enterprise Decision Validation",
+        "research_question": "Can an agent identify an enterprise operating problem and take an appropriate corrective action?",
         "headline_metrics": [
             "diagnostic_accuracy",
             "corrective_action_quality",
@@ -214,14 +214,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
             "fill_rate",
         ],
         "expected_direction": {
-            "S0": "Agent 应匹配主责部门、避免不鼓励动作，并在接管窗口改善 case-specific 指标。",
+            "S0": "The agent should identify the responsible department, avoid discouraged actions, and improve case-specific indicators during the takeover window.",
         },
     },
     "long_horizon_evolution": {
-        "name": "多企业持续演变长跑",
+        "name": "Long-Horizon Multi-Enterprise Evolution",
         "research_question": (
-            "四级供应链企业能否识别分阶段外部成本、贸易和需求变化，"
-            "并在不制造无依据需求放大的前提下维持利润、现金与履约韧性。"
+            "Can enterprises in a four-tier supply chain detect phased changes in external cost, trade, and demand "
+            "while maintaining profit, cash, and fulfillment resilience without unsupported demand amplification?"
         ),
         "headline_metrics": [
             "change_detection_and_response",
@@ -253,14 +253,14 @@ FAMILY_METRIC_CONTRACTS: Dict[str, Dict[str, Any]] = {
         ],
         "expected_direction": {
             "E1": (
-                "Agent 应在每次可观测环境变化后及时调整采购、生产、库存和销售决策，"
-                "缩短经营指标恢复时间，并避免将平稳终端需求无依据地向上游放大。"
+                "The agent should adjust procurement, production, inventory, and sales after each observable environmental change, "
+                "shorten operating-metric recovery time, and avoid unsupported upstream amplification of stable end demand."
             ),
         },
     },
     "general": {
-        "name": "通用多企业运行",
-        "research_question": "运行是否具备可纳入论文统计的基础标注和质量信息。",
+        "name": "General Multi-Enterprise Run",
+        "research_question": "Does the run contain the annotations and quality information required for evaluation?",
         "headline_metrics": [
             "operating_performance",
             "decision_quality",

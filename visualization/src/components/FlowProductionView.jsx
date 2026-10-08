@@ -294,7 +294,7 @@ const FlowProductionView = ({
           if (params.dataType === 'edge') {
             const productLabel = getDisplayItemLabel(params.data.product, quantityView);
             if (params.data.converted) {
-              return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}<br/>原始数量: ${formatNumber(params.data.originalQuantity)}`;
+              return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}<br/>Original quantity: ${formatNumber(params.data.originalQuantity)}`;
             }
             return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}`;
           }
@@ -368,7 +368,7 @@ const FlowProductionView = ({
         bottom: 54,
       },
       xAxis: { type: 'category', data: days },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('数量', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Quantity', quantityView) },
       series: [
         ...exchangeSeries,
         ...(flowMeta.productionNodeId ? [{
@@ -385,19 +385,19 @@ const FlowProductionView = ({
   };
 
   if (loading) {
-    return <div className="loading">加载流通与生产数据...</div>;
+    return <div className="loading">Loading flow and production data...</div>;
   }
 
   const externalLabels = [
-    includeUpstreamExternalSupplierMode ? '上游外部采购' : null,
-    includeDownstreamExternalMarketMode ? '下游外部销售' : null,
+    includeUpstreamExternalSupplierMode ? 'upstream external procurement' : null,
+    includeDownstreamExternalMarketMode ? 'downstream external sales' : null,
   ].filter(Boolean);
 
   return (
     <div className="flow-production-view">
       <div className="flow-chart-card">
         <div className="flow-card-header">
-          <strong>{currentDay === null ? '末轮流向快照' : '当前轮流向'}</strong>
+          <strong>{currentDay === null ? 'Final-Turn Flow Snapshot' : 'Current-Turn Flow'}</strong>
           <span>Turn {effectiveDay}</span>
         </div>
         <div className="flow-sankey-chart" ref={sankeyRef} />
@@ -405,8 +405,8 @@ const FlowProductionView = ({
 
       <div className="flow-chart-card">
         <div className="flow-card-header">
-          <strong>{quantityView?.enabled ? '流量与生产趋势（原料层折合成品）' : '流量与生产趋势'}</strong>
-          <span>{externalLabels.length > 0 ? `订单流量 + ${externalLabels.join(' + ')}${flowMeta.productionNodeId ? ' + 日产量' : ''}` : `订单流量${flowMeta.productionNodeId ? ' + 日产量' : ''}`}</span>
+          <strong>{quantityView?.enabled ? 'Flow and Production Trends (Raw Materials as Finished-Goods Equivalents)' : 'Flow and Production Trends'}</strong>
+          <span>{externalLabels.length > 0 ? `Order flow + ${externalLabels.join(' + ')}${flowMeta.productionNodeId ? ' + daily output' : ''}` : `Order flow${flowMeta.productionNodeId ? ' + daily output' : ''}`}</span>
         </div>
         <div className="flow-trend-chart" ref={trendRef} />
       </div>

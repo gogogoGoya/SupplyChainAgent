@@ -1,7 +1,7 @@
 """
-环境市场模块
+Environmental Market Module
 
-负责模拟来自外部市场的自发采购行为
+Responsible for modelling spontaneous procurement from external markets
 """
 import logging
 import random
@@ -40,7 +40,7 @@ class MarketManager:
         herding_config=None
     ):
         self.get_enterprise_instance = get_enterprise_instance
-        self.markets = {}  # 嵌套字典结构: {enterprise_id: {market_id: market}}
+        self.markets = {}  # Embedded dictionary structure: parameter:parameter}
         self.total_steps = total_steps
         self.demand_mode = normalize_market_demand_mode(
             demand_mode or DEFAULT_MARKET_DEMAND_MODE
@@ -390,15 +390,15 @@ class MarketManager:
         
     def register_market(self, market_id, enterprise, assigned_workers, market_type, products=None):
         """
-        注册市场到指定企业
-        
+        Register market to specified enterprise
+                
         Args:
-            market: 要注册的市场实例
-            enterprise: 市场所属的企业实例
-        """
+            market: Examples of markets to register
+            Enterprise: Examples of enterprise market-owned
+                """
         if products is None:
             products = []
-        # 将市场注册到对应企业的市场字典中
+        # Register the market into a market dictionary corresponding to enterprise Medium
         try:
             if enterprise.id not in self.markets:
                 self.markets[enterprise.id] = {}
@@ -432,14 +432,14 @@ class MarketManager:
 
     def get_markets_by_enterprise(self, enterprise_id):
         """
-        获取指定企业的所有市场
-        
+        Access to all designated markets enterprise
+                
         Args:
-            enterprise_id: 企业ID
-            
+            enterprise_id: enterpriseID
+                        
         Returns:
-            dict: 企业的所有市场，格式为 {market_id: market}
-        """
+            Dect: < x5/> All markets in format < x17/>
+                """
         return self.markets.get(enterprise_id, {})
 
     def _get_order_source_markets(self, enterprise_id):
@@ -470,35 +470,35 @@ class MarketManager:
 
     def get_all_markets(self):
         """
-        获取所有企业的所有市场
-        
+        Access to all markets enterprise
+                
         Returns:
-            dict: 所有市场，格式为 {enterprise_id: {market_id: market}}
-        """
+            Dect: All markets in format parameter:parameter}
+                """
         return self.markets
 
     def get_market(self, enterprise_id, market_id):
         """
-        获取指定企业的指定市场
-        
+        Access to designated market enterprise
+                
         Args:
-            enterprise_id: 企业ID
-            market_id: 市场ID
-            
+            enterprise_id: enterpriseID
+            parameter: Market ID
+                        
         Returns:
-            market实例或None
-        """
+            None
+                """
         enterprise_markets = self.markets.get(enterprise_id, {})
         return enterprise_markets.get(market_id, None)
 
     def remove_market(self, enterprise_id, market_id):
         """
-        移除指定企业的指定市场
-        
+        Remove specified market enterprise
+                
         Args:
-            enterprise_id: 企业ID
-            market_id: 市场ID
-        """
+            enterprise_id: enterpriseID
+            parameter: Market ID
+                """
         if enterprise_id in self.markets:
             if market_id in self.markets[enterprise_id]:
                 del self.markets[enterprise_id][market_id]
@@ -674,7 +674,7 @@ class MarketManager:
                 market_id = next(iter(markets.keys()))
                 source_type = 'market'
             else:
-                # 基础外部需求是规则输入，不应依赖终端企业先开发市场。
+                # The underlying external demand is a rule-based input and should not rely on the end enterprise to develop the market first.
                 market_id = "external_scheduled_demand_market"
                 source_type = 'external_market'
             product_infos.append(build_order(market_id, source_type))
@@ -1648,10 +1648,10 @@ class MarketManager:
 
     def _generate_random_orders(self, enterprise_id, current_day=None):
         """
-        根据市场需求计算生产订单需求
-        
-        """
-        # 收集所有市场中的所有产品及其对应的市场ID
+        Production order requirements based on market demand
+                
+                """
+        # Collection of all products in all markets and their corresponding market ID
         markets = self.get_markets_by_enterprise(enterprise_id)
         if markets == {}:
             return None
@@ -1681,7 +1681,7 @@ class MarketManager:
             # product_id = product.get("id")
             delivery_deadline = market_info["base_lead_time_i"] * market_info["sales_adjustment"] * capacity_adjustment * random.uniform(0.9,1.1)
             delivery_deadline = self.cap_delivery_deadline(delivery_deadline)
-            # 提高售价，加大利润变化
+            # Increased sales prices and changes in profits
             unit_price = 180 * random.uniform(1.3,1.5)
             final_quantity_i = math.ceil(raw_quantity_i * scale)
             product_info = {

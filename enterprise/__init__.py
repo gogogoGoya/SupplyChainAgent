@@ -1,7 +1,7 @@
 """
-企业模块
+enterprise Module
 
-负责定义各类企业实体及其行为
+Responsible for defining enterprise entities and their conduct
 """
 
 from .enterprise import Enterprise

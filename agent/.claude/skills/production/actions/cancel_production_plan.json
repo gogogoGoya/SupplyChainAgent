@@ -1,11 +1,11 @@
 {
   "action_name": "cancel_production_plan",
-  "description": "生产计划取消",
+  "description": "Cancel a production plan.",
   "conditions": [
-    "analysis 中生产目标发生调整或变更",
-    "销售目标取消或下调",
-    "资源不足，需优先保障高优先级计划",
-    "计划参数错误或不再合理"
+    "The production target in analysis has changed.",
+    "The sales target has been cancelled or reduced.",
+    "Resources are insufficient and higher-priority plans need protection.",
+    "Plan parameters are incorrect or no longer appropriate."
   ],
   "required_parameters": [
     "plan_id"

@@ -1,13 +1,13 @@
 """
-数据库模型模块
+Database Model Module
 
-导出所有数据库模型
+Export all database models
 """
 
-# 基础模型
+# Basic model
 from database.models.base import Base, BaseModel
 
-# 产品相关模型
+# Product-related models
 from database.models.product import (
     ProductCategory,
     ProductAttribute,
@@ -16,7 +16,7 @@ from database.models.product import (
     Brand
 )
 
-# 订单相关模型
+# Model related to orders
 from database.models.order import (
     Order,
     OrderLineItem,
@@ -25,7 +25,7 @@ from database.models.order import (
     ShippingInfo
 )
 
-# 企业相关模型
+# enterprise Related Models
 from database.models.enterprise import (
     Enterprise,
     Supplier,
@@ -36,25 +36,25 @@ from database.models.enterprise import (
 )
 
 __all__ = [
-    # 基础
+    # Foundation
     'Base',
     'BaseModel',
     
-    # 产品相关
+    # Product-related
     'ProductCategory',
     'ProductAttribute',
     'Product',
     'ProductVariant',
     'Brand',
     
-    # 订单相关
+    # Order-related
     'Order',
     'OrderLineItem',
     'ShippingAddress',
     'PaymentInfo',
     'ShippingInfo',
     
-    # 企业相关
+    # Related
     'Enterprise',
     'Supplier',
     'Customer',

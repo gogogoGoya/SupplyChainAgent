@@ -3,12 +3,12 @@ import { buildDataUrl, safeFetchJson } from '../utils/dataSource';
 
 const DEPARTMENTS = ['finance', 'sales', 'procurement', 'inventory', 'hr', 'production'];
 const DEPARTMENT_LABELS = {
-  finance: '财务',
-  sales: '销售',
-  procurement: '采购',
-  inventory: '库存',
-  hr: '人力',
-  production: '生产'
+  finance: 'Finance',
+  sales: 'Sales',
+  procurement: 'Procurement',
+  inventory: 'Inventory',
+  hr: 'Human Resources',
+  production: 'Production'
 };
 
 const formatNumber = (value) => {
@@ -51,7 +51,7 @@ const getExchangeCompanies = (exchange, direction) => {
 const getProcurementFlowSummary = (companyName, exchange) => {
   if (!exchange) {
     return {
-      title: '向上游采购',
+      title: 'Upstream Procurement',
       metrics: []
     };
   }
@@ -68,13 +68,13 @@ const getProcurementFlowSummary = (companyName, exchange) => {
   );
 
   return {
-    title: `向上游采购 · ${exchange.id}`,
+    title: `Upstream Procurement · ${exchange.id}`,
     metrics: [
-      { label: '采购请求', value: ownRequests.length },
-      { label: '上游供给', value: upstreamOffers.length },
-      { label: '撮合订单', value: ownOrders.length },
+      { label: 'Buy Requests', value: ownRequests.length },
+      { label: 'Upstream Offers', value: upstreamOffers.length },
+      { label: 'Matched Orders', value: ownOrders.length },
       {
-        label: '采购数量',
+        label: 'Purchased Quantity',
         value: formatNumber(ownOrders.reduce((sum, order) => sum + Number(order.quantity || 0), 0))
       }
     ]
@@ -84,7 +84,7 @@ const getProcurementFlowSummary = (companyName, exchange) => {
 const getSalesFlowSummary = (companyName, exchange) => {
   if (!exchange) {
     return {
-      title: '向下游销售',
+      title: 'Downstream Sales',
       metrics: []
     };
   }
@@ -101,13 +101,13 @@ const getSalesFlowSummary = (companyName, exchange) => {
   );
 
   return {
-    title: `向下游销售 · ${exchange.id}`,
+    title: `Downstream Sales · ${exchange.id}`,
     metrics: [
-      { label: '销售挂单', value: ownSalesRequests.length },
-      { label: '下游需求', value: downstreamRequests.length },
-      { label: '撮合订单', value: ownOrders.length },
+      { label: 'Sell Requests', value: ownSalesRequests.length },
+      { label: 'Downstream Demand', value: downstreamRequests.length },
+      { label: 'Matched Orders', value: ownOrders.length },
       {
-        label: '销售数量',
+        label: 'Sold Quantity',
         value: formatNumber(ownOrders.reduce((sum, order) => sum + Number(order.quantity || 0), 0))
       }
     ]
@@ -157,33 +157,33 @@ const getResultStatus = (actionItem, resultEntries) => {
   const actionName = getActionName(actionItem);
   if (actionName === 'action_pass') {
     return {
-      label: '跳过',
+      label: 'Skipped',
       className: 'pass',
-      message: actionItem?.action_reason || actionItem?.action?.action_param || '未执行动作'
+      message: actionItem?.action_reason || actionItem?.action?.action_param || 'No action executed'
     };
   }
 
   const matched = resultEntries.find((entry) => String(entry.action_type || '') === actionName);
   if (!matched) {
     return {
-      label: '未匹配结果',
+      label: 'Unmatched Result',
       className: 'unknown',
-      message: '未找到对应执行结果'
+      message: 'No corresponding execution result was found'
     };
   }
 
   if (matched.success === true || matched.status === 'success' || matched._statusKey === 'success') {
     return {
-      label: '成功',
+      label: 'Success',
       className: 'success',
-      message: matched.message || '执行成功'
+      message: matched.message || 'Execution succeeded'
     };
   }
 
   return {
-    label: '失败',
+    label: 'Failure',
     className: 'failed',
-    message: matched.message || matched.errors?.[0]?.message || '执行失败'
+    message: matched.message || matched.errors?.[0]?.message || 'Execution failed'
   };
 };
 
@@ -246,14 +246,14 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
 
         if (preActionData) {
           phases.push({
-            label: '预执行阶段',
+            label: 'Pre-execution',
             payload: preActionData,
             result: await safeFetchJson(buildDataUrl(dataRoot, `enterprises/${coreCompany}/department/${dept}/day${day}/pre_${dept}_result.json`))
           });
         }
         if (actionDataItem) {
           phases.push({
-            label: '执行阶段',
+            label: 'Execution',
             payload: actionDataItem,
             result: await safeFetchJson(buildDataUrl(dataRoot, `enterprises/${coreCompany}/department/${dept}/day${day}/${dept}_result.json`))
           });
@@ -270,15 +270,15 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
         actionData
       });
     } catch (err) {
-      console.error('加载面板数据时出错:', err);
-      setError('加载面板数据失败: ' + err.message);
+      console.error('Failed to load panel data:', err);
+      setError('Failed to load panel data: ' + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
@@ -286,7 +286,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
   }
 
   if (!panelData) {
-    return <div className="loading">暂无数据</div>;
+    return <div className="loading">No data available</div>;
   }
 
   const { exchangeData, departmentData, messagesData, actionData } = panelData;
@@ -304,43 +304,43 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
       case 'finance':
         return {
           metrics: [
-            { label: '现金', value: formatMoney(state.cash) },
-            { label: '总收入', value: formatMoney(state.total_revenue) },
-            { label: '净利润', value: formatMoney(state.financial_indicators?.net_profit) }
+            { label: 'Cash', value: formatMoney(state.cash) },
+            { label: 'Total Revenue', value: formatMoney(state.total_revenue) },
+            { label: 'Net Profit', value: formatMoney(state.financial_indicators?.net_profit) }
           ]
         };
       case 'sales':
         const salesMetrics = state.sales_metrics || {};
         return {
           metrics: [
-            { label: '订单数', value: salesMetrics.total_orders || 0 },
-            { label: '收入', value: formatMoney(salesMetrics.total_revenue) },
-            { label: '销售量', value: formatNumber(salesMetrics.total_quantity_sold) }
+            { label: 'Orders', value: salesMetrics.total_orders || 0 },
+            { label: 'Revenue', value: formatMoney(salesMetrics.total_revenue) },
+            { label: 'Quantity Sold', value: formatNumber(salesMetrics.total_quantity_sold) }
           ]
         };
       case 'procurement':
         const metrics = state.procurement_metrics || {};
         return {
           metrics: [
-            { label: '订单数', value: metrics.total_orders || 0 },
-            { label: '已完成', value: metrics.completed_orders || 0 },
-            { label: '总成本', value: formatMoney(metrics.total_cost) }
+            { label: 'Orders', value: metrics.total_orders || 0 },
+            { label: 'Completed', value: metrics.completed_orders || 0 },
+            { label: 'Total Cost', value: formatMoney(metrics.total_cost) }
           ]
         };
       case 'inventory':
         return {
           metrics: [
-            { label: '容量', value: formatNumber(state.warehouse_capacity) },
-            { label: '已用', value: formatNumber(state.used_capacity) },
-            { label: '物品种类', value: (state.inventory_items || []).length }
+            { label: 'Capacity', value: formatNumber(state.warehouse_capacity) },
+            { label: 'Used', value: formatNumber(state.used_capacity) },
+            { label: 'Item Types', value: (state.inventory_items || []).length }
           ]
         };
       case 'hr':
         const totalEmployees = (state.employees || []).reduce((sum, e) => sum + (e.count || 0), 0);
         return {
           metrics: [
-            { label: '员工数', value: totalEmployees },
-            { label: '薪酬', value: formatMoney(state.total_payroll) }
+            { label: 'Employees', value: totalEmployees },
+            { label: 'Payroll', value: formatMoney(state.total_payroll) }
           ]
         };
       case 'production':
@@ -348,9 +348,9 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
         const prodMetrics = state.production_metrics || {};
         return {
           metrics: [
-            { label: '产能', value: formatNumber(prodLines.total_capacity) },
-            { label: '可用', value: formatNumber(prodLines.available_capacity) },
-            { label: '总产量', value: formatNumber(prodMetrics.total_production) }
+            { label: 'Capacity', value: formatNumber(prodLines.total_capacity) },
+            { label: 'Available', value: formatNumber(prodLines.available_capacity) },
+            { label: 'Total Output', value: formatNumber(prodMetrics.total_production) }
           ]
         };
       default:
@@ -365,7 +365,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
     const resultEntries = flattenResultEntries(phase.result);
 
     if (actions.length === 0) {
-      return <div className="detail-row">暂无动作信息</div>;
+      return <div className="detail-row">No action information available</div>;
     }
 
     return (
@@ -375,7 +375,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
           if (action.pass_reason) {
             return (
               <div key={idx} className="pass-reason-item">
-                <div className="pass-reason-label">未执行原因</div>
+                <div className="pass-reason-label">Reason Not Executed</div>
                 <div className="pass-reason-content">{action.pass_reason}</div>
               </div>
             );
@@ -401,8 +401,8 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
                 ) : null}
                 {action.module_type && (
                   <div className="action-meta">
-                    <span className="module-type">模块: {action.module_type}</span>
-                    <span className="executor">执行: {action.executor_id || '-'}</span>
+                    <span className="module-type">Module: {action.module_type}</span>
+                    <span className="executor">Executor: {action.executor_id || '-'}</span>
                   </div>
                 )}
                 {action.action_reason && <div className="action-reason">{action.action_reason}</div>}
@@ -424,8 +424,8 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
       const content = String(msg.content || '');
       return content.includes('AssistantMessage') ||
              content.includes('ResultMessage') ||
-             content.includes('思考') ||
-             content.includes('分析') ||
+             content.includes('reason') ||
+             content.includes('analysis') ||
              content.length > 100;
     }).slice(-3);
 
@@ -433,7 +433,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
 
     return (
       <div className="messages-section">
-        <div className="section-title">部门思考</div>
+        <div className="section-title">Department Reasoning</div>
         {processedMsgs.map((msg, idx) => {
           const messageKey = `${dept}-${idx}`;
           const isExpanded = expandedMessage[messageKey];
@@ -444,14 +444,14 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
               const match = content.match(/result='([^']+)'/);
               if (match) content = match[1];
             } catch (e) {
-              // 如果解析失败，使用原始内容
+              // Fall back to the original content when parsing fails.
             }
           } else if (content.includes('AssistantMessage')) {
             try {
               const textMatch = content.match(/TextBlock\(text='([^']+)'\)/);
               if (textMatch) content = textMatch[1];
             } catch (e) {
-              // 如果解析失败，使用原始内容
+              // Fall back to the original content when parsing fails.
             }
           }
 
@@ -475,7 +475,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
 
   return (
     <div className="exchange-enterprise-panel">
-      {/* 交易所摘要 */}
+      {/* Exchange summary */}
       {coreExchanges.map((exchange, index) => (
         <div key={index} className="exchange-summary">
           <div className="exchange-flow">
@@ -495,7 +495,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
         </div>
       ))}
 
-      {/* 各部门整合信息 */}
+      {/* Consolidated department information */}
       <div className="departments-container">
         {DEPARTMENTS.map(dept => {
           const data = departmentData[dept];
@@ -506,17 +506,17 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
           const summary = getDeptSummary(dept, data);
           const isExpanded = expandedDept[dept];
 
-          const hasPreAction = Array.isArray(actions) && actions.some((phase) => phase.label === '预执行阶段');
-          const hasRegularAction = Array.isArray(actions) && actions.some((phase) => phase.label === '执行阶段');
+          const hasPreAction = Array.isArray(actions) && actions.some((phase) => phase.label === 'Pre-execution');
+          const hasRegularAction = Array.isArray(actions) && actions.some((phase) => phase.label === 'Execution');
 
           return (
             <div key={dept} className={`dept-card ${isExpanded ? 'expanded' : ''}`}>
               <div className="dept-header" onClick={() => toggleDeptExpansion(dept)}>
                 <div className="dept-name">
-                  {DEPARTMENT_LABELS[dept]}部门
+                  {DEPARTMENT_LABELS[dept]} Department
                   {(hasPreAction || hasRegularAction) && (
                     <span className="action-indicator">
-                      {hasPreAction && hasRegularAction ? '预+执行' : hasPreAction ? '预' : '执'}
+                      {hasPreAction && hasRegularAction ? 'Pre + Exec' : hasPreAction ? 'Pre' : 'Exec'}
                     </span>
                   )}
                 </div>
@@ -529,10 +529,10 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
 
               {isExpanded && (
                 <div className="dept-details">
-                  {/* 部门动作 */}
+                  {/* Department actions */}
                   {actions && (
                     <div className="details-section">
-                      <div className="section-title">部门动作</div>
+                      <div className="section-title">Department Actions</div>
                       {Array.isArray(actions) && actions.map((phase) => (
                         <React.Fragment key={phase.label}>
                           {renderActionDetails(phase)}
@@ -541,7 +541,7 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
                     </div>
                   )}
 
-                  {/* 部门思考 */}
+                  {/* Department reasoning */}
                   {(dept === 'sales' || dept === 'procurement' || dept === 'production') && renderMessages(dept)}
                   {dept === 'finance' && renderMessages('analyst')}
                 </div>
@@ -551,10 +551,10 @@ const ExchangeEnterprisePanel = ({ day, coreCompany, dataRoot }) => {
         })}
       </div>
 
-      {/* 分析师思考 */}
+      {/* Analyst reasoning */}
       {messagesData.analyst && (
         <div className="analyst-section">
-          <div className="section-title">分析师思考</div>
+          <div className="section-title">Analyst Reasoning</div>
           {messagesData.analyst.slice(-3).map((msg, idx) => {
             const messageKey = `analyst-${idx}`;
             const isExpanded = expandedMessage[messageKey];

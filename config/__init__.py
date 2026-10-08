@@ -1,10 +1,10 @@
 """
-配置目录对外导出入口。
+Configure the directory 's external export/export portal.
 
-目录内当前长期维护的三份核心配置文件为：
-- `environment_config.py`：运行环境级共享配置
-- `module_config.py`：六个业务模块自身参数
-- `simulation_preset_config.py`：多企业模拟场景级固定数据
+The three core configuration documents currently maintained in the directory are:
+- `environment_config.py`: Run an environmental level shared configuration
+- `module_config.py`: 6 business modules own parameters
+- `simulation_preset_config.py`: multi-enterprise Simulation scenario fixed data
 """
 
 from .simulation_preset_config import (

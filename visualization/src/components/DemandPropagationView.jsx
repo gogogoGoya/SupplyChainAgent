@@ -64,9 +64,9 @@ const getLaneLabel = (signal, flowMeta) => {
 };
 
 const getSignalKindLabel = (actionType) => {
-  if (actionType === 'adjust_sales_demand') return '销售供给';
-  if (actionType === 'create_replenishment_order') return '补货请求';
-  if (actionType === 'create_purchase_demand') return '手动采购';
+  if (actionType === 'adjust_sales_demand') return 'Sales Supply';
+  if (actionType === 'create_replenishment_order') return 'Replenishment Request';
+  if (actionType === 'create_purchase_demand') return 'Manual Procurement';
   return actionType;
 };
 
@@ -145,10 +145,10 @@ const DemandPropagationView = ({
       for (const company of flowMeta.companies) {
         for (const day of availableDays) {
           const resultFiles = [
-            { dept: 'sales', phase: '预执行', file: 'pre_sales_result.json' },
-            { dept: 'sales', phase: '执行', file: 'sales_result.json' },
-            { dept: 'procurement', phase: '预执行', file: 'pre_procurement_result.json' },
-            { dept: 'procurement', phase: '执行', file: 'procurement_result.json' },
+            { dept: 'sales', phase: 'Pre-execution', file: 'pre_sales_result.json' },
+            { dept: 'sales', phase: 'Execution', file: 'sales_result.json' },
+            { dept: 'procurement', phase: 'Pre-execution', file: 'pre_procurement_result.json' },
+            { dept: 'procurement', phase: 'Execution', file: 'procurement_result.json' },
           ];
 
           for (const { dept, phase, file } of resultFiles) {
@@ -227,24 +227,24 @@ const DemandPropagationView = ({
       const linkedProposals = signal.requestId ? (proposalSource.get(signal.requestId) || []) : [];
       const linkedOrders = linkedProposals.flatMap((proposal) => linkMaps.ordersByProposal.get(proposal.proposal_id) || []);
 
-      let stageLabel = '未创建请求';
+      let stageLabel = 'Request Not Created';
       if (signal.requestCreated && signal.requestId) {
-        stageLabel = '已创建请求';
+        stageLabel = 'Request Created';
       }
       if (linkedProposals.length > 0) {
         const confirmedCount = linkedProposals.filter((proposal) => proposal.status === 'confirmed').length;
         const pendingCount = linkedProposals.filter((proposal) => proposal.status === 'pending').length;
         const rejectedCount = linkedProposals.filter((proposal) => proposal.status === 'rejected').length;
         if (linkedOrders.length > 0) {
-          stageLabel = '已形成订单';
+          stageLabel = 'Order Created';
         } else if (confirmedCount > 0) {
-          stageLabel = '预案已确认';
+          stageLabel = 'Proposal Confirmed';
         } else if (pendingCount > 0) {
-          stageLabel = '预案待响应';
+          stageLabel = 'Proposal Pending';
         } else if (rejectedCount > 0) {
-          stageLabel = '预案被拒绝';
+          stageLabel = 'Proposal Rejected';
         } else {
-          stageLabel = '已生成预案';
+          stageLabel = 'Proposal Generated';
         }
       }
 
@@ -302,15 +302,15 @@ const DemandPropagationView = ({
   );
 
   if (loading) {
-    return <div className="loading">加载需求传递链路中...</div>;
+    return <div className="loading">Loading demand-propagation trace...</div>;
   }
 
   return (
     <div className="demand-propagation-view">
       <div className="demand-propagation-header">
         <div>
-          <h3>需求传递链路</h3>
-          <p>把每轮的 `adjust_sales_demand`、`create_replenishment_order`、`create_purchase_demand` 与其后续 `proposal / order` 串起来看。</p>
+          <h3>Demand-Propagation Trace</h3>
+          <p>Links each turn's `adjust_sales_demand`, `create_replenishment_order`, and `create_purchase_demand` actions to downstream proposals and orders.</p>
         </div>
       </div>
 
@@ -322,44 +322,44 @@ const DemandPropagationView = ({
           >
             <div className="demand-day-title">Turn {summary.day}</div>
             <div className="demand-day-metrics">
-              <span>信号 {summary.signalCount}</span>
-              <span>销售 {summary.sellSignalCount}</span>
-              <span>采购 {summary.procurementSignalCount}</span>
-              <span>预案 {summary.proposalCount}</span>
-              <span>订单 {summary.orderCount}</span>
+              <span>Signals {summary.signalCount}</span>
+              <span>Sales {summary.sellSignalCount}</span>
+              <span>Procurement {summary.procurementSignalCount}</span>
+              <span>Proposals {summary.proposalCount}</span>
+              <span>Orders {summary.orderCount}</span>
             </div>
             {summary.blockedSignalCount > 0 ? (
-              <div className="demand-day-warning">未建请求 {summary.blockedSignalCount}</div>
+              <div className="demand-day-warning">Requests Not Created {summary.blockedSignalCount}</div>
             ) : null}
           </div>
         ))}
       </div>
 
       <div className="demand-propagation-scroll-hint">
-        左右滚动可查看完整字段，上下滚动可浏览全部轮次；表头与前两列会固定，便于持续对照。
+        Scroll horizontally to inspect all fields and vertically to browse turns. The header and first two columns remain fixed for comparison.
       </div>
 
       <div className="demand-propagation-table-wrapper">
         <table className="demand-propagation-table">
           <thead>
             <tr>
-              <th>轮次</th>
-              <th>企业</th>
-              <th>阶段</th>
-              <th>链路</th>
-              <th>动作</th>
-              <th>物料</th>
-              <th>{getQuantityColumnLabel('数量', quantityView)}</th>
-              <th>请求ID</th>
-              <th>预案</th>
-              <th>订单</th>
-              <th>当前状态</th>
+              <th>Turn</th>
+              <th>Enterprise</th>
+              <th>Phase</th>
+              <th>Link</th>
+              <th>Action</th>
+              <th>Material</th>
+              <th>{getQuantityColumnLabel('Quantity', quantityView)}</th>
+              <th>Request ID</th>
+              <th>Proposals</th>
+              <th>Orders</th>
+              <th>Current Status</th>
             </tr>
           </thead>
           <tbody>
             {visibleSignals.length === 0 ? (
               <tr>
-                <td colSpan="11" className="demand-empty-cell">当前结果中没有捕获到需求传递动作</td>
+                <td colSpan="11" className="demand-empty-cell">No demand-propagation actions were captured in this run</td>
               </tr>
             ) : visibleSignals.map((signal) => (
               <tr key={signal.id}>
@@ -374,22 +374,22 @@ const DemandPropagationView = ({
                 <td>
                   {signal.linkedProposals.length > 0 ? (
                     <div className="demand-stage-cell">
-                      <span>{signal.linkedProposals.length} 条</span>
+                      <span>{signal.linkedProposals.length}</span>
                       <span className="demand-stage-meta">
                         {Object.entries(signal.proposalStatusSummary).map(([status, count]) => `${status}:${count}`).join(' / ')}
                       </span>
                     </div>
-                  ) : signal.requestCreated ? '0 条' : '未创建'}
+                  ) : signal.requestCreated ? '0' : 'Not created'}
                 </td>
                 <td>
                   {signal.linkedOrders.length > 0 ? (
                     <div className="demand-stage-cell">
-                      <span>{signal.linkedOrders.length} 条</span>
+                      <span>{signal.linkedOrders.length}</span>
                       <span className="demand-stage-meta">
                         {Object.entries(signal.orderStatusSummary).map(([status, count]) => `${status}:${count}`).join(' / ')}
                       </span>
                     </div>
-                  ) : '0 条'}
+                  ) : '0'}
                 </td>
                 <td>
                   <span className={`demand-stage-badge ${signal.linkedOrders.length > 0 ? 'order' : signal.linkedProposals.length > 0 ? 'proposal' : signal.requestCreated ? 'request' : 'blocked'}`}>

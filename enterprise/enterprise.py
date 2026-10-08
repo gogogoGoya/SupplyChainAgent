@@ -1,7 +1,7 @@
 """
-企业模块
+enterprise Module
 
-定义集成了多种职能的企业类，包含生产、采购、销售、分销等功能
+Defined as a enterprise class of multiple functions, including production, procurement, sales, distribution, etc.
 """
 
 import uuid
@@ -18,38 +18,38 @@ from network.exchange_manager import Exchange
 
 class Enterprise:
     """
-    企业类 - 集成了生产、采购、销售、分销等多种职能
-    """
+    enterprise - Combining production, procurement, sales, distribution, etc.
+        """
     def __init__(self, config: Dict = None, id: str = None, **kwargs):
         """
-        初始化企业
-        
+        Initialise enterprise
+                
         Args:
-            config: 企业配置信息
-            id: 企业唯一标识符，如果不提供则自动生成
-            **kwargs: 其他配置参数，将被添加到config字典中
-        
-        支持两种初始化方式：
+            config: enterprise Configuration information
+            id: enterprise Unique identifier, if not provided, automatically generated
+            **kwargs: Other configuration parameters will be added to the config dictionary Medium
+                
+        Two approaches to initialization are supported:
         1. Enterprise(config, id, **kwargs)
-        2. Enterprise({'name': name, 'initial_fund': initial_fund}) - 字典形式参数
-        """
-        # 支持字典形式的直接参数传递
+        Enterprise({'name': name, 'initial_fund': initial_fund}) - Dictionary form parameters
+                """
+        # Supports direct parameter transfer in dictionary form
         if config and isinstance(config, dict) and ('name' in config or 'initial_fund' in config):
             self.config = config.copy()
-            # 将kwargs添加到配置中
+            # Add kwargs to configuration
             self.config.update(kwargs)
         else:
             self.config = config or {}
-            # 将kwargs参数添加到config字典中
+            # Add kwargs parameter to config dictionary Medium
             self.config.update(kwargs)
         
-        # 企业基本信息
-        self.id = id if id else str(uuid.uuid4())  # 企业唯一标识符
+        # enterpriseBasic information
+        self.id = id if id else str(uuid.uuid4())  # enterprise Unique identifier
         self.name = self.config.get("name", f"Enterprise-{self.id[:8]}")
         self.description = self.config.get("description", "Integrated enterprise with multiple functions")
         self.location = self.config.get("location", {"city": "Unknown", "country": "Unknown"})
         self.established_time = self.config.get("established_time", time.time())
-        # 企业层级
+        # enterprise Level
         self.tier = self.config.get("tier", 0)
         self.role_tags = list(self.config.get("role_tags", []))
         self.policy_tags = list(self.config.get("policy_tags", []))
@@ -58,21 +58,21 @@ class Enterprise:
         self.purchasable_materials_idList = self.config.get("purchasable_materials_idList", [])
         self.supplier_name_list = self.config.get("supplier_name_list", [])
         
-        # 企业状态 - 支持从config字典或kwargs中获取initial_fund参数
+        # enterprise Status - Supports obtaining initial fund parameters from config dictionary or kwargs
         initial_fund = self.config.get("initial_fund") or kwargs.get("initial_fund")
         if initial_fund is not None:
             self.capital = float(initial_fund)
         else:
             self.capital = self.config.get("initial_capital", 1000000.0)
-        # 确保fund和cash与capital保持一致
+        # Ensuring consistency between fund and cash and capital
         self.fund = self.capital
         self.cash = self.capital
-        self.revenue = 0.0  # 总收入
-        self.expenses = 0.0  # 总支出
-        self.profit = 0.0  # 净利润
-        self.credit_score = self.config.get("initial_credit_score", 700)  # 信用评分
+        self.revenue = 0.0  # Total income
+        self.expenses = 0.0  # Total expenditure
+        self.profit = 0.0  # Net profit
+        self.credit_score = self.config.get("initial_credit_score", 700)  # Credit rating
         
-        # 添加缺失的属性以避免在to_dict和from_dict中出错
+        # Add missing properties to avoid displaying in to dict and from dict Wrong.
         self.products = []
         self.inventory = {}
         self.suppliers = []
@@ -87,12 +87,12 @@ class Enterprise:
         self.backlog_orders = []
         self.processing_orders = []
             
-        # 启用的职能 (通过配置启用/禁用不同职能)
+        # Enabled functions (enabling/disable by configuration)
         self.enabled_functions = self.config.get("enabled_functions", [
             "production", "procurement", "sales", "distribution", "inventory_management"
         ])
         
-        # 历史记录
+        # History
         self.history = {
             "financials": [],
             "inventory_changes": [],
@@ -103,32 +103,32 @@ class Enterprise:
             "messages": []
         }
         
-        # 消息系统相关
-        self.message_manager = None  # 消息管理器，将由环境注入
-        self.time_manager = None  # 时间管理器，将由环境注入
-        self.market_manager = None  # 环境市场管理器，将由环境注入
-        self.controller = None  # 控制器引用，将由控制器注册时注入
-        self.runtime_injection_config = None  # 当前运行级实验策略，将由适配器/控制器注入
-        self.exchanges = []  # 交易所列表，将由环境注入
+        # Message System Related
+        self.message_manager = None  # Message Manager, to be injected into the environment
+        self.time_manager = None  # Time manager, to be injected into the environment
+        self.market_manager = None  # Environmental market manager, to be injected by environment
+        self.controller = None  # controller reference to be injected when the controller is registered
+        self.runtime_injection_config = None  # Current operational level experimental policy to be injected by adaptor/controller
+        self.exchanges = []  # exchange List, to be injected by environment
         self.upstream_exchange = None 
         self.downstream_exchange = None  
 
-        self.message_handlers = {}  # 消息处理器字典
-        self.message_subscriptions = {}  # 消息订阅关系
+        self.message_handlers = {}  # Message Processor Dictionary
+        self.message_subscriptions = {}  # Can not open message
         
-        # 其他配置
-        self.business_modules = {}  # 业务模块字典
+        # Other Configurations
+        self.business_modules = {}  # Business module dictionary
         self.risk_tolerance = self.config.get("risk_tolerance", "medium")
         self.decision_strategy = self.config.get("decision_strategy", "default")
         
     def initialize_default_modules(self):
         """
-        初始化默认业务模块
-        
+        Initialization of the default business module
+                
         Returns:
-            初始化的模块实例
-        """
-        # 这里可以根据需要初始化默认模块
+            Examples of initialized modules
+                """
+        # The default module can be initialized as needed
         if 'finance' in self.enabled_functions:
             finance_manager = FinanceManager(self,initial_cash=self.capital)
             self.register_module(finance_manager)
@@ -156,44 +156,44 @@ class Enterprise:
         return 
     
 
-    # 消息系统相关方法
+    # Message system-related methods
     def set_message_manager(self, message_manager):
         """
-        设置消息管理器并注册企业实例
-        
+        Set message manager and register enterprise Examples
+                
         Args:
-            message_manager: 消息管理器实例
-        """
+            parameter: Message Manager Example
+                """
         self.message_manager = message_manager
-        # 注册企业实例到消息管理器
+        # Register enterprise instance to message manager
         if hasattr(message_manager, 'register_enterprise'):
             message_manager.register_enterprise(self.id, self)
 
     def set_market_manager(self, market_manager):
         """
-        设置环境市场管理器并注册企业实例
-        
+        Set up an environmental market manager and register enterprise Examples
+                
         Args:
-            market_manager: 环境市场管理器实例
-        """
+            market_manager: Examples of environmental market managers
+                """
         self.market_manager = market_manager
 
     def set_time_manager(self, time_manager):
         """
-        设置时间管理器并注册企业实例
-        
+        Set time manager and register enterprise Examples
+                
         Args:
-            time_manager: 时间管理器实例
-        """
+            parameter: Time Manager Example
+                """
         self.time_manager = time_manager
 
     def set_exchange(self, exchanges: List[Exchange]):
         """
-        设置交易所管理器并注册企业实例
-        
+        Set up exchange Manager and register enterprise Examples
+                
         Args:
-            exchanges: 交易所实例列表
-        """
+            Exchanges: exchange Examples List
+                """
         self.exchanges = exchanges
         enterprise_info = {
             "tier": self.tier,
@@ -202,7 +202,7 @@ class Enterprise:
             "salable_products_idList": list(self.salable_products_idList or []),
             "purchasable_materials_idList": list(self.purchasable_materials_idList or []),
         }
-        # 在对应的交易所中注册企业自身的 上游/下游 信息 
+        # Register your own upstream/downstream information at exchange
         for exchange in exchanges:
             exchange_prefix = exchange.id.split("_")[0]   # "0-1"
             upstream_str, downstream_str = exchange_prefix.split("-")
@@ -220,22 +220,22 @@ class Enterprise:
     
     def send_message(self, recipient_id: str, message_type: str, content: Dict, urgent: bool = False) -> Dict:
         """
-        发送消息给指定企业
-        
+        Send message to specified enterprise
+                
         Args:
-            recipient_id: 接收者企业ID
-            message_type: 消息类型
-            content: 消息内容
-            urgent: 是否为紧急消息
-            
+            recipient_id: Recipient enterpriseID
+            parameter: Message Type
+            Contact: Message Contents
+            Other Organiser
+                        
         Returns:
-            dict: 消息发送结果
-        """
+            dict: Message sent result
+                """
         if not self.message_manager:
             return {"success": False, "message": "Message manager not set"}
         
         try:
-            # 直接调用message_manager的send_message方法，传递所有必需参数
+            # Directly calls the message manager send message method and transmits all necessary parameters
             message_id = self.message_manager.send_message(
                 sender_id=self.id,
                 receiver_id=recipient_id,
@@ -244,7 +244,7 @@ class Enterprise:
                 priority="high" if urgent else "normal",
                 metadata={"sender_name": self.name, "urgent": urgent, "timestamp": time.time()}
             )
-            # 记录发送的消息
+            # Record messages sent
             self.history["messages"].append({
                 "type": "sent",
                 "message": {
@@ -263,21 +263,21 @@ class Enterprise:
     
     def broadcast_message(self, message_type: str, content: Dict, urgent: bool = False) -> Dict:
         """
-        广播消息给所有企业
-        
+        Radio message to all enterprise
+                
         Args:
-            message_type: 消息类型
-            content: 消息内容
-            urgent: 是否为紧急消息
-            
+            parameter: Message Type
+            Contact: Message Contents
+            Other Organiser
+                        
         Returns:
-            dict: 消息发送结果
-        """
+            dict: Message sent result
+                """
         if not self.message_manager:
             return {"success": False, "message": "Message manager not set"}
         
         try:
-            # 直接调用message_manager的broadcast_message方法
+            # Directly call message manager's Broadcast message method
             message_ids = self.message_manager.broadcast_message(
                 sender_id=self.id,
                 message_type=message_type,
@@ -286,7 +286,7 @@ class Enterprise:
                 metadata={"sender_name": self.name, "urgent": urgent, "timestamp": time.time()}
             )
             
-            # 记录发送的广播消息
+            # Record the broadcast.
             self.history["messages"].append({
                 "type": "broadcast",
                 "message": {
@@ -304,13 +304,13 @@ class Enterprise:
     
     def receive_message(self, message: Dict):
         """
-        接收消息
-        
+        Receive Message
+                
         Args:
-            message: 消息内容
-        """
+            message:
+                """
         message_type = message.get("message_type")
-        # 记录接收的消息
+        # Record the receipt.
         self.history["messages"].append({
             "type": "received",
             "message_type": message_type,
@@ -319,7 +319,7 @@ class Enterprise:
             "timestamp": time.time()
         })
         
-        # 检查是否有对应的消息处理器
+        # Check if there's a corresponding message processor.
         if message_type in self.message_handlers:
             handler = self.message_handlers[message_type]
             try:
@@ -329,49 +329,49 @@ class Enterprise:
                 print(f"Error processing message {message.get('id')} for enterprise {self.name}: {str(e)}")
                 return {"success": False, "error": str(e)}
         else:
-            # 默认处理逻辑
+            # Default processing logic
             print(f"Enterprise {self.name} received message of type {message_type} from {message.get('sender_name')}")
             return {"success": True, "message": "Message received but no handler registered"}
     
     def register_message_handler(self, message_type: str, handler: Callable):
         """
-        注册消息处理器
-        
+        Register Message Processor
+                
         Args:
-            message_type: 消息类型
-            handler: 消息处理函数
-        """
+            parameter: Message Type
+            Handler: Message processing function
+                """
         self.message_handlers[message_type] = handler
         return {"success": True, "message_type": message_type}
     
     def subscribe_to_messages(self, message_type: str):
         """
-        订阅特定类型的消息
-        
+        Can not open message
+                
         Args:
-            message_type: 消息类型
-            
+            parameter: Message Type
+                        
         Returns:
-            dict: 订阅结果
-        """
+            dict: Subscription Results
+                """
         if not self.message_manager:
             return {"success": False, "message": "Message manager not set"}
         
         self.message_subscriptions[message_type] = True
-        # 使用新的subscribe_enterprise_to_message方法进行订阅
+        # Subscriptions using the new subscribe entry to message method
         if hasattr(self.message_manager, 'subscribe_enterprise_to_message'):
             return self.message_manager.subscribe_enterprise_to_message(self.id, message_type)
         else:
-            # 兼容旧版本
+            # Compatible with old versions
             return self.message_manager.subscribe(self.id, message_type)
              
     def to_dict(self) -> Dict:
         """
-        转换为字典格式
-        
+        Convert to Dictionary Format
+                
         Returns:
-            dict: 企业的字典表示
-        """
+            Dict: enterprise Dict
+                """
         return {
             "id": self.id,
             "name": self.name,
@@ -399,38 +399,38 @@ class Enterprise:
     
     def register_business_module(self, module_name: str, module_instance):
         """
-        注册业务模块
-        
+        Registration business module
+                
         Args:
-            module_name: 模块名称
-            module_instance: 模块实例
-        """
+            parameter: Module name
+            parameter: Examples of modules
+                """
         self.business_modules[module_name] = module_instance
         print(f"企业 {self.name} 已注册业务模块: {module_name}")
         
     def get_business_module(self, module_name: str):
         """
-        获取业务模块
-        
+        Getting Operations Modules
+                
         Args:
-            module_name: 模块名称
-            
+            parameter: Module name
+                        
         Returns:
-            业务模块实例，不存在则返回None
-        """
+            Examples of business modules, if none does not exist
+                """
         return self.business_modules.get(module_name)
     
     @classmethod
     def from_dict(cls, data: Dict) -> 'Enterprise':
         """
-        从字典创建企业实例
-        
+        Create instance enterprise from dictionary
+                
         Args:
-            data: 企业数据
-            
+            Data: enterprise Data
+                        
         Returns:
-            Enterprise: 企业实例
-        """
+            Enterprise: enterprise Examples
+                """
         enterprise = cls(data.get("config", {}))
         enterprise.id = data.get("id", enterprise.id)
         enterprise.name = data.get("name", enterprise.name)
@@ -458,19 +458,19 @@ class Enterprise:
     
     def register_module(self, module):
         """
-        注册工作部门模块
-        
+        Registration department module
+                
         Args:
-            module: 业务模块实例，必须继承BaseBusinessModule
-            
+            Modeule: Examples of business modules that must inherit BaseBusinesModule
+                        
         Returns:
-            str: 注册的模块ID
-        """
-        # 验证模块是否是BaseBusinessModule的实例
+            st: Registered module ID
+                """
+        # Check if the module is the case of BaseBusinesModule
         if not isinstance(module, BaseBusinessModule):
             raise TypeError(f"模块必须继承BaseBusinessModule，当前类型: {type(module)}")
         
-        # 注册模块
+        # Registration module
         if not hasattr(self, 'business_modules'):
             self.business_modules = {}
         
@@ -480,7 +480,7 @@ class Enterprise:
         
         self.business_modules[module_type].append(module)
         
-        # 记录到历史
+        # Record to History
         self.history["decisions"].append({
             "action": "register_module",
             "module_id": module.module_id,
@@ -490,23 +490,23 @@ class Enterprise:
     
     def get_module(self, module_id: str):
         """
-        根据模块ID获取模块实例
-        
+        Fetch module examples from module ID
+                
         Args:
-            module_id: 模块ID
-            
+            module_id: Modular ID
+                        
         Returns:
-            BaseBusinessModule: 模块实例，如果不存在则返回None
-        """
+            BaseBusinesModule: Examples of modules, return None if none
+                """
         return self.business_modules.get(module_id)
     
     def list_modules(self) -> list:
         """
-        列出所有注册的模块
-        
+        List all registered modules
+                
         Returns:
-            list: 模块信息列表
-        """
+            list: list of module information
+                """
         lists = []
         for module_type,module_list in self.business_modules.items():
             for module in module_list:
@@ -515,18 +515,18 @@ class Enterprise:
     
     def remove_module(self, module_id: str):
         """
-        移除工作部门模块
-        
+        Remove Task department Module
+                
         Args:
-            module_id: 模块ID
-            
+            module_id: Modular ID
+                        
         Returns:
-            bool: 是否成功移除
-        """
+            Bool: Remove successfully
+                """
         if module_id in self.business_modules:
             del self.business_modules[module_id]
             
-            # 记录到历史
+            # Record to History
             self.history["decisions"].append({
                 "time": self.time_manager.get_day(),
                 "action": "remove_module",
@@ -537,12 +537,12 @@ class Enterprise:
 
     def get_info(self) -> Dict:
         """
-        获取企业基本信息
-        
+        Access enterprisebasic information
+                
         Returns:
-            dict: 包含企业名称、ID、资金等基本信息的字典
-        """
-        # 返回企业实际的资金值，不再根据名称硬编码
+            dict: Dictionary containing enterprise basic information such as names, ID, funds, etc.
+                """
+        # returns enterprise actual value of funds, no longer coded by name
         return {
             "name": self.name,
             "id": self.id,
@@ -558,12 +558,12 @@ class Enterprise:
     
     def get_state(self) -> Dict:
         """
-        获取企业当前状态
-        
+        Fetch enterprise Current Status
+                
         Returns:
-            dict: 企业状态
-        """
-        # TODO 有大量无用内容待清理
+            dict: enterprise Status
+                """
+        # TODO Substantial amount of useless content to clean
         return {
             "id": self.id,
             "name": self.name,

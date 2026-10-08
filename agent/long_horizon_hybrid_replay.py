@@ -242,7 +242,7 @@ class LongHorizonHybridReplayRunner:
             decision_source = f"{decision_source}_stale_trade_noop"
             noop_payload = self.scripted_runner._action_pass(
                 department,
-                "E1 长跑补位规则：该提案已被并行交易对手处理，无需重复响应。",
+                "E1 long-horizon recovery rule: the counterparty already resolved this proposal; no duplicate response is required.",
             )
             self.scripted_runner._write_json(target_action, noop_payload)
             MultiTenantUtils._normalize_action_file_if_possible(
@@ -317,13 +317,13 @@ class LongHorizonHybridReplayRunner:
             if not actions:
                 payload = self.scripted_runner._action_pass(
                     "sales",
-                    "E1 多企业上游销售仅响应真实 B2B 需求；当前无可执行订单，且不创建外部零售市场。",
+                    "E1 upstream sales respond only to real B2B demand; no executable order is available and no external retail market will be created.",
                 )
             else:
                 payload = actions
         return self._replace_text(payload, {
-            "C1 固定规则": "E1 长跑补位规则",
-            "规则算法": "E1 状态驱动补位规则",
+            "ME-RB fixed rule": "E1 long-horizon recovery rule",
+            "rule algorithm": "E1 state-driven recovery rule",
         })
 
     @classmethod
@@ -516,12 +516,10 @@ class LongHorizonHybridReplayRunner:
                 "superseded",
                 "already accepted",
                 "already rejected",
-                "已被接受",
-                "已被拒绝",
-                "状态为 accepted",
-                "状态为 rejected",
-                "状态为 cancelled",
-                "状态为 expired",
+                "status is accepted",
+                "status is rejected",
+                "status is cancelled",
+                "status is expired",
             )
         )
 

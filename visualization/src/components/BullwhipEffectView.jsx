@@ -78,13 +78,13 @@ const buildFlowModels = (flowSequenceInput, enterpriseSpecs = []) => {
       return {
         key: flow.dynamic_key,
         color,
-        name: '外部市场需求',
+        name: 'External Market Demand',
       };
     }
     return {
       key: flow.dynamic_key,
       color,
-      name: `${flow.downstream_enterprise_name} 向 ${flow.upstream_enterprise_name} 请求`,
+      name: `${flow.downstream_enterprise_name} Requests to ${flow.upstream_enterprise_name}`,
     };
   });
 
@@ -780,8 +780,8 @@ const BullwhipEffectView = ({
     }
     return {
       key: 'external_upstream_demand',
-      name: `外部补货需求 → ${topInternalFlow.upstreamEnterpriseId || topInternalFlowName}`,
-      shortName: '外部补货需求',
+      name: `External Replenishment Demand → ${topInternalFlow.upstreamEnterpriseId || topInternalFlowName}`,
+      shortName: 'External Replenishment Demand',
       color: '#6c5ce7',
     };
   }, [includeUpstreamExternalSupplierMode, topInternalFlow, topInternalFlowName, hasExternalUpstreamDemandData]);
@@ -791,8 +791,8 @@ const BullwhipEffectView = ({
     }
     return {
       key: 'external_upstream_procurement',
-      name: `外部供应商 → ${topInternalFlow.upstreamEnterpriseId || topInternalFlowName}`,
-      shortName: '外部供应商',
+      name: `External Supplier → ${topInternalFlow.upstreamEnterpriseId || topInternalFlowName}`,
+      shortName: 'External Supplier',
       color: '#34495e',
     };
   }, [includeUpstreamExternalSupplierMode, topInternalFlow, topInternalFlowName, hasExternalUpstreamQuantityData]);
@@ -1092,10 +1092,10 @@ const BullwhipEffectView = ({
     chartRefs.current.push(chart);
 
     const yAxisName = requestChartViewMode === 'log'
-      ? `log10(1 + ${getQuantityAxisLabel('需求量 / 请求量', quantityView)})`
+      ? `log10(1 + ${getQuantityAxisLabel('Demand / Request Quantity', quantityView)})`
       : requestChartViewMode === 'relative_peak'
-        ? '相对各自峰值 (%)'
-        : getQuantityAxisLabel('需求量 / 请求量', quantityView);
+        ? 'Relative to Own Peak (%)'
+        : getQuantityAxisLabel('Demand / Request Quantity', quantityView);
 
     chart.setOption({
       tooltip: {
@@ -1110,9 +1110,9 @@ const BullwhipEffectView = ({
             const rawValue = Number(param?.data?.rawValue ?? param?.value ?? 0);
             const displayValue = Number(param?.data?.value ?? param?.value ?? 0);
             const extra = requestChartViewMode === 'log'
-              ? `（对数显示 ${formatNumber(displayValue)}）`
+              ? ` (log display ${formatNumber(displayValue)})`
               : requestChartViewMode === 'relative_peak'
-                ? `（相对峰值 ${formatNumber(displayValue)}%）`
+                ? ` (relative peak ${formatNumber(displayValue)}%)`
                 : '';
             lines.push(`${param.marker}${param.seriesName}: ${formatNumber(rawValue)}${extra}`);
           });
@@ -1205,12 +1205,12 @@ const BullwhipEffectView = ({
 
   const renderRequestHeatmap = () => {
     const maxValue = Math.max(...requestHeatmapData.map((item) => Number(item[2] || 0)), 1);
-    renderHeatmap(requestHeatmapRef, requestAmplificationLayers, requestHeatmapData, maxValue, '请求放大倍数');
+    renderHeatmap(requestHeatmapRef, requestAmplificationLayers, requestHeatmapData, maxValue, 'Request Amplification Ratio');
   };
 
   const renderOrderHeatmap = () => {
     const maxValue = Math.max(...orderHeatmapData.map((item) => Number(item[2] || 0)), 1);
-    renderHeatmap(orderHeatmapRef, orderAmplificationLayers, orderHeatmapData, maxValue, '订单放大倍数');
+    renderHeatmap(orderHeatmapRef, orderAmplificationLayers, orderHeatmapData, maxValue, 'Order Amplification Ratio');
   };
 
   const renderTransmissionChart = () => {
@@ -1256,12 +1256,12 @@ const BullwhipEffectView = ({
           const value = Number(params.value || 0);
           const delta = value - 1;
           const demandSourceNote = params?.data?.isExternalDemandTransmission
-            ? '<br/>口径：外部补货需求 / 顶层企业累计请求量'
+            ? '<br/>Definition: external replenishment demand / top-tier cumulative requests'
             : '';
           const sourceNote = params?.data?.isExternalOrderTransmission
-            ? '<br/>口径：外部采购成交量 / 顶层企业累计请求量'
+            ? '<br/>Definition: external procurement volume / top-tier cumulative requests'
             : '';
-          return `${params.name}<br/>总量传导比值: ${formatRatio(value)}<br/>相对 1x 偏离: ${delta >= 0 ? '+' : ''}${formatNumber(delta)}x${demandSourceNote}${sourceNote}`;
+          return `${params.name}<br/>Aggregate transmission ratio: ${formatRatio(value)}<br/>Deviation from 1x: ${delta >= 0 ? '+' : ''}${formatNumber(delta)}x${demandSourceNote}${sourceNote}`;
         }
       },
       grid: { left: 152, right: 42, top: 20, bottom: 28 },
@@ -1283,7 +1283,7 @@ const BullwhipEffectView = ({
         data: transmissionTotals.map((entry) => entry.name)
       },
       series: [{
-        name: '总量传导比值',
+        name: 'Aggregate Transmission Ratio',
         type: 'bar',
         barWidth: 24,
         data: transmissionTotals.map((entry) => ({
@@ -1303,7 +1303,7 @@ const BullwhipEffectView = ({
         markLine: {
           symbol: 'none',
           label: {
-            formatter: '1x 基线',
+            formatter: '1x baseline',
             color: '#7f8db5'
           },
           lineStyle: {
@@ -1330,41 +1330,41 @@ const BullwhipEffectView = ({
       },
       yAxis: {
         type: 'value',
-        name: getQuantityAxisLabel('累计量', quantityView)
+        name: getQuantityAxisLabel('Cumulative Quantity', quantityView)
       },
       series: [
         {
-          name: '累计请求量',
+          name: 'Cumulative Requests',
           type: 'bar',
           itemStyle: { color: '#8ec5ff' },
           data: conversionRows.map((row) => row.requestTotal)
         },
         {
-          name: '累计预案量',
+          name: 'Cumulative Proposals',
           type: 'bar',
           itemStyle: { color: '#8fd3a8' },
           data: conversionRows.map((row) => row.proposalTotal)
         },
         {
-          name: '累计已接受预案量',
+          name: 'Cumulative Accepted Proposals',
           type: 'bar',
           itemStyle: { color: '#7cc8fa' },
           data: conversionRows.map((row) => row.acceptedProposalTotal)
         },
         {
-          name: '累计已确认预案量',
+          name: 'Cumulative Confirmed Proposals',
           type: 'bar',
           itemStyle: { color: '#ffd085' },
           data: conversionRows.map((row) => row.confirmedProposalTotal)
         },
         {
-          name: '累计订单量',
+          name: 'Cumulative Orders',
           type: 'bar',
           itemStyle: { color: '#f2994a' },
           data: conversionRows.map((row) => row.orderTotal)
         },
         {
-          name: '累计到货 / 交付量',
+          name: 'Cumulative Arrivals / Deliveries',
           type: 'bar',
           itemStyle: { color: '#e76f51' },
           data: conversionRows.map((row) => row.arrivedTotal)
@@ -1432,9 +1432,9 @@ const BullwhipEffectView = ({
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('需求-订单缺口', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Demand-Order Gap', quantityView) },
       series: flowModels.edgeLayers.map((entry) => ({
-        name: `${entry.name} 缺口`,
+        name: `${entry.name} Gap`,
         type: 'bar',
         itemStyle: { color: entry.color },
         data: gapSeriesMap[entry.key] || []
@@ -1481,13 +1481,13 @@ const BullwhipEffectView = ({
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('库存', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Inventory', quantityView) },
       series: [
         ...finishedGoodsSeries,
         {
           name: quantityView?.enabled
-            ? `${manufacturingNodeName} 原料总库存（折合 ${quantityView.productId}）`
-            : `${manufacturingNodeName} 原料总库存`,
+            ? `${manufacturingNodeName} Total Raw-Material Inventory (${quantityView.productId} Equivalent)`
+            : `${manufacturingNodeName} Total Raw-Material Inventory`,
           type: 'bar',
           itemStyle: { color: '#9b51e0', opacity: 0.55 },
           data: manufacturingRawEquivalentSeries
@@ -1589,75 +1589,75 @@ const BullwhipEffectView = ({
   const includeAnyExternalMode = includeUpstreamExternalSupplierMode || includeDownstreamExternalMarketMode;
   const hasNativeRawSeries = Boolean(bullwhip?.raw_series);
   const hasNativeEffectiveSeries = Boolean(bullwhip?.effective_series);
-  const requestModeLabel = requestMode === 'raw' ? '原始请求' : '有效传导';
+  const requestModeLabel = requestMode === 'raw' ? 'Raw Requests' : 'Effective Propagation';
   const requestChartViewLabel = requestChartViewMode === 'log'
-    ? '对数压缩'
+    ? 'Log Scale'
     : requestChartViewMode === 'relative_peak'
-      ? '相对峰值'
-      : '绝对量';
+      ? 'Relative Peak'
+      : 'Absolute Quantity';
   const transmissionSummaryText = flowModels.transmissionLayers.length >= 3
-    ? `${flowModels.transmissionLayers[0].name} 明显大于 1x、${flowModels.transmissionLayers[1].name} 低于 1x、而 ${flowModels.transmissionLayers[2].name} 又重新高于 1x`
-    : '第一层明显大于 1x、中间层低于 1x、而更上游链路又重新高于 1x';
+    ? `${flowModels.transmissionLayers[0].name} is above 1x, ${flowModels.transmissionLayers[1].name} is below 1x, and ${flowModels.transmissionLayers[2].name} rises above 1x again`
+    : 'the first tier is above 1x, the middle tier is below 1x, and the upstream link rises above 1x again';
   const requestModeExplanation = requestMode === 'raw'
-    ? `当前展示包含后续被 superseded / expired 的历史 buy request，更适合观察行为层面的下单冲动。序列来源：${hasNativeRawSeries ? 'bullwhip_metrics.json.raw_series' : 'exchange.json buy_requests fallback' }。`
-    : `当前展示已过滤 superseded / expired 请求，并按完整 round 轴补零，更适合判断真实需求传导与实际牛鞭放大。序列来源：${hasNativeEffectiveSeries ? 'bullwhip_metrics.json.effective_series' : 'bullwhip_metrics.json.series / exchange.json fallback'}。`;
+    ? `Includes historical buy requests that were later superseded or expired, revealing ordering intent. Source: ${hasNativeRawSeries ? 'bullwhip_metrics.json.raw_series' : 'exchange.json buy_requests fallback'}.`
+    : `Excludes superseded and expired requests and fills the complete turn axis with zeros, supporting analysis of effective demand propagation. Source: ${hasNativeEffectiveSeries ? 'bullwhip_metrics.json.effective_series' : 'bullwhip_metrics.json.series / exchange.json fallback'}.`;
   const requestChartViewExplanation = requestChartViewMode === 'log'
-    ? '对数压缩会保留原始高峰，同时压缩超大数值，适合观察被大曲线遮蔽的中小波动。'
+    ? 'The log scale preserves peaks while making smaller fluctuations visible.'
     : requestChartViewMode === 'relative_peak'
-      ? '相对峰值会把每条曲线都换算成“相对自身峰值的百分比”，更适合比较波动形状、节奏和峰值出现时机。'
-      : '绝对量保持原始请求规模，最适合判断真实量级，但在上下游量级差异很大时会压平较小曲线。';
+      ? 'Each series is expressed as a percentage of its own peak, enabling comparison of fluctuation shape and timing.'
+      : 'Absolute quantities preserve actual request scale; large tier differences may visually compress smaller series.';
   const requestChartExternalNote = includeUpstreamExternalSupplierMode && (externalUpstreamDemandLayer || externalUpstreamOrderLayer)
-    ? `${externalUpstreamDemandLayer ? `已补充“${externalUpstreamDemandLayer.name}”点线，表示最上游企业在各轮对外部供应商的补货需求（来自 top_tier_supply_plan）。` : ''}${externalUpstreamDemandLayer && externalUpstreamOrderLayer ? ' ' : ''}${externalUpstreamOrderLayer ? `已补充“${externalUpstreamOrderLayer.name}”虚线，表示最上游对外部供应商的实际采购订单量，不随 raw/effective 口径过滤。` : ''}`
+    ? `${externalUpstreamDemandLayer ? `The dotted “${externalUpstreamDemandLayer.name}” series shows top-tier replenishment demand from top_tier_supply_plan.` : ''}${externalUpstreamDemandLayer && externalUpstreamOrderLayer ? ' ' : ''}${externalUpstreamOrderLayer ? `The dashed “${externalUpstreamOrderLayer.name}” series shows actual external procurement and is unaffected by the raw/effective filter.` : ''}`
     : includeUpstreamExternalSupplierMode
-      ? '当前任务未记录到“最上游企业 → 外部供应商”的实际采购订单，因此牛鞭页不会额外绘制上游外部交易曲线。'
+      ? 'No top-tier external procurement orders were recorded, so no external upstream order series is shown.'
       : '';
 
   if (loading) {
-    return <div className="loading">加载牛鞭效应数据...</div>;
+    return <div className="loading">Loading bullwhip-effect data...</div>;
   }
 
   if (!bullwhip) {
-    return <div className="error">未找到 bullwhip_metrics.json，无法生成牛鞭效应总览。</div>;
+    return <div className="error">bullwhip_metrics.json was not found; the bullwhip overview cannot be generated.</div>;
   }
 
   return (
     <div className="bullwhip-page">
       <div className="bullwhip-kpi-grid">
         <div className="bullwhip-kpi-card">
-          <span>当前观察口径</span>
+          <span>Current Measurement</span>
           <strong>{requestModeLabel}</strong>
         </div>
         <div className="bullwhip-kpi-card">
-          <span>终端累计真实需求</span>
+          <span>Cumulative Terminal Demand</span>
           <strong>{formatNumber(totalExternalDemand)}</strong>
         </div>
         <div className="bullwhip-kpi-card warning">
-          <span>最强请求放大层级</span>
+          <span>Peak Request-Amplification Tier</span>
           <strong>{peakDemandAmplification.layerName === '-' ? '-' : `${peakDemandAmplification.layerName} · Turn ${peakDemandAmplification.day}`}</strong>
         </div>
         <div className="bullwhip-kpi-card warning">
-          <span>最大静态 BWE</span>
+          <span>Maximum Static BWE</span>
           <strong>{formatRatio(maxStaticBwe)}</strong>
         </div>
         <div className="bullwhip-kpi-card">
-          <span>最大静态 CV-BWE</span>
+          <span>Maximum Static CV-BWE</span>
           <strong>{formatRatio(maxStaticCvBwe)}</strong>
         </div>
         <div className="bullwhip-kpi-card warning">
-          <span>累计请求 → 到货 / 交付转化率</span>
+          <span>Request-to-Arrival / Delivery Conversion</span>
           <strong>{totalRequestQuantity > 0 ? formatPercent(totalArrivedQuantity / totalRequestQuantity) : '-'}</strong>
         </div>
         <div className="bullwhip-kpi-card">
-          <span>最大峰值滞后</span>
-          <strong>{longestPeakLag ? `${longestPeakLag.name} · ${longestPeakLag.lag}轮` : '-'}</strong>
+          <span>Maximum Peak Lag</span>
+          <strong>{longestPeakLag ? `${longestPeakLag.name} · ${longestPeakLag.lag} turns` : '-'}</strong>
         </div>
       </div>
 
       <div className="bullwhip-mode-panel">
         <div className="bullwhip-source-strip">
-          <span>当前任务：{currentRunId || '-'}</span>
-          <span>数据根：{currentRunSourceLabel || dataRoot}</span>
-          <span>口径来源：{requestMode === 'raw'
+          <span>Current run: {currentRunId || '-'}</span>
+          <span>Data source: {currentRunSourceLabel || dataRoot}</span>
+          <span>Series source: {requestMode === 'raw'
             ? (hasNativeRawSeries ? 'raw_series' : 'exchange fallback')
             : (hasNativeEffectiveSeries ? 'effective_series' : 'series / exchange fallback')}</span>
         </div>
@@ -1667,14 +1667,14 @@ const BullwhipEffectView = ({
             className={`bullwhip-mode-button ${requestMode === 'effective' ? 'active' : ''}`}
             onClick={() => setRequestMode('effective')}
           >
-            有效传导
+            Effective Propagation
           </button>
           <button
             type="button"
             className={`bullwhip-mode-button ${requestMode === 'raw' ? 'active' : ''}`}
             onClick={() => setRequestMode('raw')}
           >
-            原始请求
+            Raw Requests
           </button>
         </div>
         <div className="bullwhip-mode-note">{requestModeExplanation}</div>
@@ -1684,75 +1684,75 @@ const BullwhipEffectView = ({
         <div className="bullwhip-chart-card wide">
           <div className="bullwhip-card-header">
             <div className="bullwhip-card-title">
-              {quantityView?.enabled ? `${requestModeLabel}主图（最上游折合 ${quantityView.productId}）` : `${requestModeLabel}主图`}
+              {quantityView?.enabled ? `${requestModeLabel} Overview (Top Tier as ${quantityView.productId} Equivalents)` : `${requestModeLabel} Overview`}
             </div>
-            <div className="bullwhip-inline-switch" aria-label="请求主图观察模式">
+            <div className="bullwhip-inline-switch" aria-label="Request-chart display mode">
               <button
                 type="button"
                 className={`bullwhip-mode-button compact ${requestChartViewMode === 'absolute' ? 'active' : ''}`}
                 onClick={() => setRequestChartViewMode('absolute')}
               >
-                绝对量
+                Absolute
               </button>
               <button
                 type="button"
                 className={`bullwhip-mode-button compact ${requestChartViewMode === 'log' ? 'active' : ''}`}
                 onClick={() => setRequestChartViewMode('log')}
               >
-                对数压缩
+                Log Scale
               </button>
               <button
                 type="button"
                 className={`bullwhip-mode-button compact ${requestChartViewMode === 'relative_peak' ? 'active' : ''}`}
                 onClick={() => setRequestChartViewMode('relative_peak')}
               >
-                相对峰值
+                Relative Peak
               </button>
             </div>
           </div>
           <div className="bullwhip-inline-note">
-            当前主图观察模式：{requestChartViewLabel}。{requestChartViewExplanation}
+            Display mode: {requestChartViewLabel}. {requestChartViewExplanation}
             {requestChartExternalNote ? ` ${requestChartExternalNote}` : ''}
           </div>
           <div className="bullwhip-chart large" ref={requestRef} />
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">层间传导比值诊断图（累计请求总量）</div>
+          <div className="bullwhip-card-title">Inter-Tier Transmission Ratios (Cumulative Requests)</div>
           <div className="bullwhip-chart" ref={transmissionRef} />
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">逐轮请求放大热力图</div>
+          <div className="bullwhip-card-title">Per-Turn Request-Amplification Heatmap</div>
           <div className="bullwhip-chart" ref={requestHeatmapRef} />
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">逐轮订单放大热力图</div>
+          <div className="bullwhip-card-title">Per-Turn Order-Amplification Heatmap</div>
           <div className="bullwhip-chart" ref={orderHeatmapRef} />
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">履约后果：Backlog 与 Fill Rate</div>
+          <div className="bullwhip-card-title">Fulfillment Outcomes: Backlog and Fill Rate</div>
           <div className="bullwhip-chart" ref={responseRef} />
         </div>
 
         <div className="bullwhip-chart-card wide">
           <div className="bullwhip-card-title">
-            {quantityView?.enabled ? `累计请求-预案-接受-订单-到货漏斗（折合 ${quantityView.productId}）` : '累计请求-预案-接受-订单-到货漏斗'}
+            {quantityView?.enabled ? `Cumulative Request–Proposal–Acceptance–Order–Arrival Funnel (${quantityView.productId} Equivalent)` : 'Cumulative Request–Proposal–Acceptance–Order–Arrival Funnel'}
           </div>
           <div className="bullwhip-chart" ref={conversionRef} />
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">Raw / Effective 方差与 BWE 对照</div>
+          <div className="bullwhip-card-title">Raw vs. Effective Variance and BWE</div>
           <div className="bullwhip-table-wrapper">
             <table className="bullwhip-table">
               <thead>
                 <tr>
-                  <th>层级</th>
-                  <th>Raw 方差</th>
-                  <th>Effective 方差</th>
+                  <th>Tier</th>
+                  <th>Raw Variance</th>
+                  <th>Effective Variance</th>
                   <th>Raw BWE</th>
                   <th>Effective BWE</th>
                 </tr>
@@ -1773,16 +1773,16 @@ const BullwhipEffectView = ({
         </div>
 
         <div className="bullwhip-chart-card">
-          <div className="bullwhip-card-title">生命周期状态面板</div>
+          <div className="bullwhip-card-title">Lifecycle Status Panel</div>
           <div className="bullwhip-table-wrapper">
             <table className="bullwhip-table">
               <thead>
                 <tr>
-                  <th>层级</th>
-                  <th>Raw 请求总量</th>
-                  <th>Effective 请求总量</th>
-                  <th>请求状态</th>
-                  <th>预案状态</th>
+                  <th>Tier</th>
+                  <th>Total Raw Requests</th>
+                  <th>Total Effective Requests</th>
+                  <th>Request Status</th>
+                  <th>Proposal Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -1802,29 +1802,29 @@ const BullwhipEffectView = ({
 
         <div className="bullwhip-chart-card">
           <div className="bullwhip-card-title">
-            {quantityView?.enabled ? `逐轮需求-订单缺口（折合 ${quantityView.productId}）` : '逐轮需求-订单缺口'}
+            {quantityView?.enabled ? `Per-Turn Demand–Order Gap (${quantityView.productId} Equivalent)` : 'Per-Turn Demand–Order Gap'}
           </div>
           <div className="bullwhip-chart" ref={gapRef} />
         </div>
 
         <div className="bullwhip-chart-card">
           <div className="bullwhip-card-title">
-            {quantityView?.enabled ? `库存响应与上游瓶颈（原料折合 ${quantityView.productId}）` : '库存响应与上游瓶颈'}
+            {quantityView?.enabled ? `Inventory Response and Upstream Bottlenecks (Raw Materials as ${quantityView.productId} Equivalents)` : 'Inventory Response and Upstream Bottlenecks'}
           </div>
           <div className="bullwhip-chart" ref={inventoryRef} />
         </div>
 
         <div className="bullwhip-chart-card insight-card wide">
-          <div className="bullwhip-card-title">牛鞭效应观察结论</div>
+          <div className="bullwhip-card-title">Bullwhip-Effect Findings</div>
           <ul>
-            <li>需求放大峰值出现在 {peakDemandAmplification.layerName === '-' ? '-' : `${peakDemandAmplification.layerName} 的 Turn ${peakDemandAmplification.day}`}，最高达到 {formatRatio(peakDemandAmplification.value)}；对应的订单放大峰值为 {peakOrderAmplification.layerName === '-' ? '-' : `${peakOrderAmplification.layerName} 的 Turn ${peakOrderAmplification.day}`}，最高 {formatRatio(peakOrderAmplification.value)}。</li>
-            <li>“层间传导比值诊断图（累计请求总量）”直接比较各段链路的累计请求总量相对关系，并把相对 `1x` 的偏离量标在条形标签上：当 {transmissionSummaryText} 时，通常就意味着出现了“第一层放大、第二层吸收/截断、第三层再次放大”的结构。</li>
-            <li>静态 BWE 最高为 {formatRatio(maxStaticBwe)}，静态 CV-BWE 最高为 {formatRatio(maxStaticCvBwe)}；这两项用于概括整段模拟中请求波动相对终端需求的总体放大强度。</li>
-            <li>累计请求量为 {formatNumber(totalRequestQuantity)}，累计预案量为 {formatNumber(conversionRows.reduce((sum, row) => sum + row.proposalTotal, 0))}，累计已接受预案量为 {formatNumber(totalAcceptedProposalQuantity)}，累计已确认预案量为 {formatNumber(totalConfirmedProposalQuantity)}，累计订单量为 {formatNumber(totalOrderQuantity)}，累计到货/交付量为 {formatNumber(totalArrivedQuantity)}。</li>
-            <li>当前最弱的请求→订单转化层级是 {weakestConversion ? `${weakestConversion.layerName}（${formatPercent(weakestConversion.ratio)}）` : '-'}。如果请求热力图已升温，但漏斗后段明显收缩，通常意味着牛鞭已在意图层出现，但被交易或履约链路截断。</li>
-            <li>首次出现“首层请求放大达到 2x”的轮次为 {firstRetailerAmplifiedDay === null ? '未出现' : `Turn ${firstRetailerAmplifiedDay}`}；末轮全链 backlog 为 {formatNumber(totalBacklog)}，其中峰值 backlog 出现在 {peakBacklog.company === '-' ? '-' : `${peakBacklog.company} 的 Turn ${peakBacklog.day}`}，数量为 {formatNumber(peakBacklog.value)}；末轮最低 fill rate 为 {lowestFillRate ? `${lowestFillRate.company} · ${formatPercent(lowestFillRate.value)}` : '-'}。</li>
-            <li>{bottomEnterpriseName} 期末 beer 库存为 {formatNumber(bottomFinishedGoodsInventory)}，{manufacturingEnterpriseName} 期末 beer 库存为 {formatNumber(manufacturingFinishedGoodsInventory)}，{manufacturingEnterpriseName} 原料总库存为 {formatNumber(manufacturingRawEquivalent)}{quantityView?.enabled ? `（折合 ${quantityView.productId}）` : ''}；若终端库存持续走低、同时制造端原料库存也偏紧，通常意味着波动已开始传导为真实供给瓶颈。</li>
-            <li>当前页优先使用后端 `bullwhip_metrics.json` 提供的 `raw_series / effective_series / raw_bullwhip_ratio / effective_bullwhip_ratio` 观察双口径差异，并使用交易所 `buy_requests / proposals / orders`、采购到货记录与销售履约结果共同判断放大、截断与经营后果。</li>
+            <li>Request amplification peaks at {peakDemandAmplification.layerName === '-' ? '-' : `${peakDemandAmplification.layerName}, Turn ${peakDemandAmplification.day}`} with {formatRatio(peakDemandAmplification.value)}; order amplification peaks at {peakOrderAmplification.layerName === '-' ? '-' : `${peakOrderAmplification.layerName}, Turn ${peakOrderAmplification.day}`} with {formatRatio(peakOrderAmplification.value)}.</li>
+            <li>The inter-tier transmission chart compares cumulative requests and labels deviations from `1x`. When {transmissionSummaryText}, the chain exhibits amplification, attenuation, and renewed upstream amplification across successive tiers.</li>
+            <li>Maximum static BWE is {formatRatio(maxStaticBwe)}, and maximum static CV-BWE is {formatRatio(maxStaticCvBwe)}. Together they summarize request variability relative to terminal demand.</li>
+            <li>Cumulative quantities are: requests {formatNumber(totalRequestQuantity)}, proposals {formatNumber(conversionRows.reduce((sum, row) => sum + row.proposalTotal, 0))}, accepted proposals {formatNumber(totalAcceptedProposalQuantity)}, confirmed proposals {formatNumber(totalConfirmedProposalQuantity)}, orders {formatNumber(totalOrderQuantity)}, and arrivals/deliveries {formatNumber(totalArrivedQuantity)}.</li>
+            <li>The weakest request-to-order conversion occurs at {weakestConversion ? `${weakestConversion.layerName} (${formatPercent(weakestConversion.ratio)})` : '-'}. Strong request amplification paired with a narrowing funnel indicates that trading or fulfillment attenuates behavioral demand amplification.</li>
+            <li>The first turn with first-tier amplification of at least 2x is {firstRetailerAmplifiedDay === null ? 'not observed' : `Turn ${firstRetailerAmplifiedDay}`}. Ending chain-wide backlog is {formatNumber(totalBacklog)}; peak backlog occurs at {peakBacklog.company === '-' ? '-' : `${peakBacklog.company}, Turn ${peakBacklog.day}`} with {formatNumber(peakBacklog.value)}. The lowest ending fill rate is {lowestFillRate ? `${lowestFillRate.company} · ${formatPercent(lowestFillRate.value)}` : '-'}.</li>
+            <li>Ending beer inventory is {formatNumber(bottomFinishedGoodsInventory)} at {bottomEnterpriseName} and {formatNumber(manufacturingFinishedGoodsInventory)} at {manufacturingEnterpriseName}. Raw-material inventory at {manufacturingEnterpriseName} is {formatNumber(manufacturingRawEquivalent)}{quantityView?.enabled ? ` (${quantityView.productId} equivalent)` : ''}. Simultaneous downstream and raw-material depletion signals a supply bottleneck.</li>
+            <li>The view combines dual-series metrics from `bullwhip_metrics.json` with exchange requests, proposals, orders, procurement arrivals, and sales fulfillment to distinguish amplification, attenuation, and operating consequences.</li>
           </ul>
         </div>
       </div>

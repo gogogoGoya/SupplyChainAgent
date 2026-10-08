@@ -770,10 +770,10 @@ class MultiTenantUtils:
     @staticmethod
     def handle_enterprises_init() -> str:
         """
-        执行所有企业的基础信息初始化动作
-        """
+        Perform all enterprise basic information initialization actions
+                """
         MultiTenantUtils.sync_static_command_files()
-        # 分批执行，要先注册员工，再执行后续初始化操作
+        # Batch execution, first staff registration, then subsequent initialization
         StaticUtils.execute_action(Config.INIT_ACTION_1, Config.INIT_RESULT_1, "init")
         StaticUtils.execute_action(Config.INIT_ACTION_2, Config.INIT_RESULT_2, "init")
         StaticUtils.execute_action(Config.INIT_ACTION_3, Config.INIT_RESULT_3, "init")
@@ -782,23 +782,23 @@ class MultiTenantUtils:
     @staticmethod
     def handle_test() -> str:
         """
-        执行所有企业的测试动作
-        """
+        Perform all enterprise test actions
+                """
         StaticUtils.execute_action(Config.TEST_ACTION, Config.TEST_RESULT, "test", Config.TEST_ERROR,department="Procurement")
 
     @staticmethod
     def handle_enterprise_daily() -> str:
         """
-        执行所有企业的日常动作
-        """
+        Perform all routine actions enterprise
+                """
         MultiTenantUtils.sync_static_command_files()
         StaticUtils.execute_action(Config.DAILY_ACTION, Config.DAILY_RESULT, "daily", Config.DAILY_ERROR)
 
     @staticmethod
     def save_enterprise_observations(enterprise_name: str = None) -> str:
         """
-        执行企业的全局状态信息
-        """
+        Execute global status information at enterprise
+                """
         target_enterprises = Config.ENTERPRISE_IDS if enterprise_name is None else [enterprise_name]
         for current_enterprise_name in target_enterprises:
             if current_enterprise_name not in Config.ENTERPRISE_IDS:
@@ -811,8 +811,8 @@ class MultiTenantUtils:
     @staticmethod
     def handle_enterprises_observations(round_id: int, enterprise_name: str) -> str:
         """
-        执行所有企业的全局状态信息处理
-        """
+        Perform all enterprise global status information processing
+                """
         filename = f"observation_day{round_id}.txt"
         observation_path = WORKSPACE / "enterprises" / enterprise_name / "observations" / filename
         if not observation_path.exists():
@@ -859,7 +859,7 @@ class MultiTenantUtils:
 
     @staticmethod
     def generate_dept_auto_action(dept: str, enterprise_name: str, round_id: int):
-        # TODO 整合数据库后根据上一轮在共享黑板中收到的需求来确认动作 
+        # TODO Merged database to confirm action based on needs received in the shared blackboard in the previous round
         if dept == "hr":
             MultiTenantUtils.generate_hr_action(enterprise_name,round_id)
         elif dept == "inventory":
@@ -1049,10 +1049,10 @@ class MultiTenantUtils:
         })
         
         hr_action = actions
-        # 确保输出目录存在
+        # Ensure that the output directory exists
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # 写入 output_file
+        # Write output_file
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(hr_action, f, indent=2, ensure_ascii=False)
 
@@ -1164,13 +1164,14 @@ class MultiTenantUtils:
         allow_archive_fallback: bool = True,
     ) -> bool:
         """
-        确保企业根目录下存在可供 observation / skill 读取的 analysis.json。
+        Ensure that analysis.json is available for reading under enterprise root.
 
-        当本轮未运行 analyst 时，会从最近一次归档 records/day*/analysis.json 回填到根目录，
-        让 analysis 退回低频战略背景而不是每轮强制重算。
-        正式蛛网C3在分析轮可指定 require_round_id，并关闭归档回填，防止旧报告
-        在 Analyst 超时后被误当作当轮结果。
-        """
+        When the current round does not run the analyst, restore the latest archived
+        `day*/analysis.json` to the enterprise root. This keeps analysis as low-frequency
+        strategic context rather than forcing recalculation every round. A caller may set
+        `require_round_id` to prevent an older report from being treated as current after
+        an analyst timeout.
+                """
         enterprise_dir = Config.ENTERPRISE_DIR / enterprise_name
         analysis_file = enterprise_dir / "analysis.json"
         if MultiTenantUtils._is_valid_json_file(analysis_file):
@@ -1322,11 +1323,11 @@ class MultiTenantUtils:
     @staticmethod
     def write_round_integrity_summary(round_id: int) -> str:
         """
-        记录每轮最终落盘完整性。
+        The final completeness of each round is recorded at persist.
 
-        注意：该检查在 day end 归档后执行，因此 analysis 优先读取 records/dayN，
-        交易部门同时接受 pre_* 归档文件，避免把正常归档误判为缺失。
-        """
+        Note: This check is performed after day end archive, so anallysis gives priority to records/dayN,
+        The transaction department accepts the pre * archive file at the same time, avoiding miscalculating the normal archive as missing.
+                """
         enterprise_ids = list(Config.ENTERPRISE_IDS)
         totals = {
             "enterprise_count": len(enterprise_ids),
@@ -1783,7 +1784,7 @@ class MultiTenantUtils:
 
     @staticmethod
     def write_single_enterprise_chart_export(round_id: int) -> Optional[str]:
-        """导出旧单企业 charts_data_export.json contract，并按轮次归档快照。"""
+        """Export old single-enterprise charts_data_export.json effect and press round to archive a snapshot."""
         runtime_config = get_runtime_injection_config()
         policy = runtime_config.get("single_enterprise_chart_export_policy") or {}
         if not policy.get("enabled"):
@@ -2088,7 +2089,7 @@ class MultiTenantUtils:
             "procurement_action.json",
             "procurement_result.json",
         ]
-        # TODO 对 error 情况补充
+        # TODO Supplement for Error
         for name in files1:
             src = archive_dir1 / name
             if src.exists():
@@ -2108,16 +2109,16 @@ class MultiTenantUtils:
     @staticmethod
     def save_model_messages(enterprise_name: str, round_id: int, messages: List[dict]):
         """
-        保存企业各角色的模型消息到指定目录
-        :param enterprise_name: 企业名称
-        :param round_id: 轮次ID
-        :param messages: 消息列表
-        """
-        # 创建消息存储目录
+        Save model messages for enterprise roles to the specified directory
+        : paramenterprise_name: enterprise Name
+        : paramround_id: roundID
+        Message list
+                """
+        # Create Message Storage Directory
         msg_dir = WORKSPACE / "enterprises" / enterprise_name / "model_messages" / f"day{round_id}"
         msg_dir.mkdir(parents=True, exist_ok=True)
         
-        # 按角色分类消息
+        # Message by Role
         role_messages = {}
         for msg in messages:
             role = msg.get("role", "unknown")
@@ -2125,24 +2126,24 @@ class MultiTenantUtils:
                 role_messages[role] = []
             role_messages[role].append(msg)
         
-        # 为每个角色保存单独的消息文件
+        # Save a separate message file for each character
         for role, role_msgs in role_messages.items():
-            # 将角色名转换为小写并作为文件名
+            # Use the lowercase role as the file name.
             role_lower = role.lower()
             msg_file = msg_dir / f"{role_lower}_messages.json"
             
-            # 写入消息文件
+            # Write Message File
             with open(msg_file, 'w', encoding='utf-8') as f:
                 json.dump(role_msgs, f, indent=2, ensure_ascii=False)
 
     @staticmethod
     def save_exchange_info(round_id: int, stage: str = None):
         """
-        保存交易所信息到指定目录
-        :param round_id: 轮次ID
-        """
+        Can not open message
+        : paramround_id: roundID
+                """
         try:
-            # 发送请求获取交易所详细信息
+            # Send request for exchange details
             response = requests.get(
                 f"{Config.BASE_URL}/exchange",
                 headers=StaticUtils.simulation_session_headers(),
@@ -2151,13 +2152,13 @@ class MultiTenantUtils:
             if response.status_code == 200:
                 exchange_data = response.json()
                 
-                # 创建交易所信息存储目录
+                # Create exchange Info Storage Directory
                 exchange_dir = WORKSPACE / "public" / "exchange" / f"day{round_id}"
                 if stage:
                     exchange_dir = exchange_dir / stage
                 exchange_dir.mkdir(parents=True, exist_ok=True)
                 
-                # 保存交易所信息到文件
+                # Can not open message
                 exchange_file = exchange_dir / "exchange.json"
                 with open(exchange_file, 'w', encoding='utf-8') as f:
                     json.dump(exchange_data, f, indent=2, ensure_ascii=False)
@@ -2248,9 +2249,9 @@ class MultiTenantUtils:
     @staticmethod
     def save_observer_state(round_id: int, stage: str):
         """
-        保存供复盘和可视化使用的完整状态快照。
-        这些文件保留完整 simulation_context，不作为 agent 决策输入。
-        """
+        Keep complete state snapshots for review and visual use.
+        These files remain complete at parameter and do not act as an input for decision-making.
+                """
         observer_dir = WORKSPACE / "public" / "observer_state" / f"day{round_id}" / stage
         observer_dir.mkdir(parents=True, exist_ok=True)
 

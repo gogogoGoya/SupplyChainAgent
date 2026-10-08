@@ -35,14 +35,14 @@ from config.simulation_preset_config import get_runtime_injection_config
 from config.integration_profiles import resolve_integration_profiles
 
 # ============================================================
-# 单企业运行时
+# single-enterpriseRun-time
 # ============================================================
 
 class EnterpriseRuntime:
     """
-    单企业运行时
-    对应你现有的 EnterpriseCEOClient，但现在只负责“一家企业”
-    """
+    single-enterpriseRun-time
+    It's for your existing Enterprise CEO, but it's only for "the family."
+        """
 
     def __init__(
         self,
@@ -51,7 +51,7 @@ class EnterpriseRuntime:
         session_registry: SessionRegistry,
         model_name: str,
         anthropic_base_url: Optional[str] = None,
-        max_department_concurrency: int = 2,  # 默认最多同时运行2个部门
+        max_department_concurrency: int = 2,  # Default runs up to 2 department
         workspace_dir: Optional[Path] = None,
     ):
         self.client_dir = Path(client_dir)
@@ -67,7 +67,7 @@ class EnterpriseRuntime:
         )
         self._validate_agent_gateway_config()
         
-        # 部门级并发控制信号量
+        # parameter Co-control semaphore
         self.department_semaphore = asyncio.Semaphore(max_department_concurrency)
         self.skill_runner = SkillRunner(
             self.enterprise_spec,
@@ -289,26 +289,26 @@ class EnterpriseRuntime:
         return _callback
         
     # ----------------------------
-    # Prompt / Options 构造
+    # Prompt / Options Construct
     # ----------------------------
 
     def build_system_prompt(self, role: str) -> str:
         return f"""
-你属于企业：{self.enterprise_spec.enterprise_name}（ID: {self.enterprise_spec.enterprise_id}）
-你的当前角色：{role}
+You belong to enterprise {self.enterprise_spec.enterprise_name} (ID: {self.enterprise_spec.enterprise_id}).
+Your current role is {role}.
 
-要求：
-1. 你只能从本企业立场思考；
-2. 不要混淆其他企业的内部信息；
-3. 需要通过调用自身可用的 skills 来推进本企业运营；
-4. 请严格按照skill.md中的要求进行查询和输出操作，并遵循工作目录内的文件约束。
+Requirements:
+1. Reason only from this enterprise's perspective.
+2. Do not mix in another enterprise's private information.
+3. Advance operations through the skills available to your role.
+4. Follow the applicable SKILL.md instructions and all workspace file constraints.
         """.strip()
 
     def build_options(self, role: str) -> ClaudeAgentOptions:
         """
-        注意：
-        这里将 cwd 指向企业级 workspace 根目录，确保企业隔离。
-        """
+        Note:
+        This points the cwd to the enterprise level workspace root directory to ensure enterprise isolation.
+                """
         agent_env = {
             **EnvironmentConfig.get_agent_env(),
             "ANTHROPIC_BASE_URL": self.anthropic_base_url,
@@ -331,14 +331,14 @@ class EnterpriseRuntime:
         return options
 
     # ----------------------------
-    # 部门并行
+    # Parallel
     # ----------------------------
 
     async def handle_department_action(self, round_id: int) -> List[dict]:
         enabled_departments = [d for d in self.enterprise_spec.departments if d.enabled]
 
         async def run_department_with_semaphore(dept, round_id):
-            async with self.department_semaphore:  # 使用信号量控制并发
+            async with self.department_semaphore:  # Use semaphore to control co-production
                 # return await self.run_department(dept, round_id)
                 return await self.skill_runner.run_department(dept, round_id)
 
@@ -350,16 +350,16 @@ class EnterpriseRuntime:
         results = await asyncio.gather(*tasks)
         self._merge_department_communications(round_id)
         
-        # 收集所有部门消息
+        # Gather all messages
         all_dept_messages = []
         for result in results:
-            if result:  # 确保结果不为空
+            if result:  # Make sure it's not empty.
                 all_dept_messages.extend(result)
         
         return all_dept_messages
 
     # ----------------------------
-    # 单企业前半部分工作流
+    # parameter First half workflow
     # ----------------------------
 
     async def run_workflow(self, round_id: int) -> List[dict]:
@@ -419,7 +419,7 @@ class EnterpriseRuntime:
         dept_messages = await self.handle_department_action(round_id)
         messages.extend(dept_messages)
         
-        # 保存所有模型消息到指定目录
+        # Save all model messages to specified directory
         MultiTenantUtils.save_model_messages(
             enterprise_name=self.enterprise_spec.enterprise_name,
             round_id=round_id,
@@ -447,7 +447,7 @@ class EnterpriseRuntime:
         MultiTenantUtils.archive_enterprise_trade_files(self.enterprise_spec.enterprise_name, round_id)
 
         async def run_trade_with_semaphore(dept, round_id):
-            async with self.department_semaphore:  # 使用信号量控制并发
+            async with self.department_semaphore:  # Use semaphore to control co-production
                 return await self.skill_runner.run_department(dept, round_id, True)
 
         tasks = [

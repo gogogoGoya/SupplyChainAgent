@@ -1,7 +1,7 @@
 """
-库存管理模块
+Inventory management module
 
-负责企业库存相关的业务逻辑，包括库存跟踪、盘点、预警等功能
+Responsible for enterprise business logic related to inventory, including inventory tracking, inventory, early warning functions
 """
 
 import time
@@ -14,46 +14,46 @@ from config.module_config import InventoryConfig
 
 class InventoryManager(EnhancedBaseModule):
     """
-    库存管理器类
-    处理企业库存相关的所有业务逻辑
-    """
+    Inventory Manager Category
+    All business logic associated with enterprise inventory
+        """
     def __init__(self, enterprise, initial_capacity: int = None, module_id=None, config: InventoryConfig = None):
         """
-        初始化库存管理器
+        Initialized inventory manager
 
         Args:
-            enterprise: 所属企业实例
-            initial_capacity: 初始仓库容量（可选，默认从 config 读取）
-            module_id: 模块ID（可选）
-            config: 库存配置对象（可选，默认使用 InventoryConfig()）
-        """
-        # 使用配置或默认配置
+            Enterprise: Examples of enterprise
+            parameter: Initial repository capacity (optional, read by default from config)
+            module_id: Modular ID (optional)
+            Config: Inventory Configuration Object (optional, default use InventoryConfig())
+                """
+        # Use configuration or default configuration
         self.config = config or InventoryConfig()
 
-        # 调用父类初始化方法
+        # Call Parent Initialisation Method
         super().__init__(
             enterprise,
             module_id or f"inventory_{enterprise.id}",
             self.config
         )
 
-        # 库存跟踪
-        self.inventory: Dict[str, Dict] = {}  # 库存信息 {item_id: {"quantity": float, "unit_price": float, "total_value": float}}
-        self.inventory_history: Dict[str, List] = {}  # 库存变动历史 {item_id: [history_records]}
+        # Inventory tracking
+        self.inventory: Dict[str, Dict] = {}  # Inventory information
+        self.inventory_history: Dict[str, List] = {}  # History of stock changes < x 17/>
 
-        # 库存策略
-        self.reorder_points: Dict[str, float] = {}  # 再订购点 {item_id: reorder_point}
-        self.safety_stocks: Dict[str, float] = {}  # 安全库存 {item_id: safety_stock}
+        # Inventory strategy
+        self.reorder_points: Dict[str, float] = {}  # Order another {item_id: reorder_point}
+        self.safety_stocks: Dict[str, float] = {}  # Secure inventory {item_id: safety_stock}
 
-        # 仓库管理
-        self.total_capacity = initial_capacity or self.config.INITIAL_CAPACITY  # 总容量
-        self.used_capacity = 0  # 已使用容量
-        self.expansion_history = []  # 仓库扩建历史
+        # Warehouse management
+        self.total_capacity = initial_capacity or self.config.INITIAL_CAPACITY  # Total capacity
+        self.used_capacity = 0  # Used capacity
+        self.expansion_history = []  # Warehouse Extension History
 
-        # 库存事件
-        self.inventory_events: List[Dict] = []  # 库存事件日志
+        # Inventory incidents
+        self.inventory_events: List[Dict] = []  # Inventory Event Log
 
-        # 库存指标
+        # Inventory indicators
         self.inventory_metrics = {
             "total_items": 0,
             "total_value": 0.0,
@@ -63,36 +63,36 @@ class InventoryManager(EnhancedBaseModule):
             # "shrinkage_rate": 0.0
         }
 
-        # 缺货统计（用于计算缺货率）
-        self.stockout_count = 0  # 缺货次数
-        self.total_outbound_requests = 0  # 总出库请求次数
+        # Shortfall statistics (for the calculation of the rate)
+        self.stockout_count = 0  # Number of missing goods
+        self.total_outbound_requests = 0  # Total number of exit requests
 
-        # 销售成本跟踪（用于计算库存周转率）
-        # self.cost_of_goods_sold = 0.0  # 销售成本
-        # self.average_inventory_value_history = []  # 平均库存价值历史
+        # Sales cost tracking (for inventory turnover)
+        # parameter = 0.0 # sales cost
+        # < x17/ > = [ ] # Average inventory value history
 
-        # 缩水跟踪（用于计算缩水率）
-        # self.total_shrinkage_value = 0.0  # 累计缩水价值
-        # self.total_inventory_value_at_shrinkage = 0.0  # 发生缩水时的库存总价值
+        # Shrink tracking (used to calculate water shrunk rates)
+        # parameter = 0.0 # Cumulative deflation value
+        # < x17/ > = 0.0 # Total inventory value when water shrunk
 
-        # 维护成本跟踪
-        self.maintenance_cost_rate = self.config.MAINTENANCE_COST_RATE  # 维护成本率（从 config 读取）
-        self.total_maintenance_cost = 0.0  # 累计维护成本
-        self.maintenance_cost_history = []  # 维护成本历史记录
+        # Maintenance cost tracking
+        self.maintenance_cost_rate = self.config.MAINTENANCE_COST_RATE  # Maintenance cost rate (read from config)
+        self.total_maintenance_cost = 0.0  # Cumulative maintenance costs
+        self.maintenance_cost_history = []  # Maintenance of cost history records
 
-        self.operating_cost_rate = self.config.OPERATING_COST_RATE  # 运营成本率（从 config 读取）
-        self.total_operating_cost = 0.0  # 累计运营成本
-        self.operating_cost_history = []  # 运营成本历史记录
+        self.operating_cost_rate = self.config.OPERATING_COST_RATE  # Operating cost rate (read from config)
+        self.total_operating_cost = 0.0  # Cumulative operating costs
+        self.operating_cost_history = []  # Operation cost history records
 
-        # 模块类型标识
+        # Module Type Identification
         self.module_type = "InventoryManager"
 
-        # 单位转换表：外部单位 -> SU（写死配置，不提供动态修改）
-        # 格式: {unit_name: {"to_su": ratio, "from_su": inverse_ratio}}
-        # 例如: {"malt": {"to_su": 0.01, "from_su": 100}} 表示 100 malt = 1 SU
+        # Unit conversion table: External - > SU (Death configuration, no dynamic change provided)
+        # Format: parameter:{"to_su": ratio, "from_su": inverse_ratio}}
+        # For example: {"malt": < x17/ } means 100 malt = 1 SU
         self.unit_conversion_table: Dict[str, Dict[str, float]] = {}
 
-        # 默认单位映射（写死配置）
+        # Default Unit Map (Death Profile)
         # 100 Malt = 1 SU, 10 Hops = 1 SU, 5 Yeast = 1 SU, 1 Beer = 1 SU
         self._initialize_default_unit_mappings()
 
@@ -101,40 +101,40 @@ class InventoryManager(EnhancedBaseModule):
     @validate_positive("purchase_price")
     def add_inventory(self, item_id: str, quantity: float, purchase_price: float, item_type: str, dry_run: bool = False,response: ModuleResponse = None) -> ModuleResponse:
         """
-        添加入库
+        Add to Library
 
-        装饰器说明：
-        - @with_response: 自动创建响应对象、异常处理
-        - @validate_positive: 自动验证quantity > 0 和 purchase_price > 0
+        Decorator description:
+        - parameter : Automatic creation of response objects, anomalies
+        -@validate_positive: Autovalidation > 0 and purchase_price 0
 
         Args:
-            item_id: 物料ID（如果包含单位信息，如 "malt_1"，会自动检测并转换）
-            quantity: 数量（外部单位，会自动转换为SU）
-            purchase_price: 采购单价（由装饰器验证 > 0）
-            item_type: "raw_material" 或 "product"
-            dry_run: 是否为测试运行
-            response: 响应对象（由装饰器注入）
+            item_id: Material ID (if containing unit information such as "malt_1, automatically detect and convert)
+            Quantity: Number (external units, automatically converted to SU)
+            < x17/ >: Purchase unit price (validated by decorator > 0)
+            item_type: "raw_material" or "product"
+            parameter: Run for test
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 入库结果的统一响应对象
+            ModuleResponse: Unanimous object for the entry result
 
-        **代码实现**:
-        - 验证数量 > 0
-        - 自动从物料ID中检测单位（如 "malt_1" → "malt"）
-        - 将外部单位转换为SU进行内部计算
-        - 检查仓库容量是否充足
-        - 使用加权平均法计算新单价（原库存为0时直接使用新价格）
-        - 更新库存和仓库使用量（使用SU）
-        - 记录入库历史和事件
-        """
-        # 自动从物料ID中检测单位
+        **Code achieved**:
+        - Validation > 0
+        - Automatic detection units from material ID (e.g. "malt_1"→ "malt")
+        - Internal calculations of external units converted to SU
+        - Check for adequate storage capacity
+        - Weighted average method used to calculate the new unit price (the new price was directly used when the original inventory was 0)
+        - Updating of inventory and warehouse usage (using SU)
+        - Recording history and events
+                """
+        # Automatically detect units from material ID
         original_unit = self._get_item_original_unit(item_id)
         normalized_item_type = self._normalize_item_type(item_id, item_type)
 
-        # 如果检测到单位，转换为SU
+        # If unit detected, convert to SU
         su_quantity = self._to_su_quantity(quantity, original_unit)
         
-        # 1. 检查仓库容量
+        # 1. Inspection of warehouse capacity
         if self.used_capacity + su_quantity > self.total_capacity:
             remaining_capacity = self.total_capacity - self.used_capacity
             return self.error_response(
@@ -146,18 +146,18 @@ class InventoryManager(EnhancedBaseModule):
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
         
-        # 2. 更新库存（查找或创建）
+        # Update inventory (search or create)
         if item_id not in self.inventory:
             self.inventory[item_id] = {
                 "quantity": 0,
                 "unit_price": 0.0,
                 "total_value": 0.0,
                 "item_type": normalized_item_type,
-                "original_unit": original_unit,  # 保存检测到的原始单位
+                "original_unit": original_unit,  # Save detected original unit
                 "last_updated": self.enterprise.time_manager.get_day()
             }
 
-        # 3. 计算加权平均单价
+        # 3. Calculation of weighted average unit price
         current_stock = self.inventory[item_id]
         if current_stock.get("original_unit") is None:
             current_stock["original_unit"] = original_unit
@@ -179,26 +179,26 @@ class InventoryManager(EnhancedBaseModule):
         new_total_quantity = current_stock["quantity"] + su_quantity
         new_total_pricing_quantity = current_pricing_quantity + inbound_pricing_quantity
 
-        # 如果原库存为0，直接使用新价格；否则使用加权平均
+        # Use the new price directly if the original inventory is 0; otherwise weighted average
         if current_pricing_quantity == 0:
             new_unit_price = purchase_price
         else:
             new_unit_price = (original_value + new_value) / new_total_pricing_quantity
 
-        # 4. 更新库存记录（内部使用SU）
+        # Update inventory records (internal use of SU)
         current_stock["quantity"] = new_total_quantity
         current_stock["unit_price"] = new_unit_price
         current_stock["total_value"] = original_value + new_value
         current_stock["last_updated"] = self.enterprise.time_manager.get_day()
 
-        # 5. 更新仓库使用量（使用SU）
+        # 5. Updating of warehouse usage (using SU)
         self.used_capacity += su_quantity
 
-        # 6. 记录历史和事件
+        # 6. Recording history and events
         self._record_inventory_transaction(item_id, su_quantity, "inbound", "purchase/production")
         self._update_inventory_metrics()
 
-        # 返回成功响应
+        # Returns Successful Response
         response_data = {
             "item_id": item_id,
             "new_quantity": current_stock["quantity"],
@@ -222,27 +222,27 @@ class InventoryManager(EnhancedBaseModule):
     @validate_positive("quantity")
     def check_capacity(self, item_id: str, quantity: float, response: ModuleResponse = None) -> ModuleResponse:
         """
-        验证是否可以添加指定数量的物品而不超过仓库容量
+        Validate whether a specified number of items can be added to the warehouse capacity
 
         Args:
-            item_id: 物品ID
-            quantity: 要添加的数量（由装饰器验证 > 0）
-            response: 响应对象（由装饰器注入）
+            item_id: Items ID
+            Quantity: Number to add (validated by decorator > 0)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 容量检查结果的统一响应对象
+            ModuleResponse: Unified responder to the result of a volume check
 
-        **代码实现**:
-        - 检查仓库使用量 + 要添加数量是否 <= 总容量
-        - 简单的容量验证方法，用于约束检查
-        """
+        **Code achieved**:
+        - Check the warehouse usage + whether the quantity to add is < = total capacity
+        - Simple capacity validation method for binding inspections
+                """
         original_unit = self._get_item_original_unit(item_id)
         su_quantity = self._to_su_quantity(quantity, original_unit)
 
-        # 执行容量检查
+        # Perform capacity checks
         is_valid = (self.used_capacity + su_quantity) <= self.total_capacity
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"容量检查{'通过' if is_valid else '未通过'}",
@@ -261,34 +261,34 @@ class InventoryManager(EnhancedBaseModule):
     def remove_inventory(self, item_id: str, quantity: float, reason: str,
                         response: ModuleResponse = None) -> ModuleResponse:
         """
-        移除库存
+        Remove Inventory
 
         Args:
-            item_id: 物料ID（如果包含单位信息，如 "malt_1"，会自动检测并转换）
-            quantity: 数量（外部单位，会自动转换为SU）
-            reason: 移除原因 (e.g., "production", "sales")
-            response: 响应对象（由装饰器注入）
+            item_id: Material ID (if containing unit information such as "malt_1, automatically detect and convert)
+            Quantity: Number (external units, automatically converted to SU)
+            Reason for removal (e.g, "protection", "sales")
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 出库结果的统一响应对象
+            ModuleResponse: Unified responder to the results of the library
 
-        **代码实现**:
-        - 验证数量 > 0
-        - 自动从物料ID中检测单位（如 "malt_1" → "malt"）
-        - 将外部单位转换为SU进行内部计算
-        - 检查物料是否存在
-        - 检查库存是否充足
-        - 更新库存和仓库使用量（使用SU）
-        - 记录出库历史
-        - 统计出库请求次数和缺货次数（用于计算缺货率）
-        """
-        # 自动从物料ID中检测单位
+        **Code achieved**:
+        - Validation > 0
+        - Automatic detection units from material ID (e.g. "malt_1"→ "malt")
+        - Internal calculations of external units converted to SU
+        - Check for material.
+        - Check for adequacy of stocks
+        - Updating of inventory and warehouse usage (using SU)
+        - Record the history of the library.
+        - Statistics of the number of Treasury requests and the number of missing items (for the calculation of the rate)
+                """
+        # Automatically detect units from material ID
         original_unit = self._get_item_original_unit(item_id)
 
-        # 如果检测到单位，转换为SU
+        # If unit detected, convert to SU
         su_quantity = self._to_su_quantity(quantity, original_unit)
         
-        # 1. 检查库存是否存在
+        # 1. Check for inventory
         resolved_item_id = self._resolve_item_id(item_id)
         if not resolved_item_id:
             return self.error_response(
@@ -297,12 +297,12 @@ class InventoryManager(EnhancedBaseModule):
                 f"物料 {item_id} 不存在"
             )
 
-        # 2. 检查库存是否充足
+        # 2. Check for adequacy of stocks
         current_stock = self.inventory[resolved_item_id]
-        self.total_outbound_requests += 1  # 记录出库请求
+        self.total_outbound_requests += 1  # Record library requests
 
         if current_stock["quantity"] < su_quantity:
-            # 记录缺货
+            # Record missing goods
             self.stockout_count += 1
             self._update_stockout_rate()
             return self.error_response(
@@ -311,7 +311,7 @@ class InventoryManager(EnhancedBaseModule):
                 f"库存不足。需要: {su_quantity} SU, 当前: {current_stock['quantity']} SU"
             )
 
-        # 3. 更新库存（使用SU）
+        # 3. Updating of inventories (using SU)
         current_stock["quantity"] -= su_quantity
         remaining_pricing_quantity = self._to_pricing_quantity(
             current_stock["quantity"],
@@ -320,14 +320,14 @@ class InventoryManager(EnhancedBaseModule):
         current_stock["total_value"] = remaining_pricing_quantity * current_stock["unit_price"]
         current_stock["last_updated"] = self.enterprise.time_manager.get_day()
 
-        # 4. 更新仓库使用量（使用SU）
+        # Update warehouse usage (using SU)
         self.used_capacity -= su_quantity
 
-        # 5. 记录历史和事件（使用SU）
+        # 5. Recording history and events (using SU)
         self._record_inventory_transaction(resolved_item_id, -su_quantity, "outbound", reason)
         self._update_inventory_metrics()
 
-        # 返回成功响应
+        # Returns Successful Response
         response_data = {
             "item_id": resolved_item_id,
             "remaining_quantity": current_stock["quantity"],
@@ -354,22 +354,22 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("expand_warehouse")
     def expand_warehouse(self, size: int, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        扩建仓库
+        Expansion of the warehouse
 
         Args:
-            size: 扩建规模 (1000, 2000, 5000)
-            response: 响应对象（由装饰器注入）
+            size: Expansion size (1000, 2000, 5000)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 扩建结果的统一响应对象
+            ModuleResponse: Unified responder to the result of the extension
 
-        **代码实现**:
-        - 验证扩建规模是否有效
-        - 检查企业资金是否充足
-        - 通过财务模块扣除费用
-        - 立即增加仓库容量（无建设周期）
-        - 记录扩建历史
-        """
+        **Code achieved**:
+        - Verifying whether the expansion is effective
+        - Check the adequacy of enterprise funds
+        - Cost deduction through the finance module
+        - Immediate increase in warehouse capacity (no construction cycle)
+        - Recording expansion history
+                """
         costs = self.config.WAREHOUSE_EXPANSION_COSTS
         if size not in costs:
             return self.error_response(
@@ -386,7 +386,7 @@ class InventoryManager(EnhancedBaseModule):
         finance_manager = super().get_module_by_type("FinanceManager")
         hr_manager = super().get_module_by_type("HRManager")
 
-        # 与财务模块交互
+        # Interaction with the finance module
         if finance_manager.cash < cost:
             return self.error_response(
                 response,
@@ -394,7 +394,7 @@ class InventoryManager(EnhancedBaseModule):
                 f"资金不足，无法扩建。至少需要: {cost}"
             )
 
-        # 检查人力资源
+        # Inspection of human resources
         hr_result = hr_manager.get_available_workers(department="inventory")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < needed_workers:
@@ -415,7 +415,7 @@ class InventoryManager(EnhancedBaseModule):
                 getattr(assign_result, "message", "仓库扩建人手分配失败")
             )
 
-        # 扣除费用
+        # Less costs
         cost_result = finance_manager.add_cost(cost, "inventory_cost", "warehouse expand")
         if not getattr(cost_result, "success", True):
             hr_manager.release_workers("inventory", assignment_id, needed_workers, "cancelled")
@@ -425,10 +425,10 @@ class InventoryManager(EnhancedBaseModule):
                 getattr(cost_result, "message", "仓库扩建成本记录失败")
             )
 
-        # 增加容量
+        # Increased capacity
         self.total_capacity += size
 
-        # 记录历史
+        # Record history
         self.expansion_history.append({
             "time_step": self.enterprise.time_manager.get_day(),
             "expanded_size": size,
@@ -439,7 +439,7 @@ class InventoryManager(EnhancedBaseModule):
         self._update_inventory_metrics()
         hr_manager.release_workers("inventory", assignment_id, needed_workers, "completed")
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"仓库成功扩建 {size} 单位，新总容量为 {self.total_capacity}",
@@ -461,27 +461,27 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_inventory_level")
     def get_inventory_level(self, item_id: str, response: ModuleResponse = None, convert_to_original_unit: bool = True) -> ModuleResponse:
         """
-        获取单个物料的库存数量
+        Inventory of individual items acquired
 
         Args:
-            item_id: 物料ID
-            response: 响应对象（由装饰器注入）
-            convert_to_original_unit: 是否转换回原始单位（默认True）
+            item_id: Material ID
+            Response: Respond objects (injected by decorator)
+            parameter: Whether to convert back to the original unit (defaultTrue)
 
         Returns:
-            ModuleResponse: 包含物料库存数量的统一响应对象
+            ModuleResponse: Harmonized response object with material stock
 
-        **代码实现**:
-        - 参数：`item_id` - 物料ID
-        - 返回：ModuleResponse 包含库存数量（物料不存在时返回0）
-        - 如果 convert_to_original_unit=True 且物料有 original_unit，则转换回原始单位
-        """
-        # 获取库存数据
+        **Code achieved**:
+        - Parameter: `item_id` - Material ID
+        - Return: ModuleResponse contains inventory (return 0 when the material does not exist)
+        - If < x17/>=True and the material is original_unit, convert back to the original unit
+                """
+        # Access to inventory data
         resolved_item_id = self._resolve_item_id(item_id)
         inventory_data = self.inventory.get(resolved_item_id, {}) if resolved_item_id else {}
         su_quantity = inventory_data.get("quantity", 0)
         
-        # 如果有原始单位且需要转换，则转换回原始单位
+        # If there is an original unit and conversion is required, the original unit is returned
         original_unit = inventory_data.get("original_unit")
         quantity = su_quantity
         unit = None
@@ -490,7 +490,7 @@ class InventoryManager(EnhancedBaseModule):
             quantity = self._from_su_quantity(su_quantity, original_unit)
             unit = original_unit
         
-        # 返回成功响应
+        # Returns Successful Response
         response_data = {
             "item_id": resolved_item_id or item_id,
             "quantity": quantity
@@ -509,32 +509,32 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_inventory_detail")
     def get_inventory_detail(self, item_id: str, response: ModuleResponse = None, convert_to_original_unit: bool = True) -> ModuleResponse:
         """
-        获取单个物料的详细库存信息，包括安全库存、再订购点、预警状态等
+        Access to detailed inventory information for individual materials, including secure stocks, reorder points, alert status, etc.
 
         Args:
-            item_id: 物料ID
-            response: 响应对象（由装饰器注入）
-            convert_to_original_unit: 是否转换回原始单位（默认True）
+            item_id: Material ID
+            Response: Respond objects (injected by decorator)
+            parameter: Whether to convert back to the original unit (defaultTrue)
 
         Returns:
-            ModuleResponse: 包含物料详细信息的统一响应对象
+            ModuleResponse: Unified response object with material details
 
-        **代码实现**:
-        - 参数：`item_id` - 物料ID
-        - 返回：ModuleResponse 包含完整物料信息
-        - 返回字段：
-          - `quantity`: 当前库存数量（转换回原始单位）
-          - `unit`: 原始单位（如果有）
-          - `su_quantity`: SU数量（内部使用）
-          - `unit_price`: 单位价格
-          - `total_value`: 总价值
-          - `item_type`: 物料类型
-          - `last_updated`: 最后更新时间步
-          - `safety_stock`: 安全库存
-          - `reorder_point`: 再订购点
-          - `is_low_stock`: 是否低于安全库存
-          - `is_below_reorder_point`: 是否低于再订购点
-        """
+        **Code achieved**:
+        - Parameter: `item_id` - Material ID
+        - Return: ModuleResponse contains complete material information
+        - Return fields:
+          - parameter: Current stock levels (conversion back to original unit)
+          - < x17/ > : Original units (if any)
+          - < x17/ > : DU quantities (internal use)
+          - < x 17/ >: unit price
+          Total value
+          - < x17/: Material type
+          - < x17/ > : Last update step
+          - < x17/ >: Safe stock
+          - < x17/ > : Order more points
+          - < x17/ > : Below safe stock
+          - parameter: Is it below the reorder point?
+                """
         resolved_item_id = self._resolve_item_id(item_id)
         if not resolved_item_id:
             return self.error_response(
@@ -546,7 +546,7 @@ class InventoryManager(EnhancedBaseModule):
         data = self.inventory[resolved_item_id]
         su_quantity = data["quantity"]
         
-        # 转换回原始单位
+        # Convert to Original
         original_unit = data.get("original_unit")
         quantity = su_quantity
         unit = None
@@ -577,7 +577,7 @@ class InventoryManager(EnhancedBaseModule):
             detail["unit"] = unit
             detail["su_quantity"] = su_quantity
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取物料 {resolved_item_id} 的详细信息",
@@ -587,23 +587,23 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_inventory_overview")
     def get_inventory_overview(self, response: ModuleResponse = None, convert_to_original_unit: bool = True) -> ModuleResponse:
         """
-        获取库存总览
+        Obtain inventory overview
 
         Args:
-            response: 响应对象（由装饰器注入）
-            convert_to_original_unit: 是否转换回原始单位（默认True）
+            Response: Respond objects (injected by decorator)
+            parameter: Whether to convert back to the original unit (defaultTrue)
 
         Returns:
-            ModuleResponse: 包含库存总览信息的统一响应对象
+            ModuleResponse: Unified responder with inventory overview information
 
-        **代码实现**:
-        - 返回：ModuleResponse 包含以下字段
-          - `raw_materials`: List[Dict] - 原材料列表
-          - `products`: List[Dict] - 产品列表
-          - `total_inventory_value`: float - 库存总价值
-          - `warehouse_info`: Dict - 仓库信息（总容量、已使用、使用率）
-          - 每个物料包含：`id`, `quantity`, `unit` (原始单位), `su_quantity`, `unit_price`, `total_value`, `last_updated`
-        """
+        **Code achieved**:
+        - returns: ModuleResponse contains the following fields
+          - < x17/ > : List [Dict] - List of raw materials
+          - < x17/ > : List [Dict] - List of products
+          - `total_inventory_value`: float - Total inventory value
+          - < x17/ >: Dict - repository information (total capacity, usage, usage)
+          - Each material contains: `id`, `quantity`, `unit` (original unit), `su_quantity`, `unit_price`, `total_value`, `last_updated`
+                """
         raw_materials = []
         products = []
         stocks = []
@@ -613,7 +613,7 @@ class InventoryManager(EnhancedBaseModule):
             quantity = su_quantity
             unit = None
             
-            # 转换回原始单位
+            # Convert to Original
             if convert_to_original_unit and original_unit and original_unit in self.unit_conversion_table:
                 quantity = self._from_su_quantity(su_quantity, original_unit)
                 unit = original_unit
@@ -637,7 +637,7 @@ class InventoryManager(EnhancedBaseModule):
             else:
                 products.append(item_info)
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功获取库存总览",
@@ -657,18 +657,18 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("check_low_stock_levels")
     def check_low_stock_levels(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查低库存物料
-        
+        Check low inventory material
+                
         Args:
-            response: 响应对象（由装饰器注入）
-        
+            Response: Respond objects (injected by decorator)
+                
         Returns:
-            ModuleResponse: 包含低库存物料列表的统一响应对象
-        
-        **代码实现**: 
-        - 返回：ModuleResponse 包含低库存物料列表
-        - 每项包含：`item_id`, `current_quantity`, `safety_stock`, `shortfall`（缺口）
-        """
+            ModuleResponse: Harmonized Response Object with Low Inventory List
+                
+        **Code achieved**: 
+        - Return: ModuleResponse contains a list of low inventory items
+        - Each contains: `item_id`, `current_quantity`, `safety_stock`, `shortfall` (shortfall)
+                """
         low_stock_items = []
         for item_id, safety_stock in self.safety_stocks.items():
             if item_id not in self.inventory:
@@ -686,7 +686,7 @@ class InventoryManager(EnhancedBaseModule):
                     "unit": original_unit or "SU"
                 })
         
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功检查低库存，发现 {len(low_stock_items)} 个低库存物料",
@@ -699,18 +699,18 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("check_reorder_points")
     def check_reorder_points(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查再订购点
+        Check for reorder points
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含需要再订购的物料列表的统一响应对象
+            ModuleResponse: Harmonized Response Object with List of Materials Needing Reorder
 
-        **代码实现**:
-        - 返回：ModuleResponse 包含需要再订购的物料列表
-        - 每项包含：`item_id`, `current_quantity`, `reorder_point`, `shortfall`（缺口）
-        """
+        **Code achieved**:
+        - Return: ModuleResponse contains a list of items that need to be reordered
+        - Each contains: `item_id`, `current_quantity`, `reorder_point`, `shortfall` (shortfall)
+                """
         reorder_items = []
         for item_id, reorder_point in self.reorder_points.items():
             if item_id not in self.inventory:
@@ -728,7 +728,7 @@ class InventoryManager(EnhancedBaseModule):
                     "unit": original_unit or "SU"
                 })
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功检查再订购点，发现 {len(reorder_items)} 个需要再订购的物料",
@@ -741,22 +741,22 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_capacity_warning")
     def get_capacity_warning(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取容量预警信息
+        Access to capacity early warning information
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含容量预警信息的统一响应对象
+            ModuleResponse: Harmonized response audience with volume early warning information
 
-        **代码实现**:
-        - 返回：ModuleResponse 包含预警级别、使用率、剩余容量、建议等
-        - 预警级别：
-          - `"low"`: 使用率 < 30%
-          - `"normal"`: 30% ≤ 使用率 < 75%
-          - `"warning"`: 75% ≤ 使用率 < 90%
-          - `"critical"`: 使用率 ≥ 90%
-        """
+        **Code achieved**:
+        - Return: ModuleResponse contains early warning levels, usage, remaining capacity, recommendations, etc.
+        - Early warning level:
+          - parameter: Usage < 30%
+          - parameter: 30% ≤ Usage < 75%
+          - parameter: 75% ≤ Usage rate < 90%
+          - < x17/ >: Usage 90%
+                """
         utilization = self.inventory_metrics["warehouse_utilization"]
         remaining_capacity = self.total_capacity - self.used_capacity
 
@@ -777,7 +777,7 @@ class InventoryManager(EnhancedBaseModule):
             message = "仓库使用率严重过高，需要紧急扩建"
             suggestion = f"紧急扩建仓库，当前剩余容量: {remaining_capacity}"
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"容量预警：{message}",
@@ -797,22 +797,22 @@ class InventoryManager(EnhancedBaseModule):
                             dry_run: bool = False,
                             response: ModuleResponse = None) -> ModuleResponse:
         """
-        设置库存策略
-        
+        Set up an inventory policy
+                
         Args:
-            item_id: 物料ID
-            reorder_point: 再订购点（由装饰器验证 >= 0）
-            safety_stock: 安全库存（由装饰器验证 >= 0）
-            response: 响应对象（由装饰器注入）
-            
+            item_id: Material ID
+            < x17/ >: Reorder point (validated by decorator > = 0)
+            safety_stock: Safe inventory (validated by decorator > = 0)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 设置结果的统一响应对象
-        
-        **代码实现**: 
-        - 参数：`item_id` - 物料ID, `reorder_point` - 再订购点, `safety_stock` - 安全库存
-        - 返回：ModuleResponse 包含设置结果
-        - 验证物料存在和参数有效性
-        """
+            ModuleResponse: Set a unified response object for the result
+                
+        **Code achieved**: 
+        - Parameter: `item_id` - Material ID, `reorder_point` - Reorder point, `safety_stock` - Secure inventory
+        -Return: ModeuleResponse contains settings
+        - Validate material presence and parameter validity
+                """
         resolved_item_id = self._resolve_item_id(item_id)
         if not resolved_item_id:
             return self.error_response(
@@ -844,7 +844,7 @@ class InventoryManager(EnhancedBaseModule):
         self.reorder_points[resolved_item_id] = self._to_su_quantity(reorder_point, original_unit)
         self.safety_stocks[resolved_item_id] = self._to_su_quantity(safety_stock, original_unit)
         
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"已为物料 {item_id} 设置库存策略",
@@ -861,24 +861,24 @@ class InventoryManager(EnhancedBaseModule):
     def get_inventory_history(self, item_id: str, limit: int = 100,
                               response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取物料的库存变动历史
+        History of inventory changes to obtain material
 
         Args:
-            item_id: 物料ID
-            limit: 返回记录数量限制（默认100，0表示返回全部）
-            response: 响应对象（由装饰器注入）
+            item_id: Material ID
+            Limited number of returned records (default 100, 0 means all returns)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含库存变动历史记录的统一响应对象
+            ModuleResponse: A unified response with historical history of inventory changes
 
-        **代码实现**:
-        - 参数：`item_id` - 物料ID, `limit` - 返回记录数量限制
-        - 返回：ModuleResponse 包含历史记录列表（最近的记录）
-        - 每条记录包含：`time_step`, `quantity_change`, `type`, `reason`, `new_quantity`
-        - 数据结构：`self.inventory_history` - Dict[str, List[Dict]]
-        """
+        **Code achieved**:
+        - Parameters: `item_id` - Material ID, `limit` - Return to record quantity limit
+        - returns: ModuleResponse contains a list of historical records (recent record)
+        - Each record contains: `time_step`, `quantity_change`, `type`, `reason`, `new_quantity`
+        - Data structure: `self.inventory_history` - Dict[str, List [Dict]
+                """
         if item_id not in self.inventory_history:
-            # 返回空历史
+            # Return empty history
             return self.success_response(
                 response,
                 f"物料 {item_id} 没有库存历史记录",
@@ -892,7 +892,7 @@ class InventoryManager(EnhancedBaseModule):
         history = self.inventory_history[item_id]
         result_history = history[-limit:] if limit > 0 else history
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取物料 {item_id} 的库存历史记录",
@@ -909,47 +909,47 @@ class InventoryManager(EnhancedBaseModule):
     # def calculate_inventory_turnover(self, cost_of_goods_sold: Optional[float] = None,
     #                                  response: ModuleResponse = None) -> ModuleResponse:
     #     """
-    #     计算库存周转率
+    # Computation of inventory turnover
 
     #     Args:
-    #         cost_of_goods_sold: 销售成本，如果为None则使用内部跟踪的值
-    #         response: 响应对象（由装饰器注入）
+    # cost_of_goods_sold: Sales cost, using internal tracking value if None
+    # Response: Respond objects (injected by decorator)
 
     #     Returns:
-    #         ModuleResponse: 包含库存周转率的统一响应对象
+    # ModuleResponse: Unified target with inventory turnover
 
-    #     **代码实现**:
-    #     - 参数：`cost_of_goods_sold` - 销售成本（可选，默认使用内部跟踪值）
-    #     - 返回：ModuleResponse 包含库存周转率
-    #     - 关键逻辑：
-    #       - 使用历史库存价值计算平均值（最近100个时间步）
-    #       - 周转率 = 销售成本 / 平均库存价值
-    #       - 自动更新 `inventory_metrics["inventory_turnover"]`
+    # **Code achieved**:
+    # - Parameter: `cost_of_goods_sold` - Sales cost (optional, default internal tracking value)
+    # - Return: ModeuleResponse includes stock turnover
+    # - Key logic:
+    # - Calculation of averages using historical inventory values (most recently 100 time steps)
+    # - turnover = sales cost / average inventory value
+    # - Automatically update `inventory_metrics["inventory_turnover"]`
     #     """
     #     if cost_of_goods_sold is None:
     #         cost_of_goods_sold = self.cost_of_goods_sold
 
-    #     # 计算平均库存价值
+    # # Calculate average inventory value
     #     current_value = self.inventory_metrics["total_value"]
 
-    #     # 如果有历史记录，计算平均值
+    # # If there's a history, calculate the average
     #     if len(self.average_inventory_value_history) > 0:
     #         avg_value = sum(self.average_inventory_value_history) / len(self.average_inventory_value_history)
-    #         # 加入当前值
+    # # Add the current value
     #         avg_value = (avg_value + current_value) / 2
     #     else:
     #         avg_value = current_value
 
-    #     # 计算周转率
+    # # Calculate the turnover rate
     #     turnover = 0.0
     #     if avg_value > 0:
     #         turnover = cost_of_goods_sold / avg_value
     #         self.inventory_metrics["inventory_turnover"] = turnover
 
-    #     # 返回成功响应
+    # # Return to a successful response
     #     return self.success_response(
     #         response,
-    #         "成功计算库存周转率",
+    # "Successful calculation of inventory turnover"
     #         {
     #             "turnover": turnover,
     #             "cost_of_goods_sold": cost_of_goods_sold,
@@ -960,22 +960,22 @@ class InventoryManager(EnhancedBaseModule):
     
     # def record_sales_cost(self, cost: float):
     #     """
-    #     记录销售成本
+    # Recording of sales costs
         
     #     Args:
-    #         cost: 销售成本
+    # Cost of sales
         
-    #     **代码实现**: 
-    #     - 参数：`cost` - 销售成本
-    #     - 关键逻辑：
-    #       - 累加销售成本到 `cost_of_goods_sold`
-    #       - 记录当前库存价值到历史列表
-    #       - 保持历史记录在100个时间步内
+    # **Code achieved**:
+    # - Parameter: `cost` - Cost of sales
+    # - Key logic:
+    # - Accumulated sales costs to `cost_of_goods_sold`
+    # - Record current inventory value to historical list
+    # - Keep history within 100 steps.
     #     """
     #     self.cost_of_goods_sold += cost
-    #     # 记录当前库存价值到历史
+    # # Recording current inventory value to history
     #     self.average_inventory_value_history.append(self.inventory_metrics["total_value"])
-    #     # 保持历史记录在合理范围内（最近100个时间步）
+    # # Keep the historical record within reasonable limits (most recently 100 steps)
     #     if len(self.average_inventory_value_history) > 100:
     #         self.average_inventory_value_history.pop(0)
 
@@ -983,30 +983,30 @@ class InventoryManager(EnhancedBaseModule):
     def conduct_inventory_count(self, item_id: str, actual_quantity: float,
                                response: ModuleResponse = None) -> ModuleResponse:
         """
-        执行库存盘点并调整
+        Implement inventory counts and adjustments
 
         Args:
-            item_id: 盘点的物料ID
-            actual_quantity: 实际盘点数量（由装饰器验证 >= 0）
-            response: 响应对象（由装饰器注入）
+            item_id: Inventory material ID
+            < x17/ >: Number of physical inventories (valided by decorator > = 0)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 盘点调整结果的统一响应对象
+            ModuleResponse: A unified response to an inventory adjustment
 
-        **代码实现**:
-        - 参数：`item_id` - 物料ID, `actual_quantity` - 实际盘点数量
-        - 返回：ModuleResponse 包含盘点结果、差异等信息
-        - 关键逻辑：
-          1. 验证物料是否存在
-          2. 计算差异（实际数量 - 系统数量）
-          3. 如果差异为正（增加），先检查仓库容量是否充足
-          4. 更新库存数量和总价值
-          5. 更新仓库使用容量
-          6. 记录盘点历史（类型为 "adjustment"）
-          7. 如果差异为负（缩水），计算并更新缩水率
-        - 缩水率计算：累计缩水价值 / 累计库存价值（包括已缩水部分）
-        """
-        # 1. 验证物料是否存在
+        **Code achieved**:
+        - Parameter: `item_id` - Material ID, `actual_quantity` - Actual count
+        - returns: ModuleResponse contains information on inventory results, discrepancies, etc.
+        - Key logic:
+          1. Validation of the existence of material
+          2. Calculation differences (actual quantity - number of systems)
+          If the difference is positive (increase), check whether the warehouse capacity is sufficient
+          4. Updating of stock levels and total value
+          5. Updating warehouse usage
+          6. Records inventory history (type "adjustment")
+          If the difference is negative (shrunk), calculate and update the deflation rate
+        - Calculated deflation rate: Accumulated deflation value / Accumulated inventory value (including reduced)
+                """
+        # 1. Validation of the existence of material
         resolved_item_id = self._resolve_item_id(item_id)
         if not resolved_item_id:
             return self.error_response(
@@ -1022,7 +1022,7 @@ class InventoryManager(EnhancedBaseModule):
                 "盘点数量必须大于等于0"
             )
 
-        # 2. 获取系统数量和计算差异
+        # 2. Differences in the number of access systems and their calculation
         original_unit = self.inventory[resolved_item_id].get("original_unit")
         actual_su_quantity = self._to_su_quantity(actual_quantity, original_unit)
         system_quantity = self.inventory[resolved_item_id]["quantity"]
@@ -1030,7 +1030,7 @@ class InventoryManager(EnhancedBaseModule):
         shrinkage_value = 0.0
 
         if variance == 0:
-            # 盘点数量与系统一致，无需调整
+            # The number of counts is consistent with the system and no adjustments are required
             system_quantity_display = self._from_su_quantity(system_quantity, original_unit)
             return self.success_response(
                 response,
@@ -1047,7 +1047,7 @@ class InventoryManager(EnhancedBaseModule):
                 }
             )
 
-        # 3. 检查容量（如果盘点数量增加）
+        # 3. Inspection capacity (if increased)
         if variance > 0:
             if self.used_capacity + variance > self.total_capacity:
                 return self.error_response(
@@ -1056,32 +1056,32 @@ class InventoryManager(EnhancedBaseModule):
                     f"盘点数量增加后超出容量。当前使用: {self.used_capacity}, 增加: {variance}, 总容量: {self.total_capacity}"
                 )
 
-        # 4. 更新库存
+        # 4. Updating of inventories
         self.inventory[resolved_item_id]["quantity"] = actual_su_quantity
         pricing_quantity = self._to_pricing_quantity(actual_su_quantity, original_unit)
         self.inventory[resolved_item_id]["total_value"] = pricing_quantity * self.inventory[resolved_item_id]["unit_price"]
 
-        # 5. 更新容量
+        # 5. Updated capacity
         self.used_capacity += variance
 
-        # 6. 记录调整
+        # 6. Recording adjustments
         self._record_inventory_transaction(resolved_item_id, variance, "adjustment", "physical_count")
         self._update_inventory_metrics()
 
-        # # 7. 计算缩水（如果盘点数量减少）
+        # #7. Calculate water shrunk (if the number of counts decreases)
         # shrinkage_value = 0.0
         # if variance < 0:
         #     shrinkage_value = abs(variance) * self.inventory[item_id]["unit_price"]
         #     self.total_shrinkage_value += shrinkage_value
-        #     # 使用更新后的库存总价值
+        # # Use of updated total inventory value
         #     total_value = self.inventory_metrics["total_value"]
         #     self.total_inventory_value_at_shrinkage += total_value + shrinkage_value
 
-        #     # 更新缩水率：累计缩水价值 / 累计库存价值（包括已缩水部分）
+        # # Update deflation rate: Accumulated deflation value / Accumulated inventory value (including reduced)
         #     if self.total_inventory_value_at_shrinkage > 0:
         #         self.inventory_metrics["shrinkage_rate"] = self.total_shrinkage_value / self.total_inventory_value_at_shrinkage
 
-        # 返回成功响应
+        # Returns Successful Response
         system_quantity_display = self._from_su_quantity(system_quantity, original_unit)
         variance_display = self._from_su_quantity(variance, original_unit)
         return self.success_response(
@@ -1102,7 +1102,7 @@ class InventoryManager(EnhancedBaseModule):
             }
         )
 
-    # ===== 维护成本管理方法 =====
+    # == sync, corrected by elderman ==
 
     def _active_runtime_injection_config(self) -> Dict:
         runtime_config = getattr(self.enterprise, "runtime_injection_config", None)
@@ -1132,8 +1132,8 @@ class InventoryManager(EnhancedBaseModule):
 
     def _is_inventory_cost_exempt(self) -> bool:
         """
-        判断当前企业是否命中库存持有成本豁免策略。
-        """
+        To determine whether the current cost-exempt strategy of enterprise to hold a hit stockpile.
+                """
         try:
             runtime_config = self._active_runtime_injection_config()
             policy = runtime_config.get("inventory_cost_exemption_policy") or {}
@@ -1153,22 +1153,22 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("calculate_inventory_cost")
     def calculate_inventory_cost(self, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算当前时间步的维护成本
+        Calculate maintenance costs for current time steps
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含当期成本、库存价值等信息的统一响应对象
+            ModuleResponse: Unified target with current cost, inventory value, etc.
 
-        **代码实现**:
-        - 获取当前库存总价值
-        - 计算维护成本 = 库存价值 × 成本率
-        - 累加到总维护成本
-        - 记录到历史列表
-        - 通过财务模块记录支出
-        - 更新库存指标
-        """
+        **Code achieved**:
+        - Acquisition of total current inventory value
+        - Calculate maintenance costs = inventory value x cost rate
+        - Add to total maintenance costs
+        - Record to history list.
+        - Recording of expenditures through the finance module
+        - Updating of inventory indicators
+                """
         if self._is_inventory_cost_exempt():
             return self.success_response(
                 response,
@@ -1183,10 +1183,10 @@ class InventoryManager(EnhancedBaseModule):
                 }
             )
 
-        # 1. 获取当前库存总价值
+        # 1. Acquisition of total current inventory value
         inventory_value = self.inventory_metrics["total_value"]
 
-        # 2. 计算维护成本
+        # Calculation of maintenance costs
         maintenance_multiplier = self._long_horizon_cost_multiplier(
             "inventory_maintenance_cost_multiplier"
         )
@@ -1214,10 +1214,10 @@ class InventoryManager(EnhancedBaseModule):
                 }
             )
 
-        # 3. 累加到总维护成本
+        # 3. Cumulative to total maintenance costs
         self.total_maintenance_cost += maintenance_cost
 
-        # 4. 记录到历史列表
+        # 4. Historical list recorded
         maintenance_history_record = {
             "time_step": self.enterprise.time_manager.get_day(),
             "inventory_value": inventory_value,
@@ -1228,12 +1228,12 @@ class InventoryManager(EnhancedBaseModule):
         self.maintenance_cost_history.append(maintenance_history_record)
         finance_manager = super().get_module_by_type("FinanceManager")
 
-        #计算运营成本
+        # Calculation of operating costs
 
-        #累加到总运营成本
+        # Add to total operating cost
         self.total_operating_cost += operating_cost
 
-        #记录到历史列表
+        # Record to History List
         operating_history_record = {
             "time_step": self.enterprise.time_manager.get_day(),
             "total_capacity": self.total_capacity,
@@ -1244,7 +1244,7 @@ class InventoryManager(EnhancedBaseModule):
         self.operating_cost_history.append(operating_history_record)
 
 
-        # 通过财务模块记录支出（如果有财务模块）
+        # Recording of expenditures through the finance module (if available)
         if maintenance_cost > 0:
             try:
                 result = finance_manager.add_cost(
@@ -1252,7 +1252,7 @@ class InventoryManager(EnhancedBaseModule):
                     "inventory_cost",
                     "inventory_maintenance"
                 )
-                # 处理不同返回类型的情况
+                # Addressing different types of return
                 if hasattr(result, "success"):
                     if not result.success:
                         response.add_warning("COST_RECORD_WARNING", f"Failed to record maintenance cost: {result.message}")
@@ -1269,7 +1269,7 @@ class InventoryManager(EnhancedBaseModule):
                     "inventory_cost",
                     "inventory_operating"
                 )
-                # 处理不同返回类型的情况
+                # Addressing different types of return
                 if hasattr(result, "success"):
                     if not result.success:
                         response.add_warning("COST_RECORD_WARNING", f"Failed to record operating cost: {result.message}")
@@ -1281,10 +1281,10 @@ class InventoryManager(EnhancedBaseModule):
 
 
 
-        # 6. 更新库存指标
+        # 6. Updating of inventory indicators
         self._update_inventory_metrics()
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"维护成本已计算: ¥{maintenance_cost:.2f}",
@@ -1307,21 +1307,21 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("set_maintenance_cost_rate")
     def set_maintenance_cost_rate(self, rate: float, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        设置维护成本率
+        Set maintenance cost rate
 
         Args:
-            rate: 新的成本率（0-1之间的小数）
-            response: 响应对象（由装饰器注入）
+            Rate: New cost rate (no. 1 decimal)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 设置结果的统一响应对象
+            ModuleResponse: Set a unified response object for the result
 
-        **代码实现**:
-        - 验证成本率必须 >= 0 且 <= 1
-        - 更新成本率
-        - 返回成功状态
-        """
-        # 验证成本率范围
+        **Code achieved**:
+        - Validation cost rate must > = 0 and < = 1
+        - Update cost rate
+        - Back to success.
+                """
+        # Validate cost range
         if rate < 0 or rate > 1:
             return self.error_response(
                 response,
@@ -1338,11 +1338,11 @@ class InventoryManager(EnhancedBaseModule):
                 }
             )
 
-        # 更新成本率
+        # Update cost rate
         old_rate = self.maintenance_cost_rate
         self.maintenance_cost_rate = rate
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"维护成本率已设置为 {rate*100:.2f}%",
@@ -1356,25 +1356,25 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_maintenance_cost_summary")
     def get_maintenance_cost_summary(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取维护成本汇总
+        Acquisition of summary maintenance costs
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含总成本、平均成本、成本率等信息的统一响应对象
+            ModuleResponse: Unified target with total cost, average cost, cost rate, etc.
 
-        **代码实现**:
-        - 返回总成本、当前成本率、历史记录数、平均每时间步成本
-        """
-        # 计算维护成本汇总信息
+        **Code achieved**:
+        - Total return cost, current rate, historical number, average time-step cost
+                """
+        # Calculating summary maintenance information
         history_count = len(self.maintenance_cost_history)
         average_cost_per_step = (
             self.total_maintenance_cost / history_count
             if history_count > 0 else 0.0
         )
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功获取维护成本汇总",
@@ -1389,26 +1389,26 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_maintenance_cost_history")
     def get_maintenance_cost_history(self, limit: int = 100, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取维护成本历史
+        Access maintenance cost history
 
         Args:
-            limit: 返回记录数量限制（默认100，0表示返回全部）
-            response: 响应对象（由装饰器注入）
+            Limited number of returned records (default 100, 0 means all returns)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含历史记录列表的统一响应对象
+            ModuleResponse: Unified Response Object with Historical Record List
 
-        **代码实现**:
-        - 参数：`limit` - 返回记录数量限制
-        - 返回：ModuleResponse 包含历史记录列表（最近的记录）
-        """
-        # 获取历史记录
+        **Code achieved**:
+        - Parameter: `limit` - Return number limits for records
+        - returns: ModuleResponse contains a list of historical records (recent record)
+                """
+        # Access to historical records
         if limit == 0 or limit < 0:
             history = self.maintenance_cost_history
         else:
             history = self.maintenance_cost_history[-limit:]
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取维护成本历史，共返回 {len(history)} 条记录",
@@ -1421,20 +1421,20 @@ class InventoryManager(EnhancedBaseModule):
         )
                
     @with_response("set_capacity")
-    # 兼容旧接口
+    # Compatible old interfaces
     def set_capacity(self, capacity: int, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        设置仓库容量
+        Set repository capacity
 
         Args:
-            capacity: 新的仓库容量
-            response: 响应对象，由装饰器自动注入
+            Capability: New warehouse capacity
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 设置结果的统一响应对象
-        """
+            ModuleResponse: Set a unified response object for the result
+                """
         
-        # 验证容量是否有效
+        # Validation capacity
         if capacity <= 0:
             return self.error_response(
                 response,
@@ -1443,7 +1443,7 @@ class InventoryManager(EnhancedBaseModule):
                 "Failed to set warehouse capacity"
             )
         
-        # 如果新容量小于已使用容量，不允许设置
+        # Setup is not allowed if new capacity is less than used
         if capacity < self.used_capacity:
             return self.error_response(
                 response,
@@ -1454,7 +1454,7 @@ class InventoryManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 更新容量
+        # Update Capacity
         old_capacity = self.total_capacity
         self.total_capacity = capacity
         self._update_inventory_metrics()
@@ -1474,19 +1474,19 @@ class InventoryManager(EnhancedBaseModule):
                              dry_run: bool = False,
                              response: ModuleResponse = None) -> ModuleResponse:
         """
-        初始化库存
-        
+        Initialized inventory
+                
         Args:
-            raw_materials: 原材料库存数据 {item_id: {"quantity": float, "unit_price": float}} 或简写数量
-            products: 产品库存数据 {item_id: {"quantity": float, "unit_price": float}} 或简写数量
-            
-            格式说明：
-            - 简写: {"item_id": 100} 或 {"item_id": {"quantity": 100, "unit_price": 10.5}}
-            - 自动从物料ID中检测单位（如 "malt_1" → "malt"）
-            
+            raw_materials: Raw material inventory data item_id: parameter} or abbreviated quantity
+            Products: Product inventory data {item_id:{"quantity": float, "unit_price": float}} or short quantities
+                        
+            Format description:
+            - Brief: < x17/ > or parameter: parameter}
+            - Automatic detection units from material ID (e.g. "malt_1"→ "malt")
+                        
         Returns:
-            ModuleResponse: 初始化结果的统一响应对象
-        """
+            ModuleResponse: Unified response object for initialised results
+                """
         
         raw_materials = raw_materials or {}
         products = products or {}
@@ -1504,7 +1504,7 @@ class InventoryManager(EnhancedBaseModule):
         errors = []
         all_items = []
         
-        # 初始化原材料库存
+        # Initialized raw materials inventory
         for item_id, item_data in raw_materials.items():
             quantity, unit_price, err = _parse_item_data(item_id, item_data)
             if err:
@@ -1525,7 +1525,7 @@ class InventoryManager(EnhancedBaseModule):
                 else:
                     errors.append(f"原材料 {item_id} 初始化失败: {result.errors[0].message if result.errors else '未知错误'}")
         
-        # 初始化产品库存
+        # Initialized product inventory
         for item_id, item_data in products.items():
             quantity, unit_price, err = _parse_item_data(item_id, item_data)
             if err:
@@ -1546,7 +1546,7 @@ class InventoryManager(EnhancedBaseModule):
                 else:
                     errors.append(f"产品 {item_id} 初始化失败: {result.errors[0].message if result.errors else '未知错误'}")
         
-        # 设置响应状态和数据
+        # Set Response Status and Data
         total_items = len(raw_materials) + len(products)
         if len(errors) == 0:
             response.set_status(ResponseStatus.SUCCESS)
@@ -1558,7 +1558,7 @@ class InventoryManager(EnhancedBaseModule):
             response.set_status(ResponseStatus.FAILED)
             response.set_message(f"库存初始化失败，所有 {total_items} 个项目均未成功初始化")
         
-        # 添加错误信息
+        # Can not open message
         for error in errors:
             response.add_error("INITIALIZATION_ERROR", error)
         
@@ -1575,19 +1575,19 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None, convert_to_original_unit: bool = True) -> ModuleResponse:
         """
-        获取当前模块状态
+        Get Current Module Status
 
         Args:
-            response: 响应对象（由装饰器注入）
-            convert_to_original_unit: 是否转换回原始单位（默认True）
+            Response: Respond objects (injected by decorator)
+            parameter: Whether to convert back to the original unit (defaultTrue)
 
         Returns:
-            ModuleResponse: 包含模块状态的统一响应对象
-        """
+            ModuleResponse: Unified response object with modular status
+                """
         try:
             self._update_inventory_metrics()
             
-            # 计算总库存数量和价值（使用SU）
+            # Calculate total inventory quantity and value (using SU)
             total_inventory = 0
             total_value = 0
 
@@ -1597,7 +1597,7 @@ class InventoryManager(EnhancedBaseModule):
                 total_inventory += quantity
                 total_value += inventory_data.get("total_value", 0)
 
-            # 构建库存物品详细列表
+            # Build detailed list of inventory items
             inventory_items = []
             for item_id, inventory_data in self.inventory.items():
                 su_quantity = inventory_data.get("quantity", 0)
@@ -1607,7 +1607,7 @@ class InventoryManager(EnhancedBaseModule):
                 safety_stock = self.safety_stocks.get(item_id, 0)
                 reorder_point = self.reorder_points.get(item_id, 0)
                 
-                # 转换回原始单位
+                # Convert to Original
                 if convert_to_original_unit and original_unit and original_unit in self.unit_conversion_table:
                     quantity = self._from_su_quantity(su_quantity, original_unit)
                     unit = original_unit
@@ -1655,24 +1655,24 @@ class InventoryManager(EnhancedBaseModule):
                 state_data
             )
         except Exception as e:
-            # 处理异常情况
+            # Addressing anomalies
             return self.error_response(
                 response,
                 "STATE_ERROR",
                 f"获取模块状态失败: {e}"
             )
 
-        # ===== 私有方法 =====
+        # == sync, corrected by elderman ==
 
     def _record_inventory_transaction(self, item_id: str, quantity: float, trans_type: str, reason: str):
         """
-        记录库存交易历史
-        
-        **代码实现**: 
-        - 私有方法，由公开方法调用
-        - 记录库存变动历史到 `inventory_history`
-        - 调用 `_log_inventory_event()` 记录事件
-        """
+        Record inventory transaction history
+                
+        **Code achieved**: 
+        - Private methods, called by open methods
+        - Record inventory changes to `inventory_history`
+        - Call `_log_inventory_event()` to record events
+                """
         if item_id not in self.inventory_history:
             self.inventory_history[item_id] = []
         
@@ -1684,7 +1684,7 @@ class InventoryManager(EnhancedBaseModule):
             "new_quantity": self.inventory[item_id]["quantity"]
         })
         
-        # 记录事件
+        # Record Events
         self._log_inventory_event({
             "type": f"inventory_{trans_type}",
             "item_id": item_id,
@@ -1694,13 +1694,13 @@ class InventoryManager(EnhancedBaseModule):
 
     def _update_inventory_metrics(self):
         """
-        更新库存关键指标
-        
-        **代码实现**: 
-        - 私有方法，由公开方法调用
-        - 更新 `total_items`, `total_value`, `warehouse_utilization`
-        - 如果已记录销售成本，自动更新 `inventory_turnover`
-        """
+        Update of key inventory indicators
+                
+        **Code achieved**: 
+        - Private methods, called by open methods
+        - Update `total_items`, `total_value`, `warehouse_utilization`
+        - Automatically update `inventory_turnover` if sales costs are recorded
+                """
         total_value = sum(item["total_value"] for item in self.inventory.values())
         self.inventory_metrics["total_items"] = len(self.inventory)
         self.inventory_metrics["total_value"] = total_value
@@ -1710,44 +1710,44 @@ class InventoryManager(EnhancedBaseModule):
         else:
             self.inventory_metrics["warehouse_utilization"] = 0
         
-        # 更新库存周转率（如果已记录销售成本）
+        # Updated inventory turnover rate (if sales costs are recorded)
         # if self.cost_of_goods_sold > 0:
         #     self.calculate_inventory_turnover()
     
     def _update_stockout_rate(self):
         """
-        更新缺货率
-        
-        **代码实现**: 
-        - 私有方法，由 `remove_inventory()` 调用
-        - 计算缺货率 = 缺货次数 / 总出库请求次数
-        """
+        Update stockout rate
+                
+        **Code achieved**: 
+        - Private methods, called by `remove_inventory()`
+        - Calculation of the missing rate = number of missing items / total number of Treasury requests
+                """
         if self.total_outbound_requests > 0:
             self.inventory_metrics["stockout_rate"] = self.stockout_count / self.total_outbound_requests
 
     def _log_inventory_event(self, event: Dict):
         """
-        记录库存相关事件
+        Record inventory-related incidents
 
-        **代码实现**:
-        - 私有方法，由 `_record_inventory_transaction()` 调用
-        - 向 `inventory_events` 列表添加事件记录
-        """
+        **Code achieved**:
+        - Private methods, called by `_record_inventory_transaction()`
+        - Add event record to `inventory_events` list
+                """
         self.inventory_events.append(event)
 
     @with_response("generate_inventory_analysis")
     def generate_inventory_analysis(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成库存变动分析JSON
+        Generate inventory change analysis JSON
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含库存变动分析JSON的统一响应对象
-        """
+            ModuleResponse: A unified response to JSON with inventory change analysis
+                """
         try:
-            # 库存水平分析
+            # Inventory level analysis
             inventory_levels = {}
             total_value = 0
             total_quantity = 0
@@ -1767,7 +1767,7 @@ class InventoryManager(EnhancedBaseModule):
                 total_value += item_data.get("total_value", 0)
                 total_quantity += su_quantity
 
-            # 库存类型分布分析
+            # Analysis of stock type distribution
             inventory_by_type = {}
             for item_id, item_data in self.inventory.items():
                 item_type = item_data.get("item_type", "unknown")
@@ -1788,11 +1788,11 @@ class InventoryManager(EnhancedBaseModule):
                 inventory_by_type[item_type]["total_quantity_su"] += su_quantity
                 inventory_by_type[item_type]["total_value"] += item_data.get("total_value", 0)
 
-            # 仓库容量利用率分析
+            # Analysis of the utilization of warehouse capacity
             utilization = self.used_capacity / self.total_capacity if self.total_capacity > 0 else 0
             remaining_capacity = self.total_capacity - self.used_capacity
 
-            # 库存预警分析
+            # Early warning analysis of stockpiles
             low_stock_items = []
             reorder_items = []
             for item_id, item_data in self.inventory.items():
@@ -1822,7 +1822,7 @@ class InventoryManager(EnhancedBaseModule):
                         "unit": original_unit or "SU"
                     })
 
-            # 库存变动趋势分析
+            # Analysis of trends in inventory movements
             inventory_history_summary = {}
             for item_id, history in self.inventory_history.items():
                 if history:
@@ -1831,10 +1831,10 @@ class InventoryManager(EnhancedBaseModule):
                         "recent_transactions": history[-5:] if len(history) > 5 else history
                     }
 
-            # 库存周转率分析
+            # Inventory turnover analysis
             turnover = self.inventory_metrics.get("inventory_turnover", 0)
 
-            # 维护成本分析
+            # Cost analysis of maintenance
             maintenance_cost_summary = {
                 "total_maintenance_cost": self.total_maintenance_cost,
                 "maintenance_cost_rate": self.maintenance_cost_rate,
@@ -1842,13 +1842,13 @@ class InventoryManager(EnhancedBaseModule):
                 "average_cost_per_step": self.total_maintenance_cost / len(self.maintenance_cost_history) if len(self.maintenance_cost_history) > 0 else 0
             }
 
-            # 获取当前时间
+            # Get Current Time
             try:
                 timestamp = self.enterprise.time_manager.get_day() if hasattr(self.enterprise, 'time_manager') else 0
             except Exception:
                 timestamp = 0
 
-            # 构建分析JSON
+            # Build AnalysisJSON
             analysis_json = {
                 "analysis_type": "库存变动分析",
                 "timestamp": timestamp,
@@ -1895,7 +1895,7 @@ class InventoryManager(EnhancedBaseModule):
                     f"仓库利用率: {utilization:.2f}",
                     f"库存周转率: {turnover:.2f}",
                     f"缺货率: {self.inventory_metrics.get('stockout_rate', 0):.2f}",
-                    # f"缩水率: {self.inventory_metrics.get('shrinkage_rate', 0):.2f}",
+                    # f "Shrink rate: {self.inventory_metrics.get('shrinkage_rate', 0):.2f}",
                     f"低库存项目数: {len(low_stock_items)}",
                     f"需要再订购项目数: {len(reorder_items)}"
                 ]
@@ -1917,12 +1917,12 @@ class InventoryManager(EnhancedBaseModule):
 
     def _initialize_default_unit_mappings(self):
         """
-        初始化默认单位映射
-        
-        **代码实现**:
-        - 设置默认的单位转换比例
+        Initialize the default unit map
+                
+        **Code achieved**:
+        - Set the default unit conversion ratio
         - 100 Malt = 1 SU, 10 Hops = 1 SU, 5 Yeast = 1 SU, 1 Beer = 1 SU
-        """
+                """
         self.unit_conversion_table = {
             "malt": {"to_su": 0.01, "from_su": 100},
             "hops": {"to_su": 0.1, "from_su": 10},
@@ -1931,7 +1931,7 @@ class InventoryManager(EnhancedBaseModule):
         }
 
     def _get_item_original_unit(self, item_id: str) -> Optional[str]:
-        """优先读取库存记录中的单位，其次按物料 ID 推断。"""
+        """Priority is given to reading units in the inventory records, followed by extrapolation by material ID."""
         resolved_item_id = self._resolve_item_id(item_id)
         inventory_item = self.inventory.get(resolved_item_id) if resolved_item_id else None
         if inventory_item and inventory_item.get("original_unit"):
@@ -1939,7 +1939,7 @@ class InventoryManager(EnhancedBaseModule):
         return self._detect_unit_from_item_id(item_id)
 
     def _resolve_item_id(self, item_id: str) -> Optional[str]:
-        """在现有库存中解析真实物料 ID，兼容大小写差异。"""
+        """The real material ID is deciphered in the existing inventory, compatible with case differences."""
         if not item_id:
             return None
         if item_id in self.inventory:
@@ -1952,19 +1952,19 @@ class InventoryManager(EnhancedBaseModule):
         return None
 
     def _to_su_quantity(self, quantity: float, original_unit: Optional[str]) -> float:
-        """把外部原始单位数量换算为内部 SU 数量。"""
+        """Converts the original external unit number to the internal SU number."""
         if original_unit and original_unit in self.unit_conversion_table:
             return quantity * self.unit_conversion_table[original_unit]["to_su"]
         return quantity
 
     def _from_su_quantity(self, su_quantity: float, original_unit: Optional[str]) -> float:
-        """把内部 SU 数量换算回外部原始单位数量。"""
+        """Converts the internal amount of SU to the external original unit."""
         if original_unit and original_unit in self.unit_conversion_table:
             return su_quantity * self.unit_conversion_table[original_unit]["from_su"]
         return su_quantity
 
     def _to_pricing_quantity(self, su_quantity: float, original_unit: Optional[str]) -> float:
-        """把 SU 数量换算成与 `unit_price` 同口径的计价数量。"""
+        """Conversion of the quantities of SU to < x 17/ > the same calibre."""
         return self._from_su_quantity(su_quantity, original_unit)
 
     def _normalize_item_type(
@@ -1973,7 +1973,7 @@ class InventoryManager(EnhancedBaseModule):
         item_type: Optional[str],
         existing_item_type: Optional[str] = None
     ) -> str:
-        """把调用方传入的物料类型归一化为 `raw_material` 或 `product`。"""
+        """`raw_material` or `product`."""
         if existing_item_type in {"raw_material", "product"}:
             return existing_item_type
 
@@ -1994,21 +1994,21 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("convert_to_su")
     def convert_to_su(self, quantity: float, unit: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        将外部单位转换为标准单位 SU
-        
+        Conversion of external units to standard units SU
+                
         Args:
-            quantity: 数量（外部单位）
-            unit: 单位名称（如 "malt", "hops", "yeast", "beer"）
-            response: 响应对象（由装饰器注入）
-            
+            Number (external)
+            unit: unit name (e.g. "malt", "hops", "yesst", "beer")
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含转换后SU数量的统一响应对象
-            
-        **代码实现**:
-        - 检查单位是否在转换表中
-        - 使用 to_su 比例进行转换
-        - 返回转换后的SU数量
-        """
+            ModuleResponse: Harmonized response objects that contain the number of SUs after conversion
+                        
+        **Code achieved**:
+        - Check if the unit is on the conversion table.
+        - Convert with parameter ratio
+        - Number of SUs returned after conversion
+                """
         unit_lower = unit.lower()
         
         if unit_lower not in self.unit_conversion_table:
@@ -2035,21 +2035,21 @@ class InventoryManager(EnhancedBaseModule):
     @with_response("convert_from_su")
     def convert_from_su(self, su_quantity: float, unit: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        将标准单位 SU 转换为外部单位
-        
+        Convert SU to an external unit
+                
         Args:
-            su_quantity: SU数量
-            unit: 目标单位名称（如 "malt", "hops", "yeast", "beer"）
-            response: 响应对象（由装饰器注入）
-            
+            su_quantity: Number of SUs
+            unit: target unit name (e.g. "malt", "hops", "yesst", "beer")
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含转换后外部单位数量的统一响应对象
-            
-        **代码实现**:
-        - 检查单位是否在转换表中
-        - 使用 from_su 比例进行转换
-        - 返回转换后的外部单位数量
-        """
+            ModuleResponse: Harmonized response objects that include the number of external units after conversion
+                        
+        **Code achieved**:
+        - Check if the unit is on the conversion table.
+        - Convert with parameter ratio
+        - Number of external units returned after conversion
+                """
         unit_lower = unit.lower()
         
         if unit_lower not in self.unit_conversion_table:
@@ -2075,19 +2075,19 @@ class InventoryManager(EnhancedBaseModule):
 
     def _detect_unit_from_item_id(self, item_id: str) -> str:
         """
-        从物料ID中自动检测单位
-        
+        Automatic detection unit from material ID
+                
         Args:
-            item_id: 物料ID（如 "malt_1", "hops_batch", "beer_final"）
-            
+            item_id: Material ID (e.g. malt_1, hops_batch, beer_final)
+                        
         Returns:
-            str: 检测到的单位（如 "malt", "hops", "beer"），如果未检测到则返回 None
-            
-        **代码实现**:
-        - 遍历单位转换表中的所有单位
-        - 检查单位是否在物料ID中（不区分大小写）
-        - 返回第一个匹配的单位
-        """
+            str: Detected units (e. g. "malt", "hops", "beer") and returns None if not detected
+                        
+        **Code achieved**:
+        - Walk through all units in the conversion table
+        - Check if the unit is in the material ID.
+        - Return to the first matching unit
+                """
         if not item_id:
             return None
         
@@ -2102,20 +2102,20 @@ class InventoryManager(EnhancedBaseModule):
 
 def _parse_item_data(item_id: str, item_data) -> tuple:
     """
-    解析物料数据（简化版，不包含单位参数）
-    
+    Parsing material data (simplified version without unit parameters)
+        
     Args:
-        item_id: 物料ID
-        item_data: 物料数据，可以是：
-            - 简写数字: 100
-            - 字典: {"quantity": 100, "unit_price": 10.5}
-    
+        item_id: Material ID
+        item_data: Material data, which may be:
+            - Brief number: 100
+            - Dictionary: {"quantity": 100, "unit_price": 10.5}
+        
     Returns:
         tuple: (quantity, unit_price, error)
-            - quantity: 数量
-            - unit_price: 单价
-            - error: 错误信息（如果有）
-    """
+            Number
+            - < x17/ > : unit price
+            - error information (if any)
+        """
     try:
         quantity = 0
         unit_price = 0.0
@@ -2148,22 +2148,22 @@ def _parse_item_data(item_id: str, item_data) -> tuple:
 
 def _parse_item_data_with_unit(item_id: str, item_data) -> tuple:
     """
-    解析物料数据，支持单位参数（保留用于向后兼容）
-    
+    Parsing material data, supporting unit parameters (reserved for backward compatibility)
+        
     Args:
-        item_id: 物料ID
-        item_data: 物料数据，可以是：
-            - 简写数字: 100
-            - 字典: {"quantity": 100, "unit_price": 10.5}
-            - 完整字典: {"quantity": 100, "unit_price": 10.5, "unit": "malt"}
-    
+        item_id: Material ID
+        item_data: Material data, which may be:
+            - Brief number: 100
+            - Dictionary: {"quantity": 100, "unit_price": 10.5}
+            - Full dictionary: {"quantity": 100, "unit_price": 10.5, "unit": "malt"}
+        
     Returns:
         tuple: (quantity, unit_price, unit, error)
-            - quantity: 数量
-            - unit_price: 单价
-            - unit: 单位（可选）
-            - error: 错误信息（如果有）
-    """
+            Number
+            - < x17/ > : unit price
+            - unit: units (optional)
+            - error information (if any)
+        """
     try:
         quantity = 0
         unit_price = 0.0

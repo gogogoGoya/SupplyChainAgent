@@ -1,7 +1,7 @@
 """
-财务管理模块
+Financial management module
 
-负责企业财务相关的业务逻辑，包括现金流管理、收入记录、成本记录、财务指标计算等
+Responsible for enterprise financial-related business logic, including cash flow management, revenue records, cost records, financial indicator calculations, etc.
 """
 
 import time
@@ -21,54 +21,53 @@ from config.module_config import FinanceConfig
 
 class FinanceManager(EnhancedBaseModule):
     """
-    处理企业财务相关的所有业务逻辑
-    
-    """
+    Processing all business logic related to enterprise finance
+        
+        """
     
     def __init__(self, enterprise, initial_cash: float = 0, 
                  module_id: str = None, config: FinanceConfig = None):
         """
-        初始化财务管理器
-        
+        Initialize Financial Manager
+                
         Args:
-            enterprise: 所属企业实例
-            initial_cash: 初始现金余额
-            module_id: 模块唯一标识（可选）
-            config: 财务配置对象（可选，默认使用FinanceConfig()）
-        """
-        # 使用配置或默认配置
+            Enterprise: Examples of enterprise
+            initial_cash: Initial cash balance
+            parameter: Only identification of modules (optional)
+            Config: Financial Configuration Object (optional, default FinanceConfig())
+                """
+        # Use configuration or default configuration
         self.config = config or FinanceConfig()
         
-        # 调用父类初始化
+        # Call Parent Initialization
         super().__init__(
             enterprise, 
             module_id or f"finance_{enterprise.id}",
             self.config
         )
         
-        # 现金账户管理
+        # Cash account management
         self.cash = initial_cash
         self.initial_cash = initial_cash
         
-        # 交易记录
+        # Transaction records
         self.transactions = []
         
-        # 使用配置初始化数据结构
+        # Use configuration initialised data structure
         self.revenue = self.config.get_initial_revenue_dict()
         self.costs = self.config.get_initial_cost_dict()
         self.assets = self.config.get_initial_assets_dict(initial_cash)
         self.liabilities = self.config.get_initial_liabilities_dict()
         self.financial_metrics = self.config.get_initial_financial_metrics_dict()
         
-        # 预警列表
+        # Early Warning List
         self.warnings = []
         
-        # 初始检查
+        # Initial check
         self._check_cash_warning()
 
         self.module_type="FinanceManager"
     
-    # ==================== 现金流管理 ====================
     
     @with_response("add_revenue")
     @validate_positive("amount")
@@ -78,24 +77,24 @@ class FinanceManager(EnhancedBaseModule):
                    dry_run: bool = False,
                    response: ModuleResponse = None) -> ModuleResponse:
         """
-        记录收入 - 现金流入
-        
-        装饰器说明：
-        - @with_response: 自动创建响应对象、异常处理
-        - @validate_positive: 自动验证amount > 0
-        - @validate_choice: 自动验证source在有效选项中
-        
+        Recording income - cash inflows
+                
+        Decorator description:
+        - parameter : Automatic creation of response objects, anomalies
+        - parameter: Autovalidationmount > 0
+        - parameter : Autovalid source in valid option Medium
+                
         Args:
-            amount: 收入金额，必须>0（由装饰器验证）
-            source: 收入来源（由装饰器验证）
-            description: 详细描述
-            order_id: 订单ID
-            buyer_enterprise_id: 买方企业ID
-            response: 响应对象（由装饰器注入）
-            
+            amount: the amount of the income must be >0 (validated by decorator)
+            Source of income (validated by decorator)
+            description:
+            parameter: Order ID
+            buyer_enterprise_id: BuyerenterpriseID
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
+            ModuleResponse: Unified response object
+                """
         if dry_run:
             return self.success_response(
                 response,
@@ -106,15 +105,15 @@ class FinanceManager(EnhancedBaseModule):
                     "cash_after": self.cash + amount
                 }
             )
-        # 业务逻辑 - 参数已经被装饰器验证过了
+        # Business logic - parameters have been validated by decorator
         old_cash = self.cash
         self.cash += amount
         
-        # 更新收入记录
+        # Update of income records
         self.revenue[source] += amount
         self.revenue["total_revenue"] += amount
         
-        # 创建交易记录（使用辅助方法）
+        # Create transaction log (using assistive methods)
         transaction = self._create_transaction(
             tx_type="income",
             amount=amount,
@@ -126,10 +125,10 @@ class FinanceManager(EnhancedBaseModule):
             cash_after=self.cash
         )
         
-        # 更新财务状态（统一方法）
+        # Updated financial status (harmonized methodology)
         self._update_financial_state()
         
-        # 返回成功响应（装饰器会自动处理警告）
+        # Returns successful response (the decorator automatically handles warnings)
         return self.success_response(
             response,
             f"Revenue of ¥{amount:.2f} recorded from {source}",
@@ -162,23 +161,23 @@ class FinanceManager(EnhancedBaseModule):
                 dry_run: bool = False,
                 response: ModuleResponse = None) -> ModuleResponse:
         """
-        记录成本/支出 - 现金流出或应付账款
-        
-        装饰器说明：
-        - @with_response: 自动创建响应、异常处理
-        - @validate_positive: 验证amount > 0
-        - @validate_choice: 验证category有效性
-        
+        Record costs/expenditures - cash outflows or accounts payable
+                
+        Decorator description:
+        - parameter : Automatic creation of response, abnormal treatment
+        - parameter : Verifymount > 0
+        - parameter :validation of category
+                
         Args:
-            amount: 成本金额（由装饰器验证）
-            category: 成本类别（由装饰器验证）
-            description: 详细描述
-            accounts_payable: 是否记为应付账款
-            response: 响应对象（由装饰器注入）
-            
+            amount: cost amount (certified by decorator)
+            Category: Cost category (certified by decorator)
+            description:
+            accounts_payable: Recording as accounts payable
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
+            ModuleResponse: Unified response object
+                """
         if dry_run:
             projected_cash = self.cash if accounts_payable else self.cash - amount
             projected_payable = self.liabilities["accounts_payable"] + (amount if accounts_payable else 0)
@@ -192,26 +191,26 @@ class FinanceManager(EnhancedBaseModule):
                     "accounts_payable_balance": projected_payable
                 }
             )
-        # 业务逻辑
+        # Business logic
         old_cash = self.cash
         
         if accounts_payable:
-            # 记为应付账款，不立即支付
+            # Accounts payable are not payable immediately
             self.liabilities["accounts_payable"] += amount
             self.liabilities["total_liabilities"] += amount
             transaction_type = "payable"
             cash_after = self.cash
         else:
-            # 立即支付（允许透支）
+            # Immediate payment (permissible overdraft)
             self.cash -= amount
             cash_after = self.cash
             transaction_type = "expense"
         
-        # 更新成本记录
+        # Update cost records
         self.costs[category] += amount
         self.costs["total_cost"] += amount
         
-        # 创建交易记录
+        # Create transaction log
         transaction = self._create_transaction(
             tx_type=transaction_type,
             amount=amount,
@@ -222,10 +221,10 @@ class FinanceManager(EnhancedBaseModule):
             cash_after=cash_after
         )
         
-        # 更新财务状态
+        # Update Financial Status
         self._update_financial_state()
         
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"Cost of ¥{amount:.2f} recorded for {category}",
@@ -258,17 +257,17 @@ class FinanceManager(EnhancedBaseModule):
                             dry_run: bool = False,
                             response: ModuleResponse = None) -> ModuleResponse:
         """
-        支付应付账款
-        
+        Payments payable
+                
         Args:
-            amount: 支付金额（由装饰器验证 > 0）
-            description: 描述
-            response: 响应对象（由装饰器注入）
-            
+            amount: Payments (validated by decorator > 0)
+            description:
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
-        # 验证应付账款余额
+            ModuleResponse: Unified response object
+                """
+        # Validation of accounts payable balances
         if amount > self.liabilities["accounts_payable"]:
             return self.error_response(
                 response,
@@ -276,7 +275,7 @@ class FinanceManager(EnhancedBaseModule):
                 f"应付账款余额不足。需要: ¥{amount:.2f}, 当前: ¥{self.liabilities['accounts_payable']:.2f}"
             )
         
-        # 验证现金余额
+        # Verification of cash balances
         if amount > self.cash:
             return self.error_response(
                 response,
@@ -294,7 +293,7 @@ class FinanceManager(EnhancedBaseModule):
                 }
             )
         
-        # 业务逻辑
+        # Business logic
         old_cash = self.cash
         self.cash -= amount
         self.liabilities["accounts_payable"] -= amount
@@ -303,7 +302,7 @@ class FinanceManager(EnhancedBaseModule):
             self.liabilities["other_liabilities"]
         )
         
-        # 创建交易记录
+        # Create transaction log
         transaction = self._create_transaction(
             tx_type="payable_payment",
             amount=amount,
@@ -312,12 +311,12 @@ class FinanceManager(EnhancedBaseModule):
             cash_after=self.cash
         )
         
-        # 更新资产和预警
+        # Updated assets and early warning
         self.assets["cash"] = self.cash
         self._update_total_assets()
         self._check_cash_warning()
         
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"Paid ¥{amount:.2f} towards accounts payable",
@@ -339,7 +338,6 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 资产管理 ====================
     
     @with_response("record_asset_addition")
     @validate_positive("amount")
@@ -349,18 +347,18 @@ class FinanceManager(EnhancedBaseModule):
                              dry_run: bool = False,
                              response: ModuleResponse = None) -> ModuleResponse:
         """
-        记录资产增加
-        
+        Increase in recorded assets
+                
         Args:
-            asset_type: 资产类型（由装饰器验证）
-            amount: 金额（由装饰器验证 > 0）
-            description: 描述
-            depreciable: 是否可折旧
-            response: 响应对象（由装饰器注入）
-            
+            asset_type: Asset type (validated by decorator)
+            amount: Amount (validated by decorator > 0)
+            description:
+            Depreciable: Depreciable
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
+            ModuleResponse: Unified response object
+                """
         if dry_run:
             return self.success_response(
                 response,
@@ -404,20 +402,20 @@ class FinanceManager(EnhancedBaseModule):
                                  dry_run: bool = False,
                                  response: ModuleResponse = None) -> ModuleResponse:
         """
-        记录固定资产折旧
-        
+        Record depreciation of fixed assets
+                
         Args:
-            annual_depreciation_rate: 年折旧率（可选，默认使用配置值）
-            response: 响应对象（由装饰器注入）
-            
+            annual_depreciation_rate: Annual depreciation rate (optional, default configuration value)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
-        # 使用配置的默认折旧率
+            ModuleResponse: Unified response object
+                """
+        # Use the default depreciation rate of the configuration
         if annual_depreciation_rate is None:
             annual_depreciation_rate = self.config.DEFAULT_DEPRECIATION_RATE
         
-        # 验证折旧率范围
+        # Validate depreciation range
         if not self.config.is_valid_depreciation_rate(annual_depreciation_rate):
             return self.error_response(
                 response,
@@ -425,10 +423,10 @@ class FinanceManager(EnhancedBaseModule):
                 f"Depreciation rate must be between {self.config.MIN_DEPRECIATION_RATE} and {self.config.MAX_DEPRECIATION_RATE}"
             )
         
-        # 计算折旧额
+        # Calculated depreciation
         depreciation_amount = self.assets["fixed_assets"] * annual_depreciation_rate
         
-        # 若无固定资产
+        # Without fixed assets
         if depreciation_amount <= 0:
             return self.success_response(
                 response,
@@ -454,7 +452,7 @@ class FinanceManager(EnhancedBaseModule):
                 }
             )
         
-        # 记录折旧成本
+        # Record depreciation cost
         cost_result = self.add_cost(
             depreciation_amount,
             "depreciation",
@@ -474,7 +472,7 @@ class FinanceManager(EnhancedBaseModule):
                 "Failed to record depreciation cost"
             )
         
-        # 记录累计折旧
+        # Cumulative depreciation recorded
         self.assets["accumulated_depreciation"] += depreciation_amount
         self._update_total_assets()
         
@@ -506,19 +504,19 @@ class FinanceManager(EnhancedBaseModule):
                              dry_run: bool = False,
                              response: ModuleResponse = None) -> ModuleResponse:
         """
-        记录资产处置（出售资产）
-        
+        Record disposal of assets (sale of assets)
+                
         Args:
-            asset_type: 资产类型（由装饰器验证）
-            amount: 处置金额（由装饰器验证 > 0）
-            sale_price: 销售价格（由装饰器验证 > 0）
-            description: 描述
-            response: 响应对象（由装饰器注入）
-            
+            asset_type: Asset type (validated by decorator)
+            amount: disposal amount (validated by decorator > 0)
+            < x17/ >: Sales price (certified by decorator > 0)
+            description:
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 统一响应对象
-        """
-        # 验证资产余额
+            ModuleResponse: Unified response object
+                """
+        # Validation of asset balances
         if amount > self.assets[asset_type]:
             return self.error_response(
                 response,
@@ -537,11 +535,11 @@ class FinanceManager(EnhancedBaseModule):
                 }
             )
         
-        # 减少资产
+        # Reduction of assets
         old_asset_value = self.assets[asset_type]
         self.assets[asset_type] -= amount
         
-        # 增加现金（记录收入）
+        # Increase in cash (recording of income)
         revenue_result = self.add_revenue(
             sale_price,
             "asset_disposal",
@@ -549,7 +547,7 @@ class FinanceManager(EnhancedBaseModule):
         )
         
         if not revenue_result.success:
-            # 恢复资产
+            # Restoration of assets
             self.assets[asset_type] += amount
             error_message = (
                 revenue_result.errors[0]["message"]
@@ -565,7 +563,7 @@ class FinanceManager(EnhancedBaseModule):
         
         self._update_total_assets()
         
-        # 计算收益或损失
+        # Calculation of gains or losses
         gain_loss = sale_price - amount
         
         return self.success_response(
@@ -591,44 +589,43 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 利润计算 ====================
     
     @with_response("calculate_profit")
     @performance_monitor(log_slow_threshold=0.5)
     def calculate_profit(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算利润指标
-        
+        Calculation of profit indicators
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含利润计算结果
-        """
+            ModeuleResponse: Include profit calculations
+                """
         total_revenue = self.revenue["total_revenue"]
         total_cost = self.costs["total_cost"]
         
-        # 毛利润 = 总收入 - 直接成本
+        # Gross profit = total income - direct cost
         direct_cost = (
             self.costs["raw_materials"] + 
             self.costs["production_cost"]
         )
         gross_profit = total_revenue - direct_cost
         
-        # 净利润 = 总收入 - 总成本
+        # Net profit = total income - total cost
         net_profit = total_revenue - total_cost
         
-        # 利润率
+        # Profit margin
         gross_profit_rate = (gross_profit / total_revenue * 100) if total_revenue > 0 else 0
         net_profit_rate = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
         
-        # 盈亏平衡点分析
+        # Balance of gains and losses analysis
         fixed_cost = (
             self.costs["labor_cost"] + 
             self.costs["market_cost"]
         )
         
-        # 边际贡献率
+        # Marginal Contribution Rate
         margin_contribution_rate = ((total_revenue - direct_cost) / total_revenue) if total_revenue > 0 else 0
         break_even_revenue = fixed_cost / margin_contribution_rate if margin_contribution_rate > 0 else float('inf')
         
@@ -667,19 +664,18 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 财务指标 ====================
     
     @with_response("calculate_financial_indicators")
     def calculate_financial_indicators(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算所有财务指标
-        
+        Calculate all financial indicators
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含财务指标和解释
-        """
+            ModuleResponse: Include financial indicators and explanations
+                """
         total_assets = self.assets["total_assets"]
         total_liabilities = self.liabilities["total_liabilities"]
         net_equity = total_assets - total_liabilities
@@ -688,17 +684,17 @@ class FinanceManager(EnhancedBaseModule):
         total_cost = self.costs["total_cost"]
         net_profit = total_revenue - total_cost
         
-        # 投资回报率(ROI)
+        # Rate of return on investment (ROI)
         roi = ((net_equity - self.initial_cash) / self.initial_cash * 100) if self.initial_cash > 0 else 0
         
-        # 净资产收益率(ROE)
+        # Net asset rate of return (ROE)
         roe = (net_profit / net_equity * 100) if net_equity > 0 else 0
         
-        # 流动比率
+        # Mobility ratio
         current_liabilities = self.liabilities["accounts_payable"]
         current_ratio = (self.cash / current_liabilities) if current_liabilities > 0 else 0
         
-        # 资产周转率
+        # Asset turnover rate
         asset_turnover = (total_revenue / total_assets) if total_assets > 0 else 0
         
         indicators = {
@@ -736,25 +732,24 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 财务报表 ====================
     
     @with_response("generate_balance_sheet")
     def generate_balance_sheet(self, as_of_date: str = None,
                               response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成资产负债表
-        
+        Generate balance sheet
+                
         Args:
-            as_of_date: 报表截至日期（可选，默认当前日期）
-            response: 响应对象（由装饰器注入）
-            
+            as_of_date: Report due date (optional, default current date)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含资产负债表数据
-        """
+            ModeuleResponse: Includes balance sheet data
+                """
         if not as_of_date:
             as_of_date = datetime.datetime.now().strftime("%Y-%m-%d")
         
-        # 计算账面价值
+        # Calculate book value
         fixed_assets_book_value = (
             self.assets["fixed_assets"] - self.assets["accumulated_depreciation"]
         )
@@ -824,26 +819,26 @@ class FinanceManager(EnhancedBaseModule):
     def generate_income_statement(self, start_date: str, end_date: str,
                                  response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成损益表
-        
-        装饰器说明：
-        - @validate_date_range: 自动验证日期范围有效性
-        
+        Generate income statement
+                
+        Decorator description:
+        - parameter : Autovalidation of date range
+                
         Args:
-            start_date: 开始日期（YYYY-MM-DD，由装饰器验证）
-            end_date: 结束日期（YYYY-MM-DD，由装饰器验证）
-            response: 响应对象（由装饰器注入）
-            
+            start_date: Start date (YYYY-MM-DD, certified by decorator)
+            end_date: End date (YYYY-MM-DD, certified by decorator)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含损益表数据
-        """
-        # 筛选期间内的交易
+            ModeuleResponse: Include income statement data
+                """
+        # Transactions during the selection period
         period_transactions = [
             tx for tx in self.transactions
             if start_date <= tx["date"] <= end_date
         ]
         
-        # 计算期间收入和成本
+        # Income and cost for the calculation period
         period_revenue = self.config.get_initial_revenue_dict()
         period_cost = self.config.get_initial_cost_dict()
         
@@ -864,7 +859,7 @@ class FinanceManager(EnhancedBaseModule):
             v for k, v in period_cost.items() if k != "total_cost"
         )
         
-        # 计算利润指标
+        # Calculation of profit indicators
         direct_cost = period_cost["raw_materials"] + period_cost["production_cost"]
         gross_profit = period_revenue["total_revenue"] - direct_cost
         net_profit = period_revenue["total_revenue"] - period_cost["total_cost"]
@@ -914,23 +909,23 @@ class FinanceManager(EnhancedBaseModule):
     def generate_cash_flow_statement(self, start_date: str, end_date: str,
                                     response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成现金流量表
-        
+        Statement of cash flows generated
+                
         Args:
-            start_date: 开始日期（由装饰器验证）
-            end_date: 结束日期（由装饰器验证）
-            response: 响应对象（由装饰器注入）
-            
+            parameter: Start date (validated by decorator)
+            parameter: End date (validated by decorator)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含现金流量表数据
-        """
-        # 筛选期间内的交易
+            ModuleResponse: Includes cash flow statement data
+                """
+        # Transactions during the selection period
         period_transactions = [
             tx for tx in self.transactions
             if start_date <= tx["date"] <= end_date
         ]
         
-        # 计算现金流
+        # Calculate cash flow
         operating_cash_flow = 0.0
         investing_cash_flow = 0.0
         financing_cash_flow = 0.0
@@ -987,20 +982,19 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 现金流预警 ====================
     
     @with_response("get_cash_warnings")
     def get_cash_warnings(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取现金流预警
-        
+        Access to early warning of cash flows
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含现金流预警信息
-        """
-        # 确定状态（使用配置的阈值）
+            ModuleResponse: Include early warning information on cash flows
+                """
+        # Determine status (using configuration thresholds)
         status = (
             "critical" if self.cash < self.config.CASH_CRITICAL_THRESHOLD
             else "warning" if (self.cash < self.config.CASH_WARNING_THRESHOLD or len(self.warnings) > 0)
@@ -1026,23 +1020,22 @@ class FinanceManager(EnhancedBaseModule):
             }
         )
     
-    # ==================== 财务摘要 ====================
     
     @with_response("get_financial_summary")
     def get_financial_summary(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取财务摘要
-        
+        Access to financial summary
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含财务摘要信息
-        """
+            ModeuleResponse: Include financial summary information
+                """
         profit_info = self.calculate_profit()
         indicators_info = self.calculate_financial_indicators()
         
-        # 最近交易
+        # Recent transactions
         recent_transactions = sorted(
             self.transactions[-10:],
             key=lambda x: x["timestamp"],
@@ -1097,30 +1090,30 @@ class FinanceManager(EnhancedBaseModule):
                                transaction_type: str = None,
                                response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取交易历史记录
-        
+        Access transaction history
+                
         Args:
-            start_date: 开始日期（可选）
-            end_date: 结束日期（可选）
-            transaction_type: 交易类型（可选）
-            response: 响应对象（由装饰器注入）
-            
+            start_date: Start date (optional)
+            end_date: End date (optional)
+            transaction_type: Transaction type (optional)
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含交易历史记录
-        """
+            ModeuleResponse: Include transaction history
+                """
         result = self.transactions.copy()
         
-        # 按日期筛选
+        # Filter by Date
         if start_date:
             result = [tx for tx in result if tx["date"] >= start_date]
         if end_date:
             result = [tx for tx in result if tx["date"] <= end_date]
         
-        # 按类型筛选
+        # Filter by Type
         if transaction_type:
             result = [tx for tx in result if tx["type"] == transaction_type]
         
-        # 按时间倒序排列
+        # Sort in reverse order of time
         result.sort(key=lambda x: x["timestamp"], reverse=True)
         
         return self.success_response(
@@ -1145,14 +1138,14 @@ class FinanceManager(EnhancedBaseModule):
     @with_response("get_balance")
     def get_balance(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取当前现金余额
-        
+        Obtain current cash balance
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含余额信息
-        """
+            ModeuleResponse: Include balance information
+                """
         return self.success_response(
             response,
             f"当前现金余额为 ¥{self.cash:.2f}",
@@ -1162,14 +1155,14 @@ class FinanceManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取当前模块状态
-        
+        Get Current Module Status
+                
         Args:
-            response: 响应对象（由装饰器注入）
-            
+            Response: Respond objects (injected by decorator)
+                        
         Returns:
-            ModuleResponse: 包含模块状态信息
-        """
+            ModeuleResponse: Include module status information
+                """
         self._update_financial_state()
         self.get_financial_summary()
         state = {
@@ -1192,7 +1185,7 @@ class FinanceManager(EnhancedBaseModule):
         )
     
     def _get_financial_metrics(self) -> Dict:
-        """获取当前财务指标"""
+        """Obtain current financial indicators"""
         return {
             "net_profit": self.financial_metrics["net_profit"],
             "gross_profit": self.financial_metrics["gross_profit"],
@@ -1205,7 +1198,7 @@ class FinanceManager(EnhancedBaseModule):
         }
 
     def _build_cash_summary(self) -> Dict:
-        """生成供业务部门读取的现金约束摘要。"""
+        """Generates a summary of cash constraints for business department."""
         warning_threshold = float(self.config.CASH_WARNING_THRESHOLD)
         critical_threshold = float(self.config.CASH_CRITICAL_THRESHOLD)
         available_after_warning = max(0.0, self.cash - warning_threshold)
@@ -1227,20 +1220,19 @@ class FinanceManager(EnhancedBaseModule):
             "accounts_payable_balance": accounts_payable_balance,
         }
 
-    # ==================== 内部辅助方法 ====================
     
     def _create_transaction(self, tx_type: str, amount: float, **kwargs) -> Dict:
         """
-        统一创建交易记录
-        
+        Unified creation of transaction records
+                
         Args:
-            tx_type: 交易类型
-            amount: 金额
-            **kwargs: 其他交易属性
-            
+            parameter: Transaction type
+            amount: Amount
+            **kwargs: Other transaction properties
+                        
         Returns:
-            Dict: 交易记录
-        """
+            Dict: Transaction log
+                """
         transaction = {
             "id": f"txn_{tx_type}_{self.enterprise.time_manager.get_day()}",
             "type": tx_type,
@@ -1253,7 +1245,7 @@ class FinanceManager(EnhancedBaseModule):
         return transaction
     
     def _update_financial_state(self):
-        """统一更新财务状态"""
+        """Harmonized update of financial status"""
         self.assets["cash"] = self.cash
         self._update_total_assets()
         self._calculate_financial_metrics()
@@ -1261,7 +1253,7 @@ class FinanceManager(EnhancedBaseModule):
         self.calculate_financial_indicators()
     
     def _update_total_assets(self):
-        """更新总资产"""
+        """Update total assets"""
         fixed_assets_book_value = (
             self.assets["fixed_assets"] - 
             self.assets["accumulated_depreciation"]
@@ -1273,7 +1265,7 @@ class FinanceManager(EnhancedBaseModule):
         )
     
     def _calculate_financial_metrics(self):
-        """更新财务指标"""
+        """Updated financial indicators"""
         self.financial_metrics["net_profit"] = (
             self.revenue["total_revenue"] - self.costs["total_cost"]
         )
@@ -1294,11 +1286,11 @@ class FinanceManager(EnhancedBaseModule):
     
     def _check_cash_warning(self):
         """
-        检查现金流预警（使用配置的阈值）
-        """
+        Check for cash flow early warning (using configuration thresholds)
+                """
         self.warnings.clear()
         
-        # 现金余额预警（使用配置的阈值）
+        # Early warning of cash balances (using configuration thresholds)
         if self.cash < self.config.CASH_CRITICAL_THRESHOLD:
             self.warnings.append({
                 "level": "CRITICAL",
@@ -1312,7 +1304,7 @@ class FinanceManager(EnhancedBaseModule):
                 "amount": self.cash
             })
         
-        # 流动比率预警（使用配置的阈值）
+        # Movement ratio early warning (using configuration thresholds)
         if self.liabilities["accounts_payable"] > 0:
             current_ratio = self.cash / self.liabilities["accounts_payable"]
             if current_ratio < self.config.CURRENT_RATIO_WARNING:
@@ -1324,15 +1316,15 @@ class FinanceManager(EnhancedBaseModule):
     
     def _set_balance(self, balance_amount: float, reason: str = "Balance adjustment"):
         """
-        设置财务余额（不使用装饰器的旧方法，保持向后兼容）
-        
+        Set financial balance (no old decorative method, keep backward compatibility)
+                
         Args:
-            balance_amount: 要设置的余额金额
-            reason: 调整余额的原因
-            
+            balance_amount: Balance to set
+            Reason for adjustment of balance
+                        
         Returns:
-            Dict: 操作结果
-        """
+            Dict: Operation Results
+                """
         old_balance = self.cash
         self.cash = balance_amount
         self.assets["cash"] = balance_amount
@@ -1356,19 +1348,19 @@ class FinanceManager(EnhancedBaseModule):
 
     def _interpret_indicators(self, indicators: Dict) -> str:
         """
-        解释财务指标（使用配置的阈值）
-        
+        Explanation of financial indicators (using the threshold of the configuration)
+                
         Args:
-            indicators: 财务指标字典
-            
+            Indicators: Dictionary of Financial Indicators
+                        
         Returns:
-            str: 解释文本
-        """
+            st: Explanatory text
+                """
         roi = indicators.get("roi", 0)
         roe = indicators.get("roe", 0)
         current_ratio = indicators.get("current_ratio", 0)
         
-        # 使用配置的阈值进行判断
+        # Use the configuration threshold for judgement
         if (roi > self.config.EXCELLENT_ROI and 
             roe > self.config.EXCELLENT_ROE and 
             current_ratio > self.config.EXCELLENT_CURRENT_RATIO):

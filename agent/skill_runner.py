@@ -2884,7 +2884,7 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         return None
 
     def _extract_json_blocks(self, text: str) -> List[str]:
-        """提取所有 fenced JSON 块，兼容 transcript 中的转义换行。"""
+        """Extracts all fendd < x17/ > blocks that are compatible with transcript's transcript."""
         if not isinstance(text, str):
             return []
         variants = [text]
@@ -2910,7 +2910,7 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         return payloads
 
     def _extract_balanced_json_candidates(self, text: str) -> List[str]:
-        """从普通文本中兜底提取完整 JSON 数组/对象。"""
+        """JSON arrays/objects are extracted from the plain text."""
         if not isinstance(text, str):
             return []
         candidates: List[str] = []
@@ -2994,10 +2994,10 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 
     def _extract_payload_from_printed_write_call(self, data: Any, output_file_path: str) -> Any:
         """
-        兼容模型把 Write 工具调用打印成 JSON 文本而没有真正调用工具的情况。
+        The compatible model uses the Write tool to print JSON text without a real call tool.
 
-        只接受目标路径匹配当前输出文件的 Write payload，避免误恢复其它文件内容。
-        """
+        Accepts only the target path to match the current output file Write payload to avoid the wrong recovery of other document contents.
+                """
         if not isinstance(data, dict) or data.get("name") != "Write":
             return data
 
@@ -3809,16 +3809,16 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
 
     def _bind_session_to_options(self, options: Any, session_id: Optional[str]) -> Any:
         """
-        把已有会话绑定为“恢复会话”。
+        To bind existing sessions to “restore sessions”.
 
-        Claude CLI 的 --session-id 不是 resume 语义；在当前 SDK 中如果同时传入
-        --session-id 且没有 --fork-session，会触发 CLI 参数错误。因此这里统一使用
-        resume 字段，并清理历史兼容字段，避免生成错误参数组合。
-        """
+        Claude CLI --session-id is not resum; if entered simultaneously in the current SDK
+        - session-id without -- fork-session triggers CLI parameter error. So it's a common use here.
+        Resume fields, and cleans up historical compatible fields to avoid creating an error parameter combination.
+                """
         if not session_id:
             return options
 
-        # dict 型 options
+        # dict type options
         if isinstance(options, dict):
             options["resume"] = session_id
             options.pop("session_id", None)
@@ -3826,7 +3826,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
             options.pop("conversation_id", None)
             return options
 
-        # 对象型 options
+        # Object type options
         if hasattr(options, "resume"):
             try:
                 setattr(options, "resume", session_id)
@@ -3840,7 +3840,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 except Exception:
                     pass
 
-        # 某些 SDK 的 options 可能支持 model_copy/update
+        # Some SDK options may support model_copy/update
         if hasattr(options, "model_copy"):
             try:
                 return options.model_copy(
@@ -3862,8 +3862,8 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
 
     def _extract_last_json_block(self, text: str) -> Optional[str]:
         """
-        优先提取最后一个 ```json ... ``` 代码块。
-        """
+        Priority is given to extracting the last ``json ... ` `coding block.
+                """
         blocks = self._extract_json_blocks(text)
         return blocks[-1] if blocks else None
 
@@ -3889,7 +3889,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
         write_called = "name='Write'" in text or 'name="Write"' in text
         write_target_ok = spec.output_file_path in text or spec.output_file_name in text
 
-        # 输出文件的回读
+        # Readback of Output File
         read_output_called = (
             ("name='Read'" in text or 'name="Read"' in text)
             and spec.output_file_path in text
@@ -3898,7 +3898,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
         json_block = self._extract_last_json_block(text)
         has_json_block = json_block is not None
 
-        # failure type 诊断
+        # Diagnosis
         if not skill_called:
             failure_type = "skill_not_called"
         elif not skill_args_ok:
@@ -4121,7 +4121,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
             )
             return all_messages
 
-        # 只在本次任务的重试中复用 session，避免跨轮次/跨运行继承旧 cwd 与旧上下文。
+        # Only re-use the session during a re-test of this task, avoiding going across round/cross-the-board to inherit old cwd and old context.
         resume_session_id: Optional[str] = None
 
         max_retry = max(1, int(skill_profile.get("max_retries", 3) or 0))
@@ -4143,7 +4143,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
 
             print(f"START-{retry_time} {self.enterprise_spec.enterprise_id} {dept.name}")
 
-            # 每一轮都先 build_options，再尝试绑定 session
+            # Each round starts at build_options and then tries to bind the session
             options = self.build_options(role)
             options = self._bind_session_to_options(options, resume_session_id)
 
@@ -4252,11 +4252,11 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 )
                 continue
 
-            # 保存本轮 session_id
+            # Save current round session_id
             if session_id_found:
                 resume_session_id = session_id_found
 
-            # 先看文件有没有生成
+            # Let's see if it's generated.
             if advisory_only:
                 has_file = Path(spec.output_file_path).exists()
             else:
@@ -4332,7 +4332,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                         )
                         self._remove_stale_output_file(spec.output_file_path)
             else:
-                # 文件没生成或动作 schema 不合法：根据 transcript 判断失败类型，然后在同一 session 里继续修复
+                # File not generated or action schema invalid: judge the failure type based on transcript and continue to fix in the same session
                 inspection = self._inspect_messages(attempt_messages, spec)
                 prompt = self._next_prompt_by_failure(
                     spec,
@@ -4343,7 +4343,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 if has_file:
                     self._remove_stale_output_file(spec.output_file_path)
 
-                # 记录未输出时的消息，便于排错
+                # Recording unoutputed messages so that error can be recorded
                 self._dump_attempt_messages(
                     self.enterprise_spec.enterprise_name,
                     role,
@@ -4484,7 +4484,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
         prompt = self._build_analyst_launch_prompt(spec, round_id)
         skill_profile = self._skill_profile()
 
-        # 只在本次任务的重试中复用 session，避免跨轮次/跨运行继承旧 cwd 与旧上下文。
+        # Only re-use the session during a re-test of this task, avoiding going across round/cross-the-board to inherit old cwd and old context.
         resume_session_id: Optional[str] = None
 
         default_timeout = 240 if self._single_enterprise_agent_run_active() else 120
@@ -4587,11 +4587,11 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 retry_time += 1
                 continue
 
-            # 保存 session_id，后续优先同 session 继续
+            # Save session_id, follow-up priority with session continued
             if session_id_found:
                 resume_session_id = session_id_found
 
-            # 判断 analysis.json 是否已生成且合法
+            # Determines whether analysis.json is generated and legal
             output_path = Path(spec.output_file_path)
             has_file = output_path.exists()
             if not has_file:
@@ -4643,7 +4643,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 if has_file:
                     self._remove_stale_output_file(spec.output_file_path)
 
-                # 每轮失败都落地消息，便于排错
+                # It's easy to make mistakes.
                 self._dump_attempt_messages(
                     self.enterprise_spec.enterprise_name,
                     "Analyst",

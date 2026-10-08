@@ -1,19 +1,19 @@
 {
   "action_name": "reject_proposal_order",
-  "description": "拒绝来自交易所帮助拟定的订单提案, 提案内容与此前发起的采购需求相关",
+  "description": "Reject an exchange-generated order proposal related to a previously submitted purchase demand.",
   "conditions": [
-    "有执行过create_purchase_demand方法向下游交易所建立需求,此时反馈的提案不符合需求",
-    "trade_decision_card.review_queue 中存在真实待决策 proposal，或部门信息中的 proposals_list 含有状态为 pending 的 proposal",
-    "企业资金无法覆盖该proposal订单需求"
+    "A purchase demand was submitted through create_purchase_demand, but the returned proposal does not satisfy it.",
+    "trade_decision_card.review_queue contains a real proposal awaiting a decision, or the department's proposals_list contains a pending proposal.",
+    "Enterprise funds cannot cover the proposed order."
   ],
   "required_parameters": [
     "proposal_id"
   ],
   "parameter_constraints": [
-    "proposal_id 必须是已有的提案id，应优先从 trade_decision_card.review_queue 查看到；若决策卡未覆盖，再从部门信息中的 proposals_list 查看",
-    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏"
+    "proposal_id must identify an existing proposal. Prefer trade_decision_card.review_queue; consult the department's proposals_list only if the decision card does not include it.",
+    "When creating action.json from this template, action_param must contain exactly the fields listed in required_parameters, with none added or omitted."
   ],
   "constraints": [
-    "若 trade_decision_card.review_queue 中该 proposal 的 recommended_action 为 reject_proposal_order，或 reason_codes 显示 due_risk、pricing_gap、inventory_conflict 明显不利时，可以优先拒绝"
+    "Prioritize rejection when trade_decision_card.review_queue recommends reject_proposal_order or reason_codes show materially unfavorable due_risk, pricing_gap, or inventory_conflict."
   ]
 }

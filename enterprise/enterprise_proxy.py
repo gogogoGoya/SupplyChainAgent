@@ -1,7 +1,7 @@
 class EnterpriseProxy:
     """
-    以代理模式让Agent(外部用户)动态从 controller 拿取最新 enterprise 实例
-    """
+    Enable Agent (external user) dynamically to retrieve up-to-date examples of enterprise from controller in proxy mode
+        """
     def __init__(self, controller, enterprise_id: str):
         self._controller = controller
         self._enterprise_id = enterprise_id
@@ -12,7 +12,7 @@ class EnterpriseProxy:
 
     def __getattr__(self, item):
         """
-        将所有 enterprise.xxx 的访问
-        自动代理到 controller.enterprises[id].xxx
-        """
+        Will all < x17/ > visits
+        Automatic agent to < x17/>[id].xxx
+                """
         return getattr(self.enterprise, item)

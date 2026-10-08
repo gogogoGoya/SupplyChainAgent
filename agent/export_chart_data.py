@@ -23,17 +23,17 @@ COMMITTED_ORDER_STATUSES = {
     "confirmed",
 }
 ORDER_STATUS_LABELS = {
-    "available": "待接收",
-    "accepted": "已接受待履约",
-    "in_progress": "履约中",
-    "completed": "已完成",
-    "delivered": "已交付",
-    "rejected": "已拒绝",
-    "breached": "已违约",
-    "cancelled": "已取消",
-    "canceled": "已取消",
-    "failed": "失败",
-    "unknown": "未知状态",
+    "available": "Available",
+    "accepted": "Accepted, pending fulfillment",
+    "in_progress": "In progress",
+    "completed": "Completed",
+    "delivered": "Delivered",
+    "rejected": "Rejected",
+    "breached": "Breached",
+    "cancelled": "Cancelled",
+    "canceled": "Cancelled",
+    "failed": "Failed",
+    "unknown": "Unknown status",
 }
 
 
@@ -289,7 +289,7 @@ def normalize_order_status(status: Any) -> str:
 
 def order_status_label(status: Any) -> str:
     normalized = normalize_order_status(status)
-    return ORDER_STATUS_LABELS.get(normalized, str(status or "未知状态"))
+    return ORDER_STATUS_LABELS.get(normalized, str(status or "Unknown status"))
 
 
 def has_order_deadline(order: dict[str, Any]) -> bool:
@@ -739,7 +739,7 @@ def build_order_fulfillment_coverage(
                 }
             )
     return {
-        "title": "订单履约覆盖图",
+        "title": "Order Fulfillment Coverage",
         "latest_day_only": True,
         "current_day": current_day,
         "rows": rows,
@@ -795,7 +795,7 @@ def build_raw_material_coverage(
                 }
             )
     return {
-        "title": "原料覆盖天数/到货覆盖图",
+        "title": "Raw-Material and Arrival Coverage",
         "latest_day_only": True,
         "current_day": current_day,
         "rows": rows,
@@ -889,7 +889,7 @@ def build_warehouse_capacity_pressure(
             }
         )
     return {
-        "title": "仓容压力预测图",
+        "title": "Warehouse Capacity Pressure",
         "latest_day_only": True,
         "current_day": current_day,
         "rows": rows,
@@ -935,7 +935,7 @@ def build_cash_pressure_structure(
     if total_cost:
         cost_structure.append({"category": "total_cost", "amount": total_cost})
     return {
-        "title": "现金压力结构图",
+        "title": "Cash Pressure Structure",
         "latest_day_only": False,
         "historical_trend": trend,
         "current_state": trend[-1] if trend else {},
@@ -995,7 +995,7 @@ def build_demand_capacity_gap(
                 }
             )
     return {
-        "title": "需求—产能缺口图",
+        "title": "Demand-Capacity Gap",
         "latest_day_only": True,
         "current_day": current_day,
         "rows": rows,
@@ -1038,7 +1038,7 @@ def build_order_funnel_and_aging(
             deadline_metrics["total_quantity"] += to_number(order.get("quantity"))
     source_summary = observation.get("sales", {}).get("orders_summary", {})
     return {
-        "title": "订单漏斗与到期结构图",
+        "title": "Order Funnel and Due-Date Structure",
         "latest_day_only": True,
         "current_day": current_day,
         "funnel": [
@@ -1140,7 +1140,7 @@ def aggregate_action_data(workspace_dir: Path, available_days: list[int]) -> dic
                                 if action_index < len(action_name_fallbacks)
                                 else ""
                             )
-                            or "未知动作"
+                            or "Unknown action"
                         )
                         action_index += 1
                         if is_pass_action_name(action_name):
@@ -1164,7 +1164,7 @@ def aggregate_action_data(workspace_dir: Path, available_days: list[int]) -> dic
                                 if action_index < len(action_name_fallbacks)
                                 else ""
                             )
-                            or "未知动作"
+                            or "Unknown action"
                         )
                         action_index += 1
                         if is_pass_action_name(action_name):
@@ -1191,7 +1191,7 @@ def aggregate_action_data(workspace_dir: Path, available_days: list[int]) -> dic
                                 if action_index < len(action_name_fallbacks)
                                 else ""
                             )
-                            or "未知动作"
+                            or "Unknown action"
                         )
                         action_index += 1
                         if is_pass_action_name(action_name):
@@ -1233,9 +1233,9 @@ def aggregate_action_data(workspace_dir: Path, available_days: list[int]) -> dic
                     count += 1
                     details.append(
                         {
-                            "actionType": action_name or "未知动作",
+                            "actionType": action_name or "Unknown action",
                             "success": (not has_error) if is_prewarm else False,
-                            "message": "" if is_prewarm else "动作已输出但执行结果缺失",
+                            "message": "" if is_prewarm else "Action generated but execution result is missing",
                         }
                     )
 
@@ -1260,7 +1260,7 @@ def aggregate_error_data(workspace_dir: Path, available_days: list[int]) -> dict
 def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
     available_days = detect_available_days(workspace_dir)
     if not available_days:
-        raise RuntimeError("没有检测到可用的模拟日数据")
+        raise RuntimeError("No simulation-day data was found")
 
     all_data = load_observations(workspace_dir, available_days)
     day_labels = [f"Day {day}" for day in available_days]
@@ -1295,9 +1295,9 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
         },
         "charts": {
             "financial_trend": {
-                "title": "财务指标趋势（收入/利润为当日新增）",
+                "title": "Financial Trends (Daily Revenue and Profit)",
                 "days": day_labels,
-                "unit": "百万元",
+                "unit": "Millions",
                 "series": {
                     "cash": [
                         to_number(deep_get(all_data[day], ["finance", "cash"], 0.0)) / 1_000_000
@@ -1310,7 +1310,7 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
                 },
             },
             "production_sales_trend": {
-                "title": "生产与销售趋势（销售收入为当日新增）",
+                "title": "Production and Sales Trends (Daily Sales Revenue)",
                 "days": day_labels,
                 "series": {
                     "production": [
@@ -1325,7 +1325,7 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
                 },
             },
             "capacity_utilization_analysis": {
-                "title": "产能与利用率分析",
+                "title": "Capacity and Utilization",
                 "days": day_labels,
                 "series": {
                     "total_capacity": [
@@ -1355,7 +1355,7 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
                 },
             },
             "production_efficiency_analysis": {
-                "title": "生产效率与产量分析",
+                "title": "Production Efficiency and Output",
                 "days": day_labels,
                 "series": {
                     "production_efficiency_percent": [
@@ -1379,12 +1379,12 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
                 },
             },
             "inventory_quantity_change": {
-                "title": "库存数量变化",
+                "title": "Inventory Changes",
                 "days": day_labels,
                 "items": build_inventory_items(all_data, available_days),
             },
             "order_tracking": {
-                "title": "订单追踪",
+                "title": "Order Tracking",
                 "latest_day_only": True,
                 "latest_day": latest_day,
                 "orders": build_orders(all_data, available_days),
@@ -1414,12 +1414,12 @@ def build_export_payload(workspace_dir: Path) -> dict[str, Any]:
                 latest_day,
             ),
             "department_action_statistics": {
-                "title": "部门执行动作统计",
+                "title": "Department Action Statistics",
                 **aggregate_action_data(workspace_dir, available_days),
             },
             "single_case_prewarm_execution": load_prewarm_execution_summary(workspace_dir),
             "department_error_statistics": {
-                "title": "部门失败记录统计",
+                "title": "Department Failure Statistics",
                 "counts": aggregate_error_data(workspace_dir, available_days),
             },
         },
@@ -1442,7 +1442,7 @@ def main() -> None:
     default_workspace_dir = script_dir / "workspace"
     default_output = default_workspace_dir / "visualization" / "charts_data_export.json"
 
-    parser = argparse.ArgumentParser(description="导出 workspace/visualization/index.html 中图表对应的 JSON 数据")
+    parser = argparse.ArgumentParser(description="Export JSON data used by the visualization charts")
     parser.add_argument(
         "--workspace-dir",
         type=Path,
@@ -1453,14 +1453,14 @@ def main() -> None:
         "--output",
         type=Path,
         default=default_output,
-        help="导出的 JSON 文件路径",
+        help="Path of the exported JSON file",
     )
     args = parser.parse_args()
 
     payload = export_chart_data_file(args.workspace_dir, args.output)
 
-    print(f"导出完成: {args.output.resolve()}")
-    print(f"模拟日数量: {len(payload['meta']['available_days'])}")
+    print(f"Export complete: {args.output.resolve()}")
+    print(f"Simulation days: {len(payload['meta']['available_days'])}")
 
 
 if __name__ == "__main__":

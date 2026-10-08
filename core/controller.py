@@ -1,8 +1,8 @@
 """
-控制器模块
+controller module
 
-作为仿真系统的控制中枢，负责协调各组件工作、管理企业决策调度、
-处理消息和事件、执行企业动作，以及控制整体模拟流程。
+As the control hub for the simulation system, it coordinates the components, manages enterprise decision-making,
+Process messages and events, execute enterprise actions and control the overall simulation process.
 """
 
 import os
@@ -16,9 +16,9 @@ from collections import defaultdict
 from copy import deepcopy
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-# 添加项目根目录到Python路径，确保所有导入都能正常工作
+# Add the root directory to the Python path to ensure that all imports work properly
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-# 使用基于项目根目录的绝对导入
+# Use absolute import based on the root directory
 from core.action_executor import ActionExecutor
 from enterprise.enterprise import Enterprise
 from config.simulation_preset_config import (
@@ -36,7 +36,7 @@ from config.simulation_preset_config import (
     get_active_enterprise_configs,
 )
 
-# 导入组件类
+# Import Component Class
 from .environment.environment import Environment
 from .async_time_manager import AsyncTimeManager
 from .event_manager import EventManager
@@ -46,24 +46,24 @@ from network.network_manager import NetworkManager
 from message.message_manager import MessageManager
 class Controller:
     """
-    仿真系统控制器
-    
-    作为仿真系统的核心控制中枢，负责协调各组件工作，
-    管理企业决策调度，处理消息和事件，执行企业动作，
-    并控制整体模拟流程。
-    """
+    Simulation System controller
+        
+    As the central control hub of the simulation system, coordinating the components,
+    Managing enterprise decision-making, handling news and events, and carrying out enterprise actions,
+    And control the whole simulation process.
+        """
     def __init__(self, config=None, enterprise_configs=None, relationship_configs=None):
         """
-        初始化控制器
-        
-        初始化控制器核心组件和状态
-        
+        Initialization controller
+                
+        Initialization controller core components and state
+                
         Args:
-            config: 模拟配置字典
-            enterprise_configs: 企业配置列表，从外部传入，优先级高于配置文件
-            relationship_configs: 企业关系配置列表，从外部传入，优先级高于配置文件
-        """
-        # 保存配置
+            config: Simulate configuration dictionary
+            enterprise_configs: enterprise Configuration List, imported from outside, priority above configuration file
+            relationship_configs: enterprise Relationship Configuration List, imported from outside, priority above configuration file
+                """
+        # Save Configuration
         self.config = config or {}
         self.runtime_injection_config = (
             self.config.get("runtime_injection_config")
@@ -71,7 +71,7 @@ class Controller:
             or {}
         )
         
-        # 系统状态
+        # System State
         self.is_running = False
         self.enterprises = {}
         self.is_initialized = False
@@ -79,7 +79,7 @@ class Controller:
         self.enterprise_configs = enterprise_configs or get_active_enterprise_configs()
         self.enterprise_role_ids = self._build_enterprise_role_ids(self.enterprise_configs)
         
-        # 组件引用
+        # Component Reference
         self.environment = None
         self.time_manager = None
         self.event_manager = None
@@ -88,28 +88,28 @@ class Controller:
         self.market_manager = None
         self.exchange_manager = None
         
-        # 如果提供了配置，自动创建和初始化组件
+        # Automatically create and initialize components if configuration is provided
         if config:
             self.create_components()
 
             print("开始创建企业")
             try:
-                # 优先使用外部传入的配置，否则使用当前主链路的统一预设
+                # Prioritize external incoming configuration, otherwise use the current master link unified preset
                 enterprise_configs = self.enterprise_configs
-                # 创建企业实例，确保使用配置中的ID
+                # Create enterprise instance to ensure use of the profile ID
                 enterprises = {}
                 for enterprise_config in enterprise_configs:
-                    # 确保企业ID使用配置中的值
+                    # Ensure that enterpriseID uses the value in the configuration
                     enterprise = Enterprise(config=enterprise_config)
-                    # 直接设置ID，避免Enterprise类覆盖
+                    # Directly setting ID to avoid Enterprise class overlay
                     enterprise.id = enterprise_config['id']
                     enterprises[enterprise.id] = enterprise
                     print(f"创建企业: {enterprise.name}, ID: {enterprise.id}, 层级: {enterprise.tier}")
                 
-                # 初始化业务模块
+                # Initialization of business modules
                 for enterprise in enterprises.values():
                     enterprise.initialize_default_modules()
-                # 注册企业到控制器
+                # Register enterprise to controller
                 for enterprise in enterprises.values():
                     self.register_enterprise(enterprise)
                 print(f"企业创建完成，控制器中的企业数量: {len(self.enterprises)}")
@@ -119,20 +119,20 @@ class Controller:
                 traceback.print_exc()
             
             self.initialize_network_structure()
-            # 初始化环境
+            # Initializing Environment
             if self.environment and hasattr(self.environment, 'reset'):
                 self.environment.reset()
-                # 初始化网络结构和环境中的企业
+                # Initialization of network structure and environment enterprise
                 self.initialize_environment()
 
     @staticmethod
     def _build_enterprise_role_ids(enterprise_configs: List[Dict[str, Any]]) -> Dict[str, Optional[str]]:
         """
-        根据企业 tier 推导当前主链路中的上下游角色 ID。
+        The enterprise tier extrapolates the id of the current upstream/downstream role in the main link.
 
-        这样控制器内部不再依赖写死的 `Supplier / Manufacturer / Distributor / Retailer`
-        字面量，而是跟随配置中的企业层级自动识别。
-        """
+        So that the controller no longer relies on `Supplier / Manufacturer / Distributor / Retailer` for writing to die.
+        Literally, following the enterprise level of the configuration for automatic recognition.
+                """
         ordered_enterprises = sorted(
             enterprise_configs,
             key=lambda item: (item.get("tier", 0), item.get("id", "")),
@@ -155,13 +155,13 @@ class Controller:
     
     def set_environment(self, environment):
         """
-        设置环境实例
-        
+        Set Environment Examples
+                
         Args:
-            environment: Environment实例
-        """
+            Other Organiser
+                """
         self.environment = environment
-        # 双向关联
+        # Two-way Association
         if hasattr(environment, 'set_controller'):
             environment.set_controller(self)
       
@@ -170,27 +170,27 @@ class Controller:
 
     def set_message_manager(self, message_manager):
         """
-        设置消息管理器实例
-        
+        Set Message Manager Example
+                
         Args:
-            message_manager: MessageManager实例
-        """
+            message_manager: instance of MessageManager
+                """
         self.message_manager = message_manager
     
     def create_components(self):
         """
-        根据配置创建所有核心组件
-        """
-        # 创建时间管理器
+        Create all core components according to configuration
+                """
+        # Create Time Manager
         self.time_manager = AsyncTimeManager()
         
-        # 创建动作执行器
+        # Create Action Executor
         self.action_executor = ActionExecutor()
 
-        # 创建事件管理器
+        # Create Event Manager
         self.event_manager = EventManager()
 
-        # 创建环境市场模块
+        # Create an environmental market module
         environment_config = self.config.get("environment_config", {})
         self.market_manager = MarketManager(
             self.get_enterprise_instance,
@@ -220,18 +220,18 @@ class Controller:
             ),
         )
         
-        # 创建网络管理器
+        # Create Network Manager
         self.network_manager = NetworkManager()
         
-        # 创建交易所管理器
+        # Create exchange Manager
         self.exchange_manager = ExchangeManager()
         self.exchange_manager.set_trading_mode(
             environment_config.get("market_demand_mode", DEFAULT_MARKET_DEMAND_MODE)
         )
 
-        # 创建消息管理器
+        # Create Message Manager
         self.message_manager = MessageManager()
-        # 创建环境
+        # Create an Environment
         self.environment = Environment()
         self.environment.set_controller(self)
         
@@ -239,12 +239,12 @@ class Controller:
     
     def hanlde_network_action(self, step: int, action: dict):
         """
-        处理网络模块的动作
+        Action to process network modules
 
         Args:
-            step: 当前时间步
-            action: 包含动作信息的字典
-        """
+            step: Current time step
+            Action: Dictionary containing action information
+                """
         action_name = action.get("action_name")
         action_param = action.get("action_param", {})
         results = []
@@ -267,15 +267,15 @@ class Controller:
 
     def _generate_initial_events(self):
         """
-        生成初始事件
-        """
+        Generate Initial Event
+                """
         print("控制器生成初始事件...")
         
         if self.event_manager:
-            # 为零售商生成初始销售订单
+            # Generate initial sales orders for retailers
             if "retailer_1" in self.enterprises:
                 retailer = self.enterprises["retailer_1"]
-                # 创建一个初始销售订单事件
+                # Create an initial sales order event
                 self.event_manager.add_event({
                     "type": "new_sales_order",
                     "target": retailer.id,
@@ -290,61 +290,61 @@ class Controller:
     
     def on_decision_completed(self, enterprise_id, decisions):
         """
-        企业决策完成时的处理
-        
+        enterprise Handling when decision-making is completed
+                
         Args:
-            enterprise_id: 企业ID
-            decisions: 企业决策结果
-        """
+            enterprise_id: enterpriseID
+            décisions: enterprise Decision-making Results
+                """
         print(f"企业 {enterprise_id} 决策完成: {decisions}")
         
-        # 可以在这里添加决策完成后的处理逻辑
+        # You can add here the logic of processing after the decision is made.
     
     def get_enterprise_instance(self, enterprise_id):
         """
-        获取企业实例
-        
+        Can not open message
+                
         Args:
-            enterprise_id: 企业ID
-            
+            enterprise_id: enterpriseID
+                        
         Returns:
-            Enterprise实例或None
-        """
+            Example of Enterprise or None
+                """
         if enterprise_id not in self.enterprises:
             return None
         return self.enterprises[enterprise_id]
 
     def register_enterprise(self, enterprise):
         """
-        注册企业到控制系统
-        
+        Register enterprise to control system
+                
         Args:
-            enterprise: 企业实例
-            
+            Example: enterprise
+                        
         Returns:
-            bool: 注册是否成功
-        """
+            Bool: Successful registration
+                """
         try:
-            # 添加到企业字典
+            # Add to enterprise Dictionary
             self.enterprises[enterprise.id] = enterprise
             enterprise.controller = self
             enterprise.runtime_injection_config = self.runtime_injection_config
             
-            # 设置企业的消息管理器
+            # Setup enterprise Message Manager
             if self.message_manager and hasattr(enterprise, 'set_message_manager'):
                 enterprise.set_message_manager(self.message_manager)
             
             if self.time_manager and hasattr(enterprise, 'set_time_manager'):
                 enterprise.set_time_manager(self.time_manager)
 
-            # 设置企业的环境市场管理器
+            # Set up enterprise Environmental Market Manager
             if self.market_manager and hasattr(enterprise, 'set_market_manager'):
                 enterprise.set_market_manager(self.market_manager)
             
-            # 为企业注册消息处理器
+            # Can not open message Device
             self._setup_enterprise_message_handlers(enterprise)
             
-            # 将企业添加到网络管理器
+            # Add enterprise to the network manager
             if self.network_manager and hasattr(self.network_manager, 'add_enterprise'):
                 self.network_manager.add_enterprise(enterprise.id, {
                     "name": enterprise.name,
@@ -358,7 +358,7 @@ class Controller:
             return False
 
     def set_runtime_injection_config(self, runtime_injection_config: Optional[Dict[str, Any]] = None):
-        """同步当前运行级策略到控制器与已注册企业。"""
+        """Syncs the current running-level policy to the controller with registered enterprise."""
         self.runtime_injection_config = runtime_injection_config or {}
         self.config["runtime_injection_config"] = self.runtime_injection_config
         for enterprise in getattr(self, "enterprises", {}).values():
@@ -366,35 +366,35 @@ class Controller:
     
     def _setup_enterprise_message_handlers(self, enterprise):
         """
-        为企业设置消息处理器
-        
+        Setup message processing for enterprise Device
+                
         Args:
-            enterprise: 企业实例
-        """
-        # 确保企业已经设置了消息管理器
+            Example: enterprise
+                """
+        # Make sure enterprise has a message manager in place
         if not hasattr(enterprise, 'message_manager') or enterprise.message_manager is None:
             print(f"警告: 企业 {enterprise.name} 尚未设置消息管理器")
             return
         
-        # 使用消息管理器注册处理器
+        # Use message manager register processor
         message_manager = enterprise.message_manager
         
-        # 定义库存更新处理函数
+        # Define an inventory update processing function
         def handle_inventory_update(message):
             print(f"企业 {enterprise.name} 处理库存更新消息: {message.get('content', '')}")
-            # 这里可以添加具体的库存更新逻辑
+            # You can add specific inventory update logic here.
             
-        # 定义价格变动处理函数
+        # Defines the price change process function
         def handle_price_change(message):
             print(f"企业 {enterprise.name} 处理价格变动消息: {message.get('content', '')}")
-            # 这里可以添加具体的价格变动逻辑
+            # Here you can add specific price logic.
             
-        # 定义订单确认处理函数
+        # Defines the order confirmation processing function
         def handle_order_confirmed(message):
             print(f"企业 {enterprise.name} 处理订单确认消息: {message.get('content', '')}")
-            # 这里可以添加具体的订单确认逻辑
+            # Here you can add specific order confirmation logic.
             
-        # 注册消息处理器到消息管理器 (使用subscribe方法)
+        # Register message processor to message manager (use subscribe method)
         if hasattr(message_manager, 'subscribe'):
             message_manager.subscribe("inventory_update", handle_inventory_update)
             message_manager.subscribe("price_change", handle_price_change)
@@ -423,38 +423,38 @@ class Controller:
     
     def _display_simulation_stats(self, step: int):
         """
-        显示模拟统计信息
-        
+        Show Simulation Statistical Information
+                
         Args:
-            step: 当前时间步
-        """
+            step: Current time step
+                """
         if (step + 1) % 10 != 0:
             return
             
         print(f"\n--- 时间步 {step + 1} 统计信息 ---")
         print(f"企业总数: {len(self.enterprises)}")
         
-        # 可以添加更多统计信息
-        # 例如：订单数量、库存水平、销售额等
+        # You can add more statistical information
+        # For example: number of orders, level of stock, sales, etc.
     
     def _save_simulation_results(self):
         """
-        保存模拟结果
-        
+        Save Simulation Results
+                
         Returns:
-            dict: 模拟结果
-        """
+            dict: Simulation results
+                """
         try:
-            # 收集结果数据
+            # Collection of results data
             results = {
                 "total_steps": self.time_manager.get_day(),
                 "enterprise_count": len(self.enterprises),
                 "timestamp": time.time()
             }
             
-            # 如果环境有状态历史，可以保存
+            # If the environment has a state history, it can be preserved.
             if hasattr(self.environment, 'state_history'):
-                # 只保存最后几个状态以减少数据量
+                # Save only the last few states to reduce the amount of data
                 results["last_states"] = self.environment.state_history[-10:] if len(self.environment.state_history) > 10 else self.environment.state_history
             
             print(f"模拟结果已收集: 总工作日 {self.time_manager.get_day()}, 企业数量 {len(self.enterprises)}")
@@ -465,53 +465,53 @@ class Controller:
     
     def initialize_network_structure(self, structure: str = None, enterprises_config=None):
         """
-        初始化网络结构
-        
+        Initialize network structure
+                
         Args:
-            structure: 网络结构类型 (linear, star, mesh等)，如果不指定则使用配置中的值
-            enterprises_config: 企业配置
-        """
+            stringure: network structure type (linear, star, mesh, etc.), if not specified, use the configuration value
+            enterprises_config: enterprise Configuration
+                """
         print(f"开始初始化网络结构，当前企业数量: {len(self.enterprises)}")
         
-        # 如果没有指定结构，从配置中获取
+        # Fetch from configuration if no structure is specified
         if structure is None:
             structure = self.config.get("network_config", {}).get("structure", "linear")
         
         print(f"初始化网络结构: {structure}")
         
-        # 确保network_manager已初始化
+        # Make sure network manager is initialized
         if not self.network_manager:
             print("错误: 网络管理器未初始化")
             return
         
-        # 检查企业是否存在
+        # Check if enterprise exists
         if len(self.enterprises) == 0:
             print("警告: 未检测到企业")
             return
         
-        # 构建默认的供应链层级
+        # Build default supply chain level
         supply_chain_layers = []
         
         if structure == "linear":
             supply_chain_layers = [
-                ["supplier_1"],  # 第一层：供应商
-                ["manufacturer_1"],  # 第二层：制造商
-                ["retailer_1"]  # 第三层：零售商
+                ["supplier_1"],  # First tier: suppliers
+                ["manufacturer_1"],  # Second tier: manufacturer
+                ["retailer_1"]  # Level 3: Retailers
             ]
         elif structure == "mesh":
-            # 对于网状结构，使用所有已注册企业
+            # For net structure, use all registered enterprise
             enterprise_ids = list(self.enterprises.keys())
             num_enterprises = len(enterprise_ids)
             
             if num_enterprises <= 2:
-                # 如果企业数量很少，使用简单的两层结构
+                # If enterprise is small, use a simple two-tiered structure
                 mid_point = max(1, num_enterprises // 2)
                 supply_chain_layers = [
-                    enterprise_ids[:mid_point],  # 第一层：供应商
-                    enterprise_ids[mid_point:]   # 第二层：客户
+                    enterprise_ids[:mid_point],  # First tier: suppliers
+                    enterprise_ids[mid_point:]   # Second floor: clients
                 ]
             else:
-                # 将企业分成三层，确保每层至少有一个企业
+                # Split enterprise into three layers, ensuring at least one enterprise per layer
                 third_point = max(1, num_enterprises // 3)
                 two_thirds_point = max(third_point + 1, 2 * num_enterprises // 3)
                 supply_chain_layers = [
@@ -520,7 +520,7 @@ class Controller:
                     enterprise_ids[two_thirds_point:]  
                 ]
         elif structure == "custom":
-            # 对于自定义结构, 根据企业注册时的tier分配层级
+            # For a custom structure, according to the enterprise tier distribution level at registration
             for enterprise in self.enterprises.values():
                 tier = enterprise.tier
                 
@@ -530,7 +530,7 @@ class Controller:
         if supply_chain_layers and self.network_manager and hasattr(self.network_manager, 'build_supply_chain'):
             self.network_manager.build_supply_chain(supply_chain_layers)
             print(f"供应链网络构建完成，层数: {len(supply_chain_layers)}")
-        # 在此处利用network设置每一层的交易所exchange
+        # Set here exchangeexchange for each layer using network
         self.exchange_manager.initialize_exchange(supply_chain_layers)
         for enterprise in self.enterprises.values():
             exchanges = self.exchange_manager.get_exchanges_by_enterprise(enterprise.id)
@@ -540,20 +540,20 @@ class Controller:
     
     def initialize_environment(self):
         """
-        初始化环境
-        
-        将所有企业注册到环境中
-        """
+        Initializing Environment
+                
+        Register all enterprise into the environment
+                """
         print(f"开始初始化环境，当前企业数量: {len(self.enterprises)}")
         
         if not self.environment:
             print("错误: 环境未初始化")
             return
         
-        # 重置环境
+        # Reset Environment
         self.environment.reset()
         
-        # 注册企业到环境
+        # Register enterprise to Environment
         registered_count = 0
         for enterprise_id, enterprise in self.enterprises.items():
             try:
@@ -562,7 +562,7 @@ class Controller:
                 registered_count += 1
             except Exception as e:
                 print(f"注册企业 {enterprise_id} 到环境时出错: {str(e)}")
-        # 确保环境的enterprises属性被正确设置
+        # Ensure that the environment 's enterprises properties are set correctly
         if hasattr(self.environment, 'enterprises') and not isinstance(self.environment.enterprises, dict):
             self.environment.enterprises = self.enterprises
             print("已将企业字典直接设置到环境")
@@ -570,21 +570,21 @@ class Controller:
 
     def stop(self):
         """
-        停止控制器
-        """
+        Stop controller
+                """
         self.is_running = False
         print("控制器已停止")
 
-    # 模拟执行部分
-    # 通用的单步执行
+    # Simulation Executive
+    # Common Step Implementation
     async def _execute_time_step(self, actions=None, log_file=None, part="常规工作流"):
         """
-        执行单个时间步的模拟 
+        Simulation to execute a single time step 
 
         Args:
-            step: 当前时间步
-            actions: 当前步骤的动作列表
-        """
+            step: Current time step
+            Action lists for current steps
+                """
         if not actions or not isinstance(actions, list):
             return {
                 "day": self.time_manager.get_day(),
@@ -592,19 +592,19 @@ class Controller:
                 "enterprise_results": []
             }
 
-        # 更新环境时间
+        # Update Environment Time
         if hasattr(self.environment, 'current_time'):
             self.environment.current_time = self.time_manager.get_day()
 
-        # #  环境事件处理 - 负责处理整体模拟的事件
+        # # Environmental incident management - to handle the whole simulation
         # if self.environment:
         #     environment_result = self.environment.step(self.time_manager.get_day())
 
-        # # 处理消息
+        # # Handle messages
         # if self.message_manager and hasattr(self.message_manager, 'process_messages'):
         #     self.message_manager.process_messages()
 
-        # 执行流程
+        # Implementation process
         actions_by_enterprise = {}
         actions_by_controller = {}
         for item in actions:
@@ -614,19 +614,19 @@ class Controller:
                     actions_by_controller.setdefault(eid, []).append(item)
                 else:
                     actions_by_enterprise.setdefault(eid, []).append(item)
-        # 执行controller层级的动作
+        # Execute actions at the controller level
         for item in actions_by_controller.get("controller", []):
             action = item.get("action")
             dept = item.get("module_type")
             if dept == "network":
                 self.hanlde_network_action(self.time_manager.get_day(), action)
-        # 并发执行企业层级的动作
+        # Also execute actions at enterprise level
         grouped = defaultdict(lambda: defaultdict(list))
         for item in actions:
             eid = item.get("executor_id")
             dept = item.get("module_type")
             grouped[eid][dept].append(item)
-         # 找到最大队列长度
+         # Maximum queue length found
         max_depth = max((len(dept_actions) 
                  for e in grouped.values() 
                  for dept_actions in e.values()), default=0)
@@ -636,7 +636,7 @@ class Controller:
             for eid, dept_dict in grouped.items():
                 for dept, queue in dept_dict.items():
                     if i < len(queue):
-                        batch[eid][dept] = queue[i]  # 取第 i 个行为
+                        batch[eid][dept] = queue[i]  # Take i Behaviour
             if batch:
                 actions_by_timeline.append(batch)
         flattened_results = []
@@ -644,16 +644,16 @@ class Controller:
         # last_elapsed_time = 0 
         for action_in_timeline in actions_by_timeline:
             tasks = []
-            task_info = []  # 用于存储任务相关信息，解决变量作用域问题
+            task_info = []  # To store mission-related information and solve variable domain issues
             for enterprise_name, dept_dict in action_in_timeline.items():
                 for dept, action_info in dept_dict.items():
                     action = action_info.get("action")
                     enterprise = self.enterprises[enterprise_name]
-                    # 创建一个带超时的包装函数
+                    # Create a packing function with timeout
                     async def create_timeout_task(enterprise, action, dept, tick, timeout=30.0):
                         loop = asyncio.get_event_loop()
                         try:
-                            # 使用 wait_for 为线程任务添加超时
+                            # Add timeout for line tasks using wait_for
                             result = await asyncio.wait_for(
                                 loop.run_in_executor(
                                     None,
@@ -672,14 +672,14 @@ class Controller:
                     action_name = action.get("action_name") if isinstance(action, dict) else None
                     task = create_timeout_task(enterprise, action, dept, self.time_manager.get_tick())
                     tasks.append(task)
-                    task_info.append((enterprise_name, dept, action_name))  # 保存任务信息用于异常处理
+                    task_info.append((enterprise_name, dept, action_name))  # Save task information for abnormal processing
             
             results_in_line = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # 使用 task_info 来正确处理异常和日志
+            # Use task_info to handle anomalies and logs correctly
             normalized_results = []
             for i, result in enumerate(results_in_line):
-                enterprise_name, dept, action_name = task_info[i]  # 从 task_info 获取正确的变量
+                enterprise_name, dept, action_name = task_info[i]  # Get the right variable from parameter
                 if isinstance(result, Exception):
                     print(f"企业 {enterprise_name} 部门 {dept} 执行任务时出错: {str(result)}")
                     normalized_results.append({
@@ -745,11 +745,11 @@ class Controller:
             "enterprise_results": flattened_results
         }
 
-    # 将模拟的开始、结束、流程推进独立出来，交给agent调用
+    # Independently release the start, end and advance of the simulation to angent
     async def start_simulation(self, total_steps: int = None, environment=None):
         """
-        初始化并开始模拟，可以调用多次 advance_simulation 推进
-        """
+        Initialize and start simulation and can call multiple < x17/ > advances
+                """
 
         print("===== 初始化模拟环境 =====")
 
@@ -759,7 +759,7 @@ class Controller:
         if total_steps is None:
             total_steps = self.config.get("time_config", {}).get("total_steps", 100)
 
-        self.total_steps = total_steps      # 总步数上限
+        self.total_steps = total_steps      # Maximum number of total steps
         if self.market_manager:
             self.market_manager.set_total_steps(total_steps)
         self.is_running = True
@@ -782,8 +782,8 @@ class Controller:
         herding_config: Dict[str, Any] = None
     ):
         """
-        更新运行级配置。用于让外部Agent管理器在正式推进前同步最终轮次与市场需求模式。
-        """
+        Updates the operational level configuration. Used to synchronize the external Agent manager with the market demand model round before the formal advance.
+                """
         if total_steps is not None:
             self.total_steps = int(total_steps)
             self.config.setdefault("time_config", {})["total_steps"] = self.total_steps
@@ -1166,9 +1166,9 @@ class Controller:
 
     async def advance_simulation(self, workflow=None, log_file=None, part = "常规工作流"):
         """
-        推进一次 workflow,对应多个 step
-        可以被反复调用以推进时间轴
-        """
+        Push once, workflow, multiple step
+        It can be used over and over again to advance time. Axis
+                """
 
         if not self.is_running:
             print("模拟未运行，请先调用 start_simulation")
@@ -1177,14 +1177,14 @@ class Controller:
                 "environment_result": None
             }
         
-        # print("===== 推进模拟 =====")
+        # {\cHFFFFFF}{\cH00FFFF} print ("=== = advance simulation======")
         if log_file and part == "每日系统自动操作":
             with open(log_file, "a", encoding="utf-8") as f:
                 f.write(f"\n{'='*70}\n")
                 f.write(f"工作日 {self.time_manager.get_day()} - {part}\n")
                 f.write(f"{'='*70}\n")
                 f.write(f"执行时间: {datetime.now().isoformat()}\n\n")
-        # 解析 workflow
+        # Parsing WorkFlow
         step_actions_map = {}
         if isinstance(workflow, dict) and "workflows" in workflow:
             step_actions_map = {
@@ -1210,10 +1210,10 @@ class Controller:
                 "enterprise_results": [],
                 "environment_result": None
             }
-        # 获取 workflow 中最大的 step
+        # Get the largest step in workflow
         max_step = max(step_actions_map.keys()) if step_actions_map else 0
         has_errors = False
-        # 时间步推进
+        # Time step forward
         action_result = []
 
         for offset_step in range(max_step + 1):
@@ -1226,7 +1226,7 @@ class Controller:
                 and a["action"]["action_name"] != "action_pass"
             ]
             if actions:
-                # 执行之前增加部门行为检查
+                # Add department behavioural check before implementation
                 action_list_by_dept = {}
                 error_list = []
                 has_error = False
@@ -1313,8 +1313,8 @@ class Controller:
 
     async def end_simulation(self):
         """
-        结束模拟，保存和返回最终结果
-        """ 
+        End simulation, save and return final results
+                """ 
         print("===== 模拟结束 =====")
         self.is_running = False
 
@@ -1324,72 +1324,72 @@ class Controller:
             results = {}
 
         return results
-    # 一次性的模拟调用,保留用于工作流测试
+    # One-time mock call, reserved for workflow testing
     async def run_simulation(self, total_steps: int = None, environment=None, workflow=None):
         """
-        运行模拟
-        
+        Run Simulation
+                
         Args:
-            total_steps: 总时间步数，如果不指定则使用配置中的值
-            environment: 环境实例（可选）
-        
+            total_steps: Total time steps, if not specified, using the configuration value
+            Environmental examples (optional)
+                
         Returns:
-            dict: 模拟结果
-        """
+            dict: Simulation results
+                """
         print("===== 开始运行模拟 =====")
         
-        # 确保环境已设置
+        # Ensure environment is set
         if environment:
             print("使用提供的环境实例")
             self.set_environment(environment)
         
-        # 如果没有指定总步数，从配置中获取
+        # If no total number of steps is specified, get from the configuration
         if total_steps is None:
             total_steps = self.config.get("time_config", {}).get("total_steps", DEFAULT_SERVICE_TOTAL_STEPS)
         
-        # 确保控制器有enterprises属性
+        # Make sure the controller has enterpries properties
         if not hasattr(self, 'enterprises'):
             self.enterprises = {}
         if workflow:
             workflows = workflow.get('workflows', {})
             if workflows:
-                # 将键转换为整数并找到最大值
+                # Convert key to integer and find maximum value
                 max_key = max(int(key) for key in workflows.keys())
-                # 总步数为最大值加1（因为步骤从0开始）
+                # The total number of steps is the maximum plus 1 (because the step starts at 0)
                 total_steps = max_key + 1
             else:
                 total_steps = 0
         print(f"控制器开始运行模拟，总步数: {total_steps}")
         
-        # 设置运行状态
+        # Set the status of operation
         self.is_running = True
         
-        # 模拟结果
+        # Simulation Results
         results = {}
 
-        # 解析 workflow，构建步骤到 actions 的映射
+        # Parsing workflow, build steps to an actions map
         step_actions_map = {}
         if workflow:
             workflows = workflow.get('workflows', {})
             for step_key, actions in workflows.items():
                 step_actions_map[int(step_key)] = actions
-        # 开始时间轴循环
+        # Start the time axis cycle
         for step in range(total_steps):
-            # 获取当前步骤的 actions
+            # Fetches actions for the current step
             actions = step_actions_map.get(step, None)
             if actions:
-            # 执行时间步
+            # Timescale for implementation
                 await self._execute_time_step(step, actions)
                 
-                # 显示统计信息
+                # Show statistical information
                 self._display_simulation_stats(step)
             
-            # 检查是否停止
+            # Check to stop
             if not self.is_running:
                 print("模拟已停止")
                 break
         
-        # 保存结果
+        # Save Results
         if self.environment:
             results = self._save_simulation_results()
         
@@ -1397,22 +1397,22 @@ class Controller:
 
     def handle_enterprises_ordercheck(self):
         """
-        校验订单情况
-        """
+        Validation of orders
+                """
         supplier_id = self.enterprise_role_ids.get("supplier")
         retailer_id = self.enterprise_role_ids.get("retailer")
-        # 交易所分发潜在订单
+        # Distribution of potential orders exchange
         self.exchange_manager.analyze_potential_transaction(self.time_manager.get_day())
-        # 各企业销售/采购部门自动接收潜在订单
+        # Each enterprise sales/procurement department automatic receipt of potential orders
         for enterprise in self.enterprises.values():
             if enterprise.id != supplier_id:
-                # 处理向上采购
+                # Processing upward procurement
                 ProcurementManagers = enterprise.business_modules.get("ProcurementManager")
                 if ProcurementManagers:
                     ProcurementManager = ProcurementManagers[0]
                     ProcurementManager.receive_proposals()
             if enterprise.id != retailer_id:
-                # 处理向下销售订单
+                # Processing down sales orders
                 SaleManagers = enterprise.business_modules.get("SalesManager")
                 if SaleManagers:
                     SaleManager = SaleManagers[0]
@@ -1420,21 +1420,21 @@ class Controller:
 
     def handle_enterprises_orderstatistics(self):
         """
-        统计订单情况
-        """
+        Statistics on orders
+                """
         supplier_id = self.enterprise_role_ids.get("supplier")
         retailer_id = self.enterprise_role_ids.get("retailer")
         self.exchange_manager.statistics_exchange_orders()
-        # 各企业销售/采购部门建立订单
+        # enterprise Sales/procurement department Establishment of orders
         for enterprise in self.enterprises.values():
             if enterprise.id != supplier_id:
-                # 处理向上采购
+                # Processing upward procurement
                 ProcurementManagers = enterprise.business_modules.get("ProcurementManager")
                 if ProcurementManagers:
                     ProcurementManager = ProcurementManagers[0]
                     ProcurementManager.build_orders_from_exchange()
             if enterprise.id != retailer_id:
-                # 处理向下销售订单
+                # Processing down sales orders
                 SalesManagers = enterprise.business_modules.get("SalesManager")
                 if SalesManagers:
                     SalesManager = SalesManagers[0]

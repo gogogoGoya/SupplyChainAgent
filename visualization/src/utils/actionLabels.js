@@ -1,34 +1,34 @@
 export const ACTION_LABELS = {
-  action_pass: '跳过',
-  create_order: '创建销售订单',
-  accept_order: '接收销售订单',
-  reject_order: '拒绝销售订单',
-  develop_market: '开拓市场',
-  adjust_sales_demand: '调整销售需求',
-  create_production_plan: '创建生产计划',
-  build_production_line: '建设生产线',
-  initialize_production_line: '初始化生产线',
-  create_purchase_order: '创建采购订单',
-  create_purchase_demand: '创建采购需求',
-  create_replenishment_order: '创建补货订单',
-  accept_proposal_order: '接受企业间订单',
-  reject_proposal_order: '拒绝企业间订单',
-  expand_warehouse: '扩建仓库',
-  add_inventory: '增加库存',
-  set_capacity: '设置仓容',
-  set_product_recipe: '设置产品配方',
-  initialize_staffing: '初始化人员',
-  handle_recruitment: '招聘人员',
-  process_employee_attrition: '处理人员流失',
-  initialize_suppliers: '初始化供应商',
-  add_cost: '登记成本',
-  create_loan: '创建贷款',
-  repay_loan: '偿还贷款',
+  action_pass: 'Skip',
+  create_order: 'Create Sales Order',
+  accept_order: 'Accept Sales Order',
+  reject_order: 'Reject Sales Order',
+  develop_market: 'Develop Market',
+  adjust_sales_demand: 'Adjust Sales Supply',
+  create_production_plan: 'Create Production Plan',
+  build_production_line: 'Build Production Line',
+  initialize_production_line: 'Initialize Production Line',
+  create_purchase_order: 'Create Purchase Order',
+  create_purchase_demand: 'Create Purchase Demand',
+  create_replenishment_order: 'Create Replenishment Order',
+  accept_proposal_order: 'Accept B2B Proposal',
+  reject_proposal_order: 'Reject B2B Proposal',
+  expand_warehouse: 'Expand Warehouse',
+  add_inventory: 'Add Inventory',
+  set_capacity: 'Set Warehouse Capacity',
+  set_product_recipe: 'Set Product Recipe',
+  initialize_staffing: 'Initialize Staffing',
+  handle_recruitment: 'Recruit Employees',
+  process_employee_attrition: 'Process Employee Attrition',
+  initialize_suppliers: 'Initialize Suppliers',
+  add_cost: 'Record Cost',
+  create_loan: 'Create Loan',
+  repay_loan: 'Repay Loan',
 };
 
-export const getActionDisplayName = (actionName, fallback = '未知动作') => {
+export const getActionDisplayName = (actionName, fallback = 'Unknown Action') => {
   const key = String(actionName || '').trim();
-  if (!key || key === 'unknown_action' || key === '未知动作') {
+  if (!key || key === 'unknown_action') {
     return fallback;
   }
   return ACTION_LABELS[key] || key;

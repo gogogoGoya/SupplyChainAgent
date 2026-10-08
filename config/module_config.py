@@ -1,15 +1,15 @@
 """
-业务模块配置中心。
+Business module configuration centre.
 
-这个文件集中维护六个业务模块自身的参数，包括：
-- 枚举类字段与可选项
-- 阈值、成本、配方约束
-- 模块内动作的时间消耗
+This document focuses on maintaining the parameters of the six business modules themselves, including:
+- Enumeration fields and options
+- Thresholds, costs, formulation constraints
+- Time consumption of actions within modules
 
-使用边界：
-- 只服务于 `enterprise/modules/*`
-- 不承载多企业场景编排、企业初始盘面、Beer Game 市场预设
-- 这些场景级固定数据统一放在 `simulation_preset_config.py`
+Use boundary:
+- Only at `enterprise/modules/*`
+- No multi-enterprise scenario, enterprise initial disk, Beer Game market preset
+- These scene-level fixed data are unified at `simulation_preset_config.py`
 """
 
 from dataclasses import dataclass, field
@@ -19,79 +19,76 @@ from typing import Dict, List
 @dataclass
 class FinanceConfig:
     """
-    财务模块配置类
+    Finance module configuration Category
 
-    集中管理财务模块的分类字典、预警阈值、折旧规则和动作耗时。
+    The classification dictionary, warning threshold, depreciation rules and actions of the financial module are centrally managed.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/finance_manager.py`
-    - `enterprise/modules/decorators.py` 中的 choice 校验
-    """
+    - choice verification in `enterprise/modules/decorators.py`
+        """
     
-    # ==================== 分类配置 ====================
     
     REVENUE_SOURCES: List[str] = field(default_factory=lambda: [
-        "order_delivery",   # 订单交付收入
-        "b2b_sales",        # B2B销售收入
-        "asset_disposal",   # 资产处置收入
-        "market",           # 市场收入
-        "other_income"      # 其他收入
+        "order_delivery",   # Income from order delivery
+        "b2b_sales",        # B2B sales revenue
+        "asset_disposal",   # Income from disposal of assets
+        "market",           # Market income
+        "other_income"      # Other income
     ])
     
     COST_CATEGORIES: List[str] = field(default_factory=lambda: [
-        "raw_materials",    # 原材料成本
-        "production_cost",  # 生产成本
-        "labor_cost",       # 人工成本
-        "procurement_cost", # 采购成本
-        "inventory_cost",   # 库存成本
-        "depreciation",     # 折旧
-        "produce_cost",     # 生产费用
-        "market_cost",      # 市场费用
-        "other_cost"        # 其他成本
+        "raw_materials",    # Cost of raw materials
+        "production_cost",  # Production costs
+        "labor_cost",       # Labour costs
+        "procurement_cost", # Procurement costs
+        "inventory_cost",   # Cost of inventory
+        "depreciation",     # Depreciation
+        "produce_cost",     # Production costs
+        "market_cost",      # Market costs
+        "other_cost"        # Other costs
     ])
     
     ASSET_TYPES: List[str] = field(default_factory=lambda: [
-        "fixed_assets",     # 固定资产
-        "inventory_value"   # 库存价值
+        "fixed_assets",     # Fixed assets
+        "inventory_value"   # Inventory value
     ])
     
-    # ==================== 阈值配置 ====================
     
-    # 现金预警阈值（元）
+    # Cash warning threshold ($)
     CASH_WARNING_THRESHOLD: float = 50000.0
     CASH_CRITICAL_THRESHOLD: float = 0.0
     
-    # 流动比率预警阈值
+    # Flow ratio early warning threshold
     CURRENT_RATIO_WARNING: float = 1.0
     
-    # 资产折旧相关
-    DEFAULT_DEPRECIATION_RATE: float = 0.1  # 默认年折旧率 10%
+    # Depreciation of assets
+    DEFAULT_DEPRECIATION_RATE: float = 0.1  # Default annual depreciation rate 10%
     MIN_DEPRECIATION_RATE: float = 0.0
     MAX_DEPRECIATION_RATE: float = 1.0
     
-    # ==================== 时间消耗配置（秒） ====================
     
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
-        # 基础财务操作
+        # Basic financial operations
         "add_revenue": 60,
         "add_cost": 60,
         "pay_accounts_payable": 30,
         
-        # 资产管理
+        # Asset management
         "record_asset_addition": 45,
         "record_asset_depreciation": 60,
         "record_asset_disposal": 90,
         
-        # 财务分析
+        # Financial analysis
         "calculate_profit": 30,
         "calculate_financial_indicators": 45,
         
-        # 报表生成
+        # Report Generation
         "generate_balance_sheet": 60,
         "generate_income_statement": 60,
         "generate_cash_flow_statement": 60,
         
-        # 查询操作
+        # Query Operations
         "get_cash_warnings": 10,
         "get_financial_summary": 20,
         "get_transaction_history": 20,
@@ -99,57 +96,55 @@ class FinanceConfig:
         "get_state": 15
     })
     
-    # ==================== 财务指标解释阈值 ====================
     
-    # 优秀指标阈值
-    EXCELLENT_ROI: float = 50.0  # 投资回报率 > 50%
-    EXCELLENT_ROE: float = 30.0  # 净资产收益率 > 30%
-    EXCELLENT_CURRENT_RATIO: float = 2.0  # 流动比率 > 2.0
+    # Threshold of excellent indicators
+    EXCELLENT_ROI: float = 50.0  # Investment return > 50%
+    EXCELLENT_ROE: float = 30.0  # Net asset return > 30 per cent
+    EXCELLENT_CURRENT_RATIO: float = 2.0  # Mobility ratio > 2.0
     
-    # 良好指标阈值
+    # Good indicator threshold
     GOOD_ROI: float = 20.0
     GOOD_ROE: float = 15.0
     GOOD_CURRENT_RATIO: float = 1.5
     
-    # 及格指标阈值
+    # Pass indicator threshold
     ACCEPTABLE_ROI: float = 0.0
     ACCEPTABLE_ROE: float = 5.0
     ACCEPTABLE_CURRENT_RATIO: float = 1.0
     
-    # ==================== 初始化方法 ====================
     
     def get_initial_revenue_dict(self) -> Dict[str, float]:
         """
-        获取初始化收入字典
-        
+        Get Initialized Income Dictionary
+                
         Returns:
-            Dict[str, float]: 所有收入来源初始化为0.0
-        """
+            Dict [str, flat]: All sources of income are initially 0.0
+                """
         result = {source: 0.0 for source in self.REVENUE_SOURCES}
         result["total_revenue"] = 0.0
         return result
     
     def get_initial_cost_dict(self) -> Dict[str, float]:
         """
-        获取初始化成本字典
-        
+        Get Initial Cost Dictionary
+                
         Returns:
-            Dict[str, float]: 所有成本类别初始化为0.0
-        """
+            Dict [str, float]: Initialization of all cost categories to 0.0
+                """
         result = {category: 0.0 for category in self.COST_CATEGORIES}
         result["total_cost"] = 0.0
         return result
     
     def get_initial_assets_dict(self, initial_cash: float = 0.0) -> Dict[str, float]:
         """
-        获取初始化资产字典
-        
+        Get Initialized Asset Dictionary
+                
         Args:
-            initial_cash: 初始现金
-            
+            parameter: Initial cash
+                        
         Returns:
-            Dict[str, float]: 资产字典
-        """
+            Dict[str, float]: Asset dictionary
+                """
         return {
             "cash": initial_cash,
             "inventory_value": 0.0,
@@ -160,11 +155,11 @@ class FinanceConfig:
     
     def get_initial_liabilities_dict(self) -> Dict[str, float]:
         """
-        获取初始化负债字典
-        
+        Get Initialised Liabilities Dictionary
+                
         Returns:
-            Dict[str, float]: 负债字典
-        """
+            Dict[str, float]: Debt Dictionary
+                """
         return {
             "accounts_payable": 0.0,
             "other_liabilities": 0.0,
@@ -173,11 +168,11 @@ class FinanceConfig:
     
     def get_initial_financial_metrics_dict(self) -> Dict[str, float]:
         """
-        获取初始化财务指标字典
-        
+        Get Initialized Financial Indicators Dictionary
+                
         Returns:
-            Dict[str, float]: 财务指标字典
-        """
+            Dict [str, float]: dictionaries of financial indicators
+                """
         return {
             "net_profit": 0.0,
             "gross_profit": 0.0,
@@ -189,40 +184,38 @@ class FinanceConfig:
             "asset_turnover": 0.0
         }
     
-    # ==================== 验证方法 ====================
     
     def is_valid_revenue_source(self, source: str) -> bool:
-        """验证收入来源是否合法"""
+        """Validation of legal sources of income"""
         return source in self.REVENUE_SOURCES
     
     def is_valid_cost_category(self, category: str) -> bool:
-        """验证成本类别是否合法"""
+        """Validate the legality of cost categories"""
         return category in self.COST_CATEGORIES
     
     def is_valid_asset_type(self, asset_type: str) -> bool:
-        """验证资产类型是否合法"""
+        """Verifying the legality of asset types"""
         return asset_type in self.ASSET_TYPES
     
     def is_valid_depreciation_rate(self, rate: float) -> bool:
-        """验证折旧率是否合法"""
+        """Validate depreciation"""
         return self.MIN_DEPRECIATION_RATE < rate <= self.MAX_DEPRECIATION_RATE
 
 
 @dataclass
 class HRConfig:
     """
-    人力资源模块配置类
+    Human resources module configuration Category
 
-    集中管理 HR 部门的薪资、招聘、人效阈值和动作耗时。
+    Centrally managed HR department payroll, recruitment, human impact thresholds and time-consuming operations.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/hr_manager.py`
-    - 仅作用于 HR 模块本身，不参与多企业场景编排
-    """
+    - Only for HR module itself, not participating in multi-enterprise scenario
+        """
 
-    # ==================== 部门和薪资配置 ====================
 
-    # 部门工资配置（人民币/人/月）
+    # < x6/ > Wage Allocation (NMB/person/month)
     DEPARTMENT_WAGES: Dict[str, float] = field(default_factory=lambda: {
         "HR": 700,
         "PRODUCTION": 900,
@@ -232,7 +225,7 @@ class HRConfig:
         "FINANCE": 850
     })
 
-    # 部门招聘成本配置（人民币/人）
+    # < x6/> Recruitment cost allocation (NMB/person)
     DEPARTMENT_RECRUIT_COSTS: Dict[str, float] = field(default_factory=lambda: {
         "HR": 800,
         "PRODUCTION": 1000,
@@ -242,21 +235,19 @@ class HRConfig:
         "FINANCE": 1600
     })
 
-    # 招聘周期（时间步）
+    # Recruitment cycle (timescale)
     RECRUIT_CYCLE: int = 1
 
-    # ==================== 业务约束配置 ====================
 
-    MAX_RECRUIT_PER_TIME: int = 10  # 每次招聘最多人数
-    MIN_RECRUIT_PER_TIME: int = 1   # 每次招聘最少人数
+    MAX_RECRUIT_PER_TIME: int = 10  # Maximum number per recruitment
+    MIN_RECRUIT_PER_TIME: int = 1   # Minimum number per recruitment
 
-    # 利用率阈值
-    UTILIZATION_SURPLUS_THRESHOLD: float = 0.3      # 人员冗余阈值
-    UTILIZATION_SHORTAGE_THRESHOLD: float = 1.0     # 人员不足阈值
-    OPTIMAL_UTILIZATION_LOWER: float = 0.7          # 最优利用率下界
-    OPTIMAL_UTILIZATION_UPPER: float = 0.9          # 最优利用率上界
+    # Utilization threshold
+    UTILIZATION_SURPLUS_THRESHOLD: float = 0.3      # Personnel redundancy threshold
+    UTILIZATION_SHORTAGE_THRESHOLD: float = 1.0     # Personnel deficit threshold
+    OPTIMAL_UTILIZATION_LOWER: float = 0.7          # Underutilization
+    OPTIMAL_UTILIZATION_UPPER: float = 0.9          # Highest utilization
 
-    # ==================== 时间消耗配置（秒） ====================
 
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
         "initialize_staffing": 10,
@@ -287,45 +278,42 @@ class HRConfig:
 @dataclass
 class InventoryConfig:
     """
-    库存管理模块配置类
+    Inventory management module configuration Category
 
-    集中管理库存部门的规则阈值、成本参数和动作耗时。
+    Centrally managed inventory department rule thresholds, cost parameters and actions are time-consuming.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/inventory_manager.py`
-    - 仅作用于库存模块本身，不参与多企业场景编排
-    """
+    - Use only the inventory module itself and do not participate in the multi-enterprise scenario
+        """
 
-    # ==================== 库存管理配置 ====================
 
-    INITIAL_CAPACITY: int = 10000  # 初始仓库容量
+    INITIAL_CAPACITY: int = 10000  # Initial warehouse capacity
 
-    # 维护成本率（库存价值的百分比）
-    MAINTENANCE_COST_RATE: float = 0.00001  # 尽量弱化库存价值持有成本影响
+    # Maintenance cost rate (percentage of inventory value)
+    MAINTENANCE_COST_RATE: float = 0.00001  # Minimize the cost impact of holding inventory value
 
-    OPERATING_COST_RATE: float = 0.00001  # 尽量弱化仓储运营成本影响
+    OPERATING_COST_RATE: float = 0.00001  # Minimize the cost impact of warehousing operations
 
-    # 仓库扩建成本配置。key 为扩仓档位，value 为该档位对应的一次性成本。
+    # Warehouse expansion cost configuration. Key is the one-time cost associated with the silo.
     WAREHOUSE_EXPANSION_COSTS: Dict[int, float] = field(default_factory=lambda: {
         1000: 50000,
         2000: 80000,
         5000: 150000
     })
 
-    # 不同扩仓档位对应的最少仓储员工需求。
+    # Minimum storage staff requirements for different silos.
     WAREHOUSE_EXPANSION_WORKER_REQUIREMENTS: Dict[int, int] = field(default_factory=lambda: {
         1000: 1,
         2000: 2,
         5000: 3,
     })
 
-    # ==================== 仓库容量利用率阈值 ====================
 
-    CAPACITY_LOW_THRESHOLD: float = 0.3  # 使用率低于该值时记为 low
-    CAPACITY_WARNING_THRESHOLD: float = 0.75  # 容量预警阈值
-    CAPACITY_CRITICAL_THRESHOLD: float = 0.9  # 容量紧急阈值
+    CAPACITY_LOW_THRESHOLD: float = 0.3  # Low when usage below this value
+    CAPACITY_WARNING_THRESHOLD: float = 0.75  # Capacity early warning threshold
+    CAPACITY_CRITICAL_THRESHOLD: float = 0.9  # Capacity emergency threshold
 
-    # ==================== 时间消耗配置（秒） ====================
 
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
         "add_inventory": 10,
@@ -356,16 +344,15 @@ class InventoryConfig:
 @dataclass
 class ProcurementConfig:
     """
-    采购管理模块配置类
+    Procurement management module configuration Category
 
-    集中管理采购模块的物流参数、人员门槛和动作耗时。
+    The logistics parameters, personnel thresholds and movements of the procurement module are centrally managed and time-consuming.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/procurement_manager.py`
-    - 仅作用于采购模块本身，不参与多企业场景编排
-    """
+    - serve only the procurement module itself and do not participate in the multi-enterprise scenario
+        """
 
-    # ==================== 物流配置 ====================
 
     LOGISTICS_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
         "road": {
@@ -388,40 +375,36 @@ class ProcurementConfig:
         }
     })
 
-    # ==================== 采购约束 ====================
 
-    MIN_PROCUREMENT_STAFF: int = 1  # 创建订单最少需要员工数
-    MIN_CANCEL_STAFF: int = 1       # 取消订单最少需要员工数
-    MIN_REGISTER_STAFF: int = 1     # 注册供应商最少需要员工数
+    MIN_PROCUREMENT_STAFF: int = 1  # Minimum number of employees required to create an order
+    MIN_CANCEL_STAFF: int = 1       # Minimum number of employees required to cancel the order
+    MIN_REGISTER_STAFF: int = 1     # Minimum number of registered vendors required
 
-    # ==================== B2B 出价策略 ====================
 
-    # 采购侧不再直接拿库存单价做硬上限，而是在参考单价上给出可成交带宽。
+    # Instead of using the unit price of inventory as a hard cap, the side of the procurement gives a tradeable bandwidth on the reference unit price.
     B2B_PRICE_REFERENCE_FALLBACK: float = 1.0
     B2B_BASE_MAX_PRICE_MULTIPLIER: float = 1.22
     B2B_URGENT_MAX_PRICE_MULTIPLIER: float = 1.38
     B2B_LOW_STOCK_MAX_PRICE_MULTIPLIER: float = 1.30
 
-    # ==================== 配方联动补货与顶层保供 ====================
 
-    # 当原料需求是由生产配方反推得到时，避免再被 target_inventory_days 过度放大。
+    # When raw material demand is inverted by the production formulation, it is avoided being over-magnified by target_inventory_days.
     RECIPE_RECOVERY_SOFT_CAP_MULTIPLIER: float = 1.0
-    # 对处于生产恢复瓶颈的原料，允许额外保留一部分安全缓冲。
+    # For raw material, which is a production recovery bottleneck, an additional part of the security buffer is allowed.
     RECIPE_RECOVERY_SAFETY_BUFFER_SHARE: float = 1.0
-    # 用于将 recovery target 转成“日需求等价”时的默认窗口。
+    # The default window for converting the value of a value value into a " daily demand equivalent " .
     RECIPE_RECOVERY_DEFAULT_TARGET_DAYS: int = 2
-    # proposal backlog 仅作为弱信号参与配方联动补货估算，避免直接按 100% 放大。
+    # Proposal backlog is only used as a weak signal in the estimation of the formula combination replenishment to avoid a direct 100% magnification.
     RECOVERY_PROPOSAL_SIGNAL_WEIGHT: float = 0.25
-    # Supplier 顶层保供时，为 Manufacturer 当前瓶颈料额外提高优先级。
+    # The Supplier top-level insulation has added priority to the current Manufacturer bottlenecks.
     TOP_TIER_BOTTLENECK_PRIORITY_BOOST: float = 5000.0
-    # Supplier 顶层保供时，若多种原料共同服务于同一恢复性生产目标，额外提高“成套保供”优先级。
+    # During the Supplier top-level insulation, additional raw material priority was given to raw material co-services to the same restorative production target.
     TOP_TIER_PACKAGE_PRIORITY_BOOST: float = 3000.0
-    # 当 Supplier 自身库存与在途已经足够覆盖若干轮恢复包需求时，停止继续机械外采。
+    # The continuation of mechanical extraction was stopped when Supplier's own inventory and in transit were sufficient to cover several recovery package requirements.
     TOP_TIER_PACKAGE_COVERAGE_TARGET_ROUNDS: float = 2.0
-    # 若关键料处于明确瓶颈，优先使用更快物流。
+    # If key materials are identified as bottlenecks, priority is given to faster logistics.
     TOP_TIER_CRITICAL_LOGISTICS_MODE: str = "air"
 
-    # ==================== 时间消耗配置（秒） ====================
 
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
         "initialize_suppliers": 20,
@@ -451,16 +434,15 @@ class ProcurementConfig:
 @dataclass
 class SalesConfig:
     """
-    销售管理模块配置类
+    Sales management module configuration Category
 
-    集中管理销售部门的市场开发参数、人员约束和动作耗时。
+    The market development parameters, personnel constraints and movements of department sales are centrally managed.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/sales_manager.py`
-    - 仅作用于销售模块本身，不参与多企业场景编排
-    """
+    - Only for the sales module itself, not for the multi-enterprise scenery
+        """
 
-    # ==================== 市场开发配置 ====================
 
     MARKET_DEVELOPMENT_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
         "regional": {
@@ -475,33 +457,30 @@ class SalesConfig:
         }
     })
 
-    TOTAL_POSSIBLE_MARKETS: int = 10  # 市场总数（用于计算市场覆盖率）
+    TOTAL_POSSIBLE_MARKETS: int = 10  # Total market (for market coverage)
 
-    # ==================== 销售约束 ====================
 
-    MIN_DEVELOP_MARKET_STAFF: int = 1   # 开发市场最少需要员工数
-    MIN_PLACE_ORDER_STAFF: int = 0      # 接受/下单最少需要员工数
-    MIN_SEND_QUOTATION_STAFF: int = 1   # 发送报价最少需要员工数
-    MIN_RESPOND_QUOTATION_STAFF: int = 1  # 响应报价最少需要员工数
+    MIN_DEVELOP_MARKET_STAFF: int = 1   # Minimum number of employees needed to develop the market
+    MIN_PLACE_ORDER_STAFF: int = 0      # Minimum number of staff required to accept/decree
+    MIN_SEND_QUOTATION_STAFF: int = 1   # Minimum number of employees required to send offers
+    MIN_RESPOND_QUOTATION_STAFF: int = 1  # Minimum number of staff required to respond to offers
 
-    # ==================== B2B 出价策略 ====================
 
-    # 销售侧也不再直接把库存单价当成绝对底价，而是根据库存压力给出浮动底价。
+    # The sales side no longer directly treats the unit price of the inventory as the absolute floor, but rather gives the floating floor price based on the pressure of the stock.
     B2B_PRICE_REFERENCE_FALLBACK: float = 1.0
     B2B_BASE_MIN_PRICE_MULTIPLIER: float = 1.00
     B2B_LOW_STOCK_MIN_PRICE_MULTIPLIER: float = 1.10
     B2B_HIGH_STOCK_MIN_PRICE_MULTIPLIER: float = 0.95
-    # 无论库存压力如何，B2B 销售底价都不应长期低于自身硬成本。
+    # Whatever the stock pressure, the B2B sales floor should not be below its own hard cost in the long term.
     B2B_HARD_COST_FLOOR_MULTIPLIER: float = 1.02
-    # Supplier 对外部采购后再转卖原料时，需要更高一些的毛利底线来覆盖运营波动。
+    # Upon resale of raw material after external procurement, Suplier required a higher Māori base to cover operational fluctuations.
     B2B_TOP_TIER_RAW_MATERIAL_MARGIN_FLOOR: float = 1.08
-    # Manufacturer 对下游销售 beer 时，应保持更积极但更高的售价底线，避免持续低价恢复生产。
+    # Manufacturer should maintain a more active, but higher, sales floor for downstream sales to beer and avoid a continued low-cost resumption of production.
     B2B_MANUFACTURER_FINISHED_GOODS_BASE_MIN_PRICE_MULTIPLIER: float = 1.08
     B2B_MANUFACTURER_FINISHED_GOODS_LOW_STOCK_MIN_PRICE_MULTIPLIER: float = 1.16
     B2B_MANUFACTURER_FINISHED_GOODS_HIGH_STOCK_MIN_PRICE_MULTIPLIER: float = 1.02
     B2B_MANUFACTURER_FINISHED_GOODS_MARGIN_FLOOR: float = 1.18
 
-    # ==================== 时间消耗配置（秒） ====================
 
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
         "develop_market": 20,
@@ -530,16 +509,15 @@ class SalesConfig:
 @dataclass
 class ProductionConfig:
     """
-    生产管理模块配置类
+    Production management module configuration Category
 
-    集中管理生产部门的产线参数、人员约束和动作耗时。
+    The production of department line parameters, human constraints and time-consuming operations are centrally managed.
 
-    使用范围：
+    Scope of use:
     - `enterprise/modules/production_manager.py`
-    - 仅作用于生产模块本身，不参与多企业场景编排
-    """
+    - Use only the production module itself and do not participate in the multi-enterprise scenery
+        """
 
-    # ==================== 生产线配置 ====================
 
     LINE_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
         "small": {
@@ -565,51 +543,47 @@ class ProductionConfig:
         }
     })
 
-    MAX_PRODUCTION_LINES: int = 10  # 最大生产线数
+    MAX_PRODUCTION_LINES: int = 10  # Maximum number of production lines
 
-    # ==================== 生产约束 ====================
 
-    MIN_CANCEL_PLAN_STAFF: int = 1  # 取消计划最少需要员工数
+    MIN_CANCEL_PLAN_STAFF: int = 1  # Minimum number of employees required to cancel the plan
 
-    # 创建生产计划时，每多少产量至少需要 1 名生产员工。
+    # At the time of the creation of the production plan, at least one production worker is required for every production.
     PLAN_QUANTITY_PER_WORKER: int = 1000
 
-    # ==================== 恢复性供给护栏 ====================
 
-    # 当成品库存低于 safety_stock/reorder_point 乘以下列比例时，视为低库存恢复信号。
+    # Low stock recovery signals are considered to be held at a level below < x 17/ > when this is multiplied by the following ratio.
     RECOVERY_LOW_STOCK_RATIO: float = 0.5
 
-    # proposal backlog 仅作为弱信号参与恢复性生产估算，避免直接按 100% 放大。
+    # Proposal backlog is only used as a weak signal to estimate restorative production, avoiding direct 100% magnification.
     RECOVERY_PROPOSAL_SIGNAL_WEIGHT: float = 0.25
 
-    # 单轮恢复性生产建议的最小批量；若资源不足以满足该批量，则保留更小的真实可执行量。
+    # The minimum amount recommended for single-cycle restorative production; if resources are insufficient to meet that volume, a smaller, real implementable amount is retained.
     RECOVERY_MIN_BATCH_QUANTITY: float = 50.0
 
-    # 单轮恢复性生产建议最多使用可用产能的比例，避免一次性吃满全部产能。
+    # A maximum of capacity is recommended for a single round of restorative production to avoid full one-time capacity.
     RECOVERY_MAX_BATCH_SHARE_OF_CAPACITY: float = 0.75
-    # 当成品库存明显低于策略地板时，恢复性生产对库存缺口可做额外放大，避免恢复过慢。
+    # When the stock of pawns is clearly below the strategic floor, the stock gap can be magnified by restorative production to avoid a slow recovery.
     RECOVERY_POLICY_GAP_MULTIPLIER: float = 1.5
-    # stale backlog 比普通 proposal backlog 更接近真实服务恢复压力。
+    # This post is part of our special coverage Global Development 2011.
     RECOVERY_STALE_BACKLOG_WEIGHT: float = 1.0
-    # 已存在恢复计划时，只按部分比例抵消新增恢复需求，避免恢复节奏长期偏慢。
+    # Where recovery plans already exist, only additional recovery needs are partially offset to avoid a long-term slowdown in recovery.
     RECOVERY_ACTIVE_PLAN_OFFSET_SHARE: float = 0.5
 
-    # ==================== 生产毛利护栏 ====================
 
-    # 恢复性生产在正常经营模式下，期望达到的最低毛利率。
+    # Restorative production is expected to achieve the minimum Māori rate under the normal business model.
     RECOVERY_MARGIN_HEALTHY_FLOOR_RATE: float = 0.08
 
-    # 若存在真实 confirmed/stale backlog，可容忍的小幅低毛利恢复区间。
+    # If there is a real confirmed/stale backlog, a small low-māori recovery area is tolerated.
     RECOVERY_MARGIN_SERVICE_FLOOR_RATE: float = -0.03
 
-    # 扩产比恢复生产更严格；若预计毛利率低于该阈值，不建议建设新产线。
+    # The increase is more stringent than the resumption of production; if the Māori rate is expected to fall below that threshold, the construction of new production lines is not recommended.
     BUILD_LINE_MIN_MARGIN_RATE: float = 0.10
-    # 当库存单价或销售侧价格信号缺失时，给关键成品一个经营性售价回退，避免冷启动阶段完全无价可算。
+    # When the unit price of the inventory or the sales side price signal is missing, an operational sale price for the key product is reversed to avoid a completely priceless cold start-up phase.
     EXPECTED_SALE_PRICE_FALLBACKS: Dict[str, float] = field(default_factory=lambda: {
         "beer": 140.0,
     })
 
-    # ==================== 时间消耗配置（秒） ====================
 
     TIME_COST: Dict[str, int] = field(default_factory=lambda: {
         "build_production_line": 30,
@@ -634,16 +608,15 @@ class ProductionConfig:
     })
 
 
-# ==================== 配置工厂 ====================
 
 class ModuleConfigFactory:
     """
-    模块配置工厂。
+    Module configuration plant.
 
-    使用范围：
-    - `enterprise/modules/*_manager.py` 在未显式注入配置时可回退到这里
-    - 便于后续按模块替换或覆写配置实例
-    """
+    Scope of use:
+    - `enterprise/modules/*_manager.py` Back here when invisible injection configuration
+    - Follow-up to replace or overwrite the configuration with modules
+        """
     
     _configs = {
         "finance": FinanceConfig(),
@@ -657,14 +630,14 @@ class ModuleConfigFactory:
     @classmethod
     def get_config(cls, module_type: str):
         """
-        获取指定模块的配置
-        
+        Get the configuration of the specified module
+                
         Args:
-            module_type: 模块类型（如 "finance", "production"）
-            
+            module_type: Module type (e.g. "finance", "protection")
+                        
         Returns:
-            配置对象，如果不存在则返回None
-        """
+            Configure objects, return None if none does not exist
+                """
         config = cls._configs.get(module_type)
         if config is None:
             raise ValueError(f"Unknown module type: {module_type}")
@@ -673,10 +646,10 @@ class ModuleConfigFactory:
     @classmethod
     def register_config(cls, module_type: str, config):
         """
-        注册新的模块配置
-        
+        Register new module configuration
+                
         Args:
-            module_type: 模块类型
-            config: 配置对象
-        """
+            parameter: Module type
+            config: Configure Object
+                """
         cls._configs[module_type] = config

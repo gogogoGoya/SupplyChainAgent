@@ -1,3 +1,3 @@
 """
-核心组件模块
+Core Component Module
 """

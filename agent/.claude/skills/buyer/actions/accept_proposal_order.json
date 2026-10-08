@@ -1,23 +1,23 @@
 {
   "action_name": "accept_proposal_order",
-  "description": "接收来自交易所帮助拟定的订单提案, 提案内容与此前发起的采购需求相关",
+  "description": "Accept an exchange-generated order proposal related to a previously submitted purchase demand.",
   "conditions": [
-    "有执行过create_purchase_demand方法向下游交易所建立需求,此时反馈的提案符合需求",
-    "trade_decision_card.review_queue 中存在真实待决策 proposal，或部门信息中的 proposals_list 含有状态为 pending 的 proposal",
-    "blackboard.departments.finance.cash_summary 与 procurement.self_state.cash_guard 显示企业资金能够覆盖该proposal订单需求"
+    "A purchase demand was submitted through create_purchase_demand and the returned proposal satisfies it.",
+    "trade_decision_card.review_queue contains a real proposal awaiting a decision, or the department's proposals_list contains a pending proposal.",
+    "blackboard.departments.finance.cash_summary and procurement.self_state.cash_guard show that enterprise funds can cover the proposed order."
   ],
   "required_parameters": [
     "proposal_id"
   ],
   "parameter_constraints": [
-    "proposal_id 必须是已有的提案id，应优先从 trade_decision_card.review_queue 查看到；若决策卡未覆盖，再从部门信息中的 proposals_list 查看",
-    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏"
+    "proposal_id must identify an existing proposal. Prefer trade_decision_card.review_queue; consult the department's proposals_list only if the decision card does not include it.",
+    "When creating action.json from this template, action_param must contain exactly the fields listed in required_parameters, with none added or omitted."
   ],
   "constraints": [
-    "必须先读取 blackboard.departments.finance.cash_summary 与 procurement.self_state.cash_guard，再判断是否接受",
-    "若 cash_guard.guard_level = hard_blocked，则不得接受该 proposal",
-    "若 cash_summary.cash_level = warning，应优先接受金额更小、交期更稳、对 confirmed/stale backlog 更关键的 proposal",
-    "仓库容量当前未被系统校验，需避免明显超量采购",
-    "若 trade_decision_card.review_queue 中该 proposal 的 recommended_action 为 accept_proposal_order，且 quantity、price、delivery_round 无明显冲突时，默认优先接受"
+    "Read blackboard.departments.finance.cash_summary and procurement.self_state.cash_guard before deciding whether to accept.",
+    "Do not accept the proposal when cash_guard.guard_level = hard_blocked.",
+    "When cash_summary.cash_level = warning, prioritize smaller proposals with more reliable delivery dates that matter most for confirmed or stale backlog.",
+    "Warehouse capacity is not currently validated by the system; avoid obviously excessive purchases.",
+    "Prefer acceptance when trade_decision_card.review_queue recommends accept_proposal_order for this proposal and quantity, price, and delivery_round show no material conflict."
   ]
 }

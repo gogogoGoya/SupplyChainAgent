@@ -1,7 +1,7 @@
 """
-数字处理工具模块
+Digital Processing Tool Module
 
-提供金额、数量等数字的格式化、计算、验证等功能
+Provide functions such as formatting, computing, certification of amounts, quantities, etc.
 """
 
 import re
@@ -11,27 +11,27 @@ from decimal import Decimal, getcontext, ROUND_HALF_UP
 
 class NumberUtils:
     """
-    数字处理工具类
-    """
+    Digital Processing Tool Category
+        """
     
-    # 默认精度
+    # Default Precision
     DEFAULT_PRECISION = 2
     
-    # 初始化Decimal上下文
+    # Initialize Decimal Context
     getcontext().rounding = ROUND_HALF_UP
-    getcontext().prec = 28  # 设置足够的精度
+    getcontext().prec = 28  # Set enough precision
     
     @staticmethod
     def to_decimal(value: Union[float, int, str, Decimal]) -> Optional[Decimal]:
         """
-        将各种类型转换为Decimal对象
-        
+        Convert types to Decimal objects
+                
         Args:
-            value: 要转换的值
-            
+            value: value to be converted
+                        
         Returns:
-            Decimal: Decimal对象，转换失败返回None
-        """
+            Decimal: Decimal Object, None returns with conversion failure
+                """
         if value is None:
             return None
         
@@ -41,7 +41,7 @@ class NumberUtils:
             elif isinstance(value, (int, float)):
                 return Decimal(str(value))
             elif isinstance(value, str):
-                # 清理字符串中的非数字字符（保留负号和小数点）
+                # Clears non-numeric characters in a string (reserve negative numbers and decimal points)
                 cleaned = re.sub(r'[^\d.-]', '', value)
                 return Decimal(cleaned)
             return None
@@ -52,20 +52,20 @@ class NumberUtils:
     def round_number(value: Union[float, int, str, Decimal], 
                     precision: int = DEFAULT_PRECISION) -> float:
         """
-        四舍五入数字
-        
+        Rounded
+                
         Args:
-            value: 要四舍五入的值
-            precision: 小数位数
-            
+            value: value to be rounded
+            Number of decimal places
+                        
         Returns:
-            float: 四舍五入后的结果
-        """
+            Float: result rounded
+                """
         decimal_value = NumberUtils.to_decimal(value)
         if decimal_value is None:
             return 0.0
         
-        # 使用Decimal进行精确的四舍五入
+        # Use Decimal for precise rounding
         rounded = decimal_value.quantize(Decimal(f'0.{"0" * precision}'))
         return float(rounded)
     
@@ -76,52 +76,52 @@ class NumberUtils:
                        thousands_separator: str = ",",
                        decimal_separator: str = ".") -> str:
         """
-        格式化货币
-        
+        Formatting Currency
+                
         Args:
-            value: 金额
-            currency_symbol: 货币符号
-            precision: 小数位数
-            thousands_separator: 千位分隔符
-            decimal_separator: 小数分隔符
-            
+            Value: Amount
+            parameter: Currency symbol
+            Number of decimal places
+            parameter: thousands separator
+            decimal_separator: Decimal Separator
+                        
         Returns:
-            str: 格式化后的货币字符串
-        """
-        # 转换为Decimal并四舍五入
+            str: Formatted Currency String
+                """
+        # Convert to Decimal and rounded
         decimal_value = NumberUtils.to_decimal(value)
         if decimal_value is None:
             return f"{currency_symbol}0{decimal_separator}{'0' * precision}"
         
-        # 格式化数字部分
+        # Formatting numbers section
         rounded = decimal_value.quantize(Decimal(f'0.{"0" * precision}'))
         parts = str(rounded).split('.')
         
-        # 处理整数部分，添加千位分隔符
+        # Handle integer part, add thousands partition Symbol
         integer_part = parts[0]
-        # 处理负数
+        # Deal with negative numbers
         negative = False
         if integer_part.startswith('-'):
             negative = True
             integer_part = integer_part[1:]
         
-        # 从右向左每3位添加分隔符
+        # Add Separator every 3 places from right to left
         formatted_integer = ''
         for i, char in enumerate(reversed(integer_part)):
             if i > 0 and i % 3 == 0:
                 formatted_integer = thousands_separator + formatted_integer
             formatted_integer = char + formatted_integer
         
-        # 组合结果
+        # Group results
         result = currency_symbol
         if negative:
             result += '-'
         result += formatted_integer
         
-        # 添加小数部分
+        # Add decimal part
         if precision > 0:
             decimal_part = parts[1] if len(parts) > 1 else '0' * precision
-            decimal_part = decimal_part.ljust(precision, '0')[:precision]  # 确保小数位数正确
+            decimal_part = decimal_part.ljust(precision, '0')[:precision]  # Make sure the decimal is correct.
             result += decimal_separator + decimal_part
         
         return result
@@ -131,26 +131,26 @@ class NumberUtils:
                          precision: int = DEFAULT_PRECISION, 
                          include_symbol: bool = True) -> str:
         """
-        格式化百分比
-        
+        Formatting Percentage
+                
         Args:
-            value: 百分比值（如0.1表示10%）
-            precision: 小数位数
-            include_symbol: 是否包含百分号
-            
+            Value: Percentage value (e.g. 0.1 means 10%)
+            Number of decimal places
+            parameter: Does it contain a percentage number?
+                        
         Returns:
-            str: 格式化后的百分比字符串
-        """
-        # 转换为Decimal并乘以100
+            str: Percentage string after formatting
+                """
+        # Convert to Decimal and multiply by 100
         decimal_value = NumberUtils.to_decimal(value)
         if decimal_value is None:
             return f"0{'.' + '0' * precision if precision > 0 else ''}{'%' if include_symbol else ''}"
         
-        # 转换为百分比并四舍五入
+        # Convert to percentage and rounded
         percentage_value = decimal_value * Decimal('100')
         rounded = percentage_value.quantize(Decimal(f'0.{"0" * precision}'))
         
-        # 格式化为字符串
+        # Format into string
         result = f"{float(rounded):.{precision}f}"
         if include_symbol:
             result += '%'
@@ -162,33 +162,33 @@ class NumberUtils:
                           discount_value: Union[float, int, str, Decimal], 
                           is_percentage: bool = True) -> Tuple[float, float]:
         """
-        计算折扣金额和折后价格
-        
+        Calculation of discount amount and discount price
+                
         Args:
-            original_price: 原价
-            discount_value: 折扣值（如果是百分比，则为0-100的数字）
-            is_percentage: 是否为百分比折扣
-            
+            parameter: Original price
+            discount_value: Debit value (0-100 in percentage)
+            parameter : Whether it is a percentage discount
+                        
         Returns:
-            tuple: (折扣金额, 折后价格)
-        """
-        # 转换为Decimal
+            tuple: (discount amount, discount price)
+                """
+        # Convert to Decimal
         original = NumberUtils.to_decimal(original_price)
         discount = NumberUtils.to_decimal(discount_value)
         
         if original is None or discount is None or original < 0:
             return 0.0, float(original or 0)
         
-        # 计算折扣金额
+        # Calculation of discount amount
         if is_percentage:
-            # 确保折扣百分比在合理范围内
+            # Ensure that the percentage discount is within reasonable range Internal
             discount_percent = discount / Decimal('100')
             discount_amount = original * discount_percent
         else:
-            # 直接折扣金额，不能超过原价
+            # Direct discount amount, not above original price
             discount_amount = min(discount, original)
         
-        # 计算折后价格
+        # Calculating post-mortem prices
         discounted_price = original - discount_amount
         
         return float(discount_amount), float(discounted_price)
@@ -197,23 +197,23 @@ class NumberUtils:
     def calculate_tax(amount: Union[float, int, str, Decimal], 
                      tax_rate: Union[float, int, str, Decimal]) -> float:
         """
-        计算税额
-        
+        Calculation of taxes
+                
         Args:
-            amount: 计税金额
-            tax_rate: 税率（百分比，如13表示13%）
-            
+            amount: tax amount
+            tax_rate: Tax rate (percentage, i.e. 13%)
+                        
         Returns:
-            float: 税额
-        """
-        # 转换为Decimal
+            Taxes
+                """
+        # Convert to Decimal
         base_amount = NumberUtils.to_decimal(amount)
         rate = NumberUtils.to_decimal(tax_rate)
         
         if base_amount is None or rate is None or base_amount < 0:
             return 0.0
         
-        # 计算税额
+        # Calculation of taxes
         tax_amount = base_amount * (rate / Decimal('100'))
         
         return float(tax_amount)
@@ -222,19 +222,19 @@ class NumberUtils:
     def calculate_total_with_tax(subtotal: Union[float, int, str, Decimal], 
                                 tax_rate: Union[float, int, str, Decimal]) -> Tuple[float, float]:
         """
-        计算含税总价和税额
-        
+        Computation of gross and tax values
+                
         Args:
-            subtotal: 不含税金额
-            tax_rate: 税率（百分比）
-            
+            Subtotal: No tax amounts
+            tax_rate: Tax rate (percentage)
+                        
         Returns:
-            tuple: (税额, 含税总价)
-        """
-        # 计算税额
+            Tuple: (tax, including total tax)
+                """
+        # Calculation of taxes
         tax_amount = NumberUtils.calculate_tax(subtotal, tax_rate)
         
-        # 计算总价
+        # Calculate total price
         subtotal_float = float(NumberUtils.to_decimal(subtotal) or 0)
         total = subtotal_float + tax_amount
         
@@ -243,18 +243,18 @@ class NumberUtils:
     @staticmethod
     def calculate_average(numbers: List[Union[float, int, str, Decimal]]) -> float:
         """
-        计算平均值
-        
+        Calculated average
+                
         Args:
-            numbers: 数字列表
-            
+            Numbers: Number List
+                        
         Returns:
-            float: 平均值
-        """
+            float: average
+                """
         if not numbers:
             return 0.0
         
-        # 转换并过滤有效数字
+        # Convert and filter valid numbers
         valid_numbers = []
         for num in numbers:
             decimal_num = NumberUtils.to_decimal(num)
@@ -264,7 +264,7 @@ class NumberUtils:
         if not valid_numbers:
             return 0.0
         
-        # 计算平均值
+        # Calculated average
         total = sum(valid_numbers)
         average = total / Decimal(len(valid_numbers))
         
@@ -273,41 +273,41 @@ class NumberUtils:
     @staticmethod
     def is_valid_number(value: str) -> bool:
         """
-        检查字符串是否为有效数字
-        
+        Checks if the string is a valid number
+                
         Args:
-            value: 要检查的字符串
-            
+            value: String to check
+                        
         Returns:
-            bool: 是否为有效数字
-        """
+            Bool: Is it a valid number
+                """
         if not isinstance(value, str):
             return False
         
-        # 匹配整数或小数（包括负数）
+        # Match integer or decimal (including negative)
         pattern = r'^-?\d+(\.\d+)?$'
         return bool(re.match(pattern, value))
     
     @staticmethod
     def is_valid_positive_number(value: str) -> bool:
         """
-        检查字符串是否为有效正数
-        
+        Check if the string is active positive
+                
         Args:
-            value: 要检查的字符串
-            
+            value: String to check
+                        
         Returns:
-            bool: 是否为有效正数
-        """
+            Bool: Is it a valid positive number
+                """
         if not isinstance(value, str):
             return False
         
-        # 匹配正数（包括小数）
+        # Match positive numbers (including decimals)
         pattern = r'^\d+(\.\d+)?$'
         if not re.match(pattern, value):
             return False
         
-        # 确保不是0
+        # Make sure it's not zero.
         try:
             num = float(value)
             return num > 0
@@ -319,16 +319,16 @@ class NumberUtils:
                     min_value: Union[float, int], 
                     max_value: Union[float, int]) -> float:
         """
-        将数字限制在指定范围内
-        
+        Limiting numbers to specified ranges
+                
         Args:
-            value: 要限制的数字
-            min_value: 最小值
-            max_value: 最大值
-            
+            Value: Numbers to limit
+            parameter: Minimal value
+            parameter: Maximum value
+                        
         Returns:
-            float: 限制后的数字
-        """
+            float: Limited Numbers
+                """
         if min_value > max_value:
             min_value, max_value = max_value, min_value
         
@@ -339,31 +339,31 @@ class NumberUtils:
                                   new_value: Union[float, int, str, Decimal],
                                   precision: int = DEFAULT_PRECISION) -> float:
         """
-        计算百分比变化
-        
+        Calculated percentage change
+                
         Args:
-            old_value: 旧值
-            new_value: 新值
-            precision: 小数位数
-            
+            parameter: Old value
+            new_value: New value
+            Number of decimal places
+                        
         Returns:
-            float: 百分比变化（正值表示增长，负值表示减少）
-        """
-        # 转换为Decimal
+            float: percentage change (positive for growth, negative for decrease)
+                """
+        # Convert to Decimal
         old = NumberUtils.to_decimal(old_value)
         new = NumberUtils.to_decimal(new_value)
         
         if old is None or new is None:
             return 0.0
         
-        # 避免除以零
+        # Avoid dividing by zero
         if old == 0:
             return float('inf') if new > 0 else 0.0
         
-        # 计算变化百分比
+        # Calculated percentage change
         change_percent = ((new - old) / old) * Decimal('100')
         
-        # 四舍五入
+        # Rounded
         rounded = change_percent.quantize(Decimal(f'0.{"0" * precision}'))
         
         return float(rounded)
@@ -374,94 +374,94 @@ class NumberUtils:
                     thousands_separator: str = ",",
                     decimal_separator: str = ".") -> str:
         """
-        格式化数字
-        
+        Format Numbers
+                
         Args:
-            value: 要格式化的数字
-            precision: 小数位数
-            thousands_separator: 千位分隔符
-            decimal_separator: 小数分隔符
-            
+            value: numbers to format
+            Number of decimal places
+            parameter: thousands separator
+            decimal_separator: Decimal Separator
+                        
         Returns:
-            str: 格式化后的数字字符串
-        """
-        # 转换为Decimal并四舍五入
+            str: Formatted Digital String
+                """
+        # Convert to Decimal and rounded
         decimal_value = NumberUtils.to_decimal(value)
         if decimal_value is None:
             return f"0{decimal_separator}{'0' * precision}"
         
-        # 格式化数字部分
+        # Formatting numbers section
         rounded = decimal_value.quantize(Decimal(f'0.{"0" * precision}'))
         parts = str(rounded).split('.')
         
-        # 处理整数部分，添加千位分隔符
+        # Handle integer part, add thousands partition Symbol
         integer_part = parts[0]
-        # 处理负数
+        # Deal with negative numbers
         negative = False
         if integer_part.startswith('-'):
             negative = True
             integer_part = integer_part[1:]
         
-        # 从右向左每3位添加分隔符
+        # Add Separator every 3 places from right to left
         formatted_integer = ''
         for i, char in enumerate(reversed(integer_part)):
             if i > 0 and i % 3 == 0:
                 formatted_integer = thousands_separator + formatted_integer
             formatted_integer = char + formatted_integer
         
-        # 组合结果
+        # Group results
         result = ''
         if negative:
             result += '-'
         result += formatted_integer
         
-        # 添加小数部分
+        # Add decimal part
         if precision > 0:
             decimal_part = parts[1] if len(parts) > 1 else '0' * precision
-            decimal_part = decimal_part.ljust(precision, '0')[:precision]  # 确保小数位数正确
+            decimal_part = decimal_part.ljust(precision, '0')[:precision]  # Make sure the decimal is correct.
             result += decimal_separator + decimal_part
         
         return result
 
 
-# 示例用法
+# Example Usage
 if __name__ == "__main__":
-    # 格式化货币
+    # Formatting Currency
     price = 12345.6789
     formatted_price = NumberUtils.format_currency(price)
-    print(f"格式化货币: {formatted_price}")
+    print(f"Formatted currency: {formatted_price}")
     
-    # 格式化百分比
+    # Formatting Percentage
     discount_rate = 0.15
     formatted_percent = NumberUtils.format_percentage(discount_rate)
-    print(f"格式化百分比: {formatted_percent}")
+    print(f"Formatted percentage: {formatted_percent}")
     
-    # 计算折扣
+    # Calculate discount
     original_price = 1000
     discount_value = 20
     discount_amount, discounted_price = NumberUtils.calculate_discount(original_price, discount_value, is_percentage=True)
-    print(f"原价: {original_price}, 折扣: {discount_value}%, 折扣金额: {discount_amount:.2f}, 折后价: {discounted_price:.2f}")
+    print(f"Original price: {original_price}, discount: {discount_value}%, discount amount: {discount_amount:.2f}, discounted price: {discounted_price:.2f}")
     
-    # 计算税额
+    # Calculation of taxes
     subtotal = 1000
     tax_rate = 13
     tax_amount, total_with_tax = NumberUtils.calculate_total_with_tax(subtotal, tax_rate)
-    print(f"不含税金额: {subtotal}, 税率: {tax_rate}%, 税额: {tax_amount:.2f}, 含税总价: {total_with_tax:.2f}")
+    print(f"Subtotal: {subtotal}, tax rate: {tax_rate}%, tax: {tax_amount:.2f}, total with tax: {total_with_tax:.2f}")
     
-    # 格式化大数字
+    # Format Big Numbers
     large_number = 123456789.123456
     formatted_large = NumberUtils.format_number(large_number, precision=4)
-    print(f"格式化大数字: {formatted_large}")
+    print(f"Formatted large number: {formatted_large}")
     
-    # 计算百分比变化
+    # Calculated percentage change
     old_sales = 10000
     new_sales = 12500
     change_percent = NumberUtils.calculate_percentage_change(old_sales, new_sales)
-    print(f"销售额变化: {old_sales} -> {new_sales}, 变化百分比: {change_percent:.2f}%")
+    print(f"Sales change: {old_sales} -> {new_sales}, percentage change: {change_percent:.2f}%")
     
-    # 限制数字范围
+    # Limit number ranges
     value = 150
     min_val = 0
     max_val = 100
     clamped = NumberUtils.clamp_number(value, min_val, max_val)
-    print(f"限制范围 [{min_val}, {max_val}]: {value} -> {clamped}")
+    print(f"Clamp to [{min_val}, {max_val}]: {value} -> {clamped}")

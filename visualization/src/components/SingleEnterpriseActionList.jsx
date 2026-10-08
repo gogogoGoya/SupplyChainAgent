@@ -5,19 +5,19 @@ import { getActionDisplayName } from '../utils/actionLabels';
 const DEPARTMENTS = ['finance', 'production', 'sales', 'inventory', 'procurement', 'hr'];
 
 const DEPARTMENT_LABELS = {
-  finance: '财务',
-  production: '生产',
-  sales: '销售',
-  inventory: '库存',
-  procurement: '采购',
-  hr: '人力',
+  finance: 'Finance',
+  production: 'Production',
+  sales: 'Sales',
+  inventory: 'Inventory',
+  procurement: 'Procurement',
+  hr: 'Human Resources',
 };
 
 const STATUS_LABELS = {
-  failed: '异常',
-  success: '成功',
-  generated: '已生成',
-  empty: '暂无动作',
+  failed: 'Issue',
+  success: 'Success',
+  generated: 'Generated',
+  empty: 'No Action',
 };
 
 const normalizeActions = (payload) => {
@@ -133,7 +133,7 @@ const loadFirstAvailable = async (dataRoot, candidates) => {
 const Section = ({ title, children, emptyText }) => (
   <section className="single-action-section">
     <h4>{title}</h4>
-    {children || <p>{emptyText || '暂无记录'}</p>}
+    {children || <p>{emptyText || 'No records available'}</p>}
   </section>
 );
 
@@ -201,9 +201,9 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
         ]);
 
         const actions = [
-          ...normalizeActions(preAction).map((item) => ({ ...item, phase: '预执行' })),
-          ...normalizeActions(action).map((item) => ({ ...item, phase: '执行' })),
-          ...normalizeActions(marketSeedAction).map((item) => ({ ...item, phase: '预热种子' })),
+          ...normalizeActions(preAction).map((item) => ({ ...item, phase: 'Pre-execution' })),
+          ...normalizeActions(action).map((item) => ({ ...item, phase: 'Execution' })),
+          ...normalizeActions(marketSeedAction).map((item) => ({ ...item, phase: 'Warm-up Seed' })),
         ];
         const successResults = [
           ...normalizeResultItems(preResult, 'success'),
@@ -267,7 +267,7 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
     <aside className="single-action-panel">
       <div className="single-action-header">
         <span>Department Trace</span>
-        <strong>Turn {currentDay} 部门行动与思考</strong>
+        <strong>Turn {currentDay} Department Actions and Reasoning</strong>
       </div>
       <div className="single-action-list">
         {rows.map((row) => {
@@ -278,7 +278,7 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
                 <div>
                   <strong>{row.departmentLabel}</strong>
                   <small>
-                    动作 {row.actions.length} · 成功 {row.successResults.length} · 失败 {row.failedResults.length + row.errors.length} · 消息 {row.messages.length}
+                    Actions {row.actions.length} · Successes {row.successResults.length} · Failures {row.failedResults.length + row.errors.length} · Messages {row.messages.length}
                   </small>
                 </div>
                 <button
@@ -287,7 +287,7 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
                   onClick={() => setExpandedDept(expanded ? null : row.department)}
                 >
                   <span>{STATUS_LABELS[row.status] || row.status}</span>
-                  <b>{expanded ? '收起' : '详情'}</b>
+                  <b>{expanded ? 'Collapse' : 'Details'}</b>
                 </button>
               </header>
 
@@ -296,55 +296,55 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
                   {row.actions.slice(0, expanded ? row.actions.length : 2).map((action, index) => (
                     <article key={`${row.department}-${index}`}>
                       <b>{action.phase} · {getActionName(action)}</b>
-                      <small>{getActionReason(action) || '未记录动作原因'}</small>
+                      <small>{getActionReason(action) || 'No action rationale recorded'}</small>
                     </article>
                   ))}
                   {!expanded && row.actions.length > 2 && (
-                    <p>还有 {row.actions.length - 2} 条动作，展开查看完整信息。</p>
+                    <p>{row.actions.length - 2} more actions. Expand to view the complete trace.</p>
                   )}
                 </div>
               ) : (
-                <p>当前轮次未读取到该部门动作。</p>
+                <p>No action was recorded for this department in the current turn.</p>
               )}
 
               {expanded && (
                 <div className="single-action-detail-panel">
-                  <Section title="动作计划">
+                  <Section title="Action Plan">
                     {row.actions.length > 0 ? (
                       row.actions.map((action, index) => (
                         <article key={`plan-${row.department}-${index}`} className="single-action-detail-item">
                           <b>{action.phase} · {getActionName(action)}</b>
                           <dl>
-                            <dt>参数</dt>
+                            <dt>Parameters</dt>
                             <dd>{stringifyCompact(getActionParams(action), 360)}</dd>
-                            <dt>原因</dt>
-                            <dd>{getActionReason(action) || '未记录'}</dd>
+                            <dt>Rationale</dt>
+                            <dd>{getActionReason(action) || 'Not recorded'}</dd>
                           </dl>
                         </article>
                       ))
                     ) : null}
                   </Section>
 
-                  <Section title="执行结果">
+                  <Section title="Execution Results">
                     {(row.successResults.length > 0 || row.failedResults.length > 0) ? (
                       <div className="single-action-result-grid">
                         <div>
-                          <strong>成功</strong>
+                          <strong>Success</strong>
                           {row.successResults.length > 0
                             ? row.successResults.slice(0, 4).map((item, index) => <p key={`success-${index}`}>{stringifyCompact(item, 180)}</p>)
-                            : <p>暂无成功结果</p>}
+                            : <p>No successful results</p>}
                         </div>
                         <div>
-                          <strong>失败</strong>
+                          <strong>Failure</strong>
                           {row.failedResults.length > 0
                             ? row.failedResults.slice(0, 4).map((item, index) => <p key={`failed-${index}`}>{stringifyCompact(item, 180)}</p>)
-                            : <p>暂无失败结果</p>}
+                            : <p>No failed results</p>}
                         </div>
                       </div>
                     ) : null}
                   </Section>
 
-                  <Section title="错误与校验">
+                  <Section title="Errors and Validation">
                     {(row.errors.length > 0 || row.audits.length > 0) ? (
                       <>
                         {row.errors.map((message, index) => (
@@ -357,7 +357,7 @@ const SingleEnterpriseActionList = ({ company, currentDay = 0, dataRoot }) => {
                     ) : null}
                   </Section>
 
-                  <Section title="思考与消息">
+                  <Section title="Reasoning and Messages">
                     {row.messages.length > 0 ? (
                       <div className="single-action-message-list">
                         {row.messages.slice(-4).map((message) => (

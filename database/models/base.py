@@ -1,7 +1,7 @@
 """
-基础数据库模型
+Basic database model
 
-定义数据库表的基类和通用结构
+Define the base category and common structure of the database tables
 """
 
 from datetime import datetime
@@ -13,49 +13,49 @@ from database.db_manager import Base
 
 class BaseModel(Base):
     """
-    数据库模型基类
-    对应于数据模型中的BaseModel
-    """
+    Database Model Base Category
+    BaseModel in the data model
+        """
     __abstract__ = True
     
-    # 主键ID
+    # Primary Key ID
     id = Column(String, primary_key=True, index=True)
     
-    # 时间戳
+    # Timetamp
     created_at = Column(DateTime, default=datetime.utcnow, server_default=func.now())
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, server_default=func.now())
     
-    # 状态
+    # Status
     status = Column(String, default="active")
     
-    # 标签（使用JSON存储列表）
+    # Label (use JSON storage list)
     tags = Column(JSON, default=list)
     
-    # 元数据
+    # Metadata
     metadata_ = Column("metadata", JSON, default=dict)
     
     def to_dict(self) -> Dict[str, Any]:
         """
-        将数据库模型转换为字典
-        
+        Convert database model to dictionary
+                
         Returns:
-            dict: 模型字典表示
-        """
+            dict: Model dictionary
+                """
         result = {}
         for column in self.__table__.columns:
             key = column.name
             value = getattr(self, key)
             
-            # 处理JSON字段
+            # Process JSON fields
             if isinstance(value, dict) or isinstance(value, list):
                 result[key] = value
-            # 处理datetime字段
+            # Process the datetime field
             elif hasattr(value, 'isoformat'):
                 result[key] = value.isoformat()
             else:
                 result[key] = value
         
-        # 修复metadata_字段名
+        # Fix metadata field name
         if 'metadata_' in result:
             result['metadata'] = result.pop('metadata_')
         
@@ -63,16 +63,16 @@ class BaseModel(Base):
     
     def from_dict(self, data: Dict[str, Any]) -> "BaseModel":
         """
-        从字典加载数据到模型
-        
+        Load data from dictionary to model
+                
         Args:
-            data: 模型字典数据
-        
+            Data: Model dictionary data
+                
         Returns:
-            BaseModel: 更新后的模型实例
-        """
+            BaseModel: updated model examples
+                """
         for key, value in data.items():
-            # 处理metadata字段名
+            # Process metadata field names
             if key == 'metadata':
                 key = 'metadata_'
             

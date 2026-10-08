@@ -157,7 +157,7 @@ const loadProductionErrorRowsForDays = async (dataRoot, availableDays, enterpris
             buildDataUrl(dataRoot, `enterprises/${enterpriseId}/department/production/day${day}/${fileName}`)
           );
           const text = payload ? JSON.stringify(payload) : '';
-          if (text.includes('资金不足') || text.toLowerCase().includes('insufficient')) {
+          if (text.toLowerCase().includes('insufficient funds') || text.toLowerCase().includes('insufficient cash')) {
             insufficientFundErrors += 1;
           }
         }
@@ -287,7 +287,7 @@ const Legend = ({ items }) => (
   </div>
 );
 
-const EmptyChart = ({ message = '暂无可绘制数据', detail = null }) => (
+const EmptyChart = ({ message = 'No chart data available', detail = null }) => (
   <div className="commons-svg-empty">
     <strong>{message}</strong>
     {detail && <span>{detail}</span>}
@@ -301,7 +301,7 @@ const LineSvgChart = ({
   min = null,
   percent = false,
   floorZero = true,
-  emptyMessage = '暂无可绘制数据',
+  emptyMessage = 'No chart data available',
   emptyDetail = null,
 }) => {
   if (!rows.length || !series.length) {
@@ -409,8 +409,8 @@ const buildStrategyRows = (enterpriseRows, runMeta) => {
       const profile = configMap[row.enterpriseId]?.strategy_profile || {};
       return {
         ...row,
-        strategyLabel: profile.label || profile.profile_id || '默认策略',
-        acquisitionBias: profile.acquisition_bias || '未声明',
+        strategyLabel: profile.label || profile.profile_id || 'Default Strategy',
+        acquisitionBias: profile.acquisition_bias || 'Not specified',
         preferredBand: Array.isArray(profile.preferred_acquisition_band)
           ? profile.preferred_acquisition_band
           : [],
@@ -440,9 +440,9 @@ const AcquisitionSvgChart = ({ rows }) => {
     <div className="commons-svg-chart-wrap">
       <Legend
         items={[
-          { name: '计划获取量', color: COMMONS_COLORS.planned },
-          { name: '有效获取量', color: COMMONS_COLORS.effective },
-          { name: '可持续线', color: COMMONS_COLORS.sustainable },
+          { name: 'Planned Acquisition', color: COMMONS_COLORS.planned },
+          { name: 'Effective Acquisition', color: COMMONS_COLORS.effective },
+          { name: 'Sustainable Limit', color: COMMONS_COLORS.sustainable },
         ]}
       />
       <svg className="commons-svg-chart" viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} role="img">
@@ -453,13 +453,13 @@ const AcquisitionSvgChart = ({ rows }) => {
           const height = chartBottom - y;
           return (
             <rect key={row.round} x={x} y={y} width={barWidth} height={height} rx="4" fill={COMMONS_COLORS.planned} opacity="0.76">
-              <title>{`D${row.round} 计划获取量: ${formatNumber(row.total_planned_acquisition, 2)}`}</title>
+              <title>{`D${row.round} planned acquisition: ${formatNumber(row.total_planned_acquisition, 2)}`}</title>
             </rect>
           );
         })}
         {[
-          { name: '有效获取量', color: COMMONS_COLORS.effective, value: (row) => row.total_effective_acquisition },
-          { name: '可持续线', color: COMMONS_COLORS.sustainable, value: (row) => row.sustainable_total_acquisition, dashed: true },
+          { name: 'Effective Acquisition', color: COMMONS_COLORS.effective, value: (row) => row.total_effective_acquisition },
+          { name: 'Sustainable Limit', color: COMMONS_COLORS.sustainable, value: (row) => row.sustainable_total_acquisition, dashed: true },
         ].map((entry) => {
           const points = rows.map((row, index) => ({
             x: helpers.x(index),
@@ -529,7 +529,7 @@ const StackedEnterpriseSvgChart = ({ rows, enterpriseIds }) => {
 
 const StrategyDifferenceChart = ({ rows }) => {
   if (!rows.length) {
-    return <EmptyChart message="暂无策略画像数据" detail="当前运行元数据中没有企业策略配置，无法绘制策略差异。" />;
+    return <EmptyChart message="No strategy-profile data" detail="The run metadata contains no enterprise strategy configuration." />;
   }
   const maxPlanned = Math.max(...rows.map((row) => Number(row.plannedTotal || 0)), 1);
 
@@ -548,8 +548,8 @@ const StrategyDifferenceChart = ({ rows }) => {
               <strong>{row.strategyLabel}</strong>
             </div>
             <div className="commons-strategy-meta">
-              <span>偏好：{row.acquisitionBias}</span>
-              <span>目标带：{row.preferredBand.length ? row.preferredBand.join('-') : '-'}</span>
+              <span>Preference: {row.acquisitionBias}</span>
+              <span>Target band: {row.preferredBand.length ? row.preferredBand.join('-') : '-'}</span>
             </div>
             <div className="commons-strategy-bars">
               <div className="commons-strategy-track">
@@ -569,9 +569,9 @@ const StrategyDifferenceChart = ({ rows }) => {
               </div>
             </div>
             <div className="commons-strategy-values">
-              <span>累计计划 {formatNumber(row.plannedTotal, 0)}</span>
-              <span>累计有效 {formatNumber(row.effectiveTotal, 0)}</span>
-              <span>风险敏感 {formatNumber(row.riskSensitivity, 2)}</span>
+              <span>Cumulative planned {formatNumber(row.plannedTotal, 0)}</span>
+              <span>Cumulative effective {formatNumber(row.effectiveTotal, 0)}</span>
+              <span>Risk sensitivity {formatNumber(row.riskSensitivity, 2)}</span>
             </div>
           </div>
         );
@@ -642,7 +642,7 @@ function CommonsTragedyView({
         }
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError.message || '加载公地悲剧数据失败');
+          setError(loadError.message || 'Failed to load commons-tragedy data');
         }
       } finally {
         if (!cancelled) {
@@ -723,7 +723,7 @@ function CommonsTragedyView({
   );
 
   if (loading) {
-    return <div className="commons-empty-state">正在加载公地悲剧实验数据...</div>;
+    return <div className="commons-empty-state">Loading commons-tragedy experiment data...</div>;
   }
 
   if (error) {
@@ -733,7 +733,7 @@ function CommonsTragedyView({
   if (metrics.length === 0) {
     return (
       <div className="commons-empty-state warning">
-        当前任务未读取到 `shared_resource_metrics.json`，请选择 shared_resource_market 场景。
+        The current run does not contain `shared_resource_metrics.json`. Select a shared_resource_market scenario.
       </div>
     );
   }
@@ -743,99 +743,98 @@ function CommonsTragedyView({
       <section className="commons-hero">
         <div className="commons-hero-copy">
           <span className="commons-eyebrow">Commons Tragedy</span>
-          <h2>公地悲剧实验解释与验证</h2>
+          <h2>Commons-Tragedy Experiment Analysis</h2>
           <p>
-            本页面关注同一个公共资源池如何被多家企业共同消耗。脚本只维护资源池、可持续线和结算后果；
-            企业是否扩大获取量，由 Agent 在订单、利润、产能和资源状态之间自主决策。
+            This view traces how multiple enterprises draw from a shared resource pool. The environment maintains resource dynamics and settlement, while agents choose acquisition levels from orders, profit, capacity, and observed resource conditions.
           </p>
           <div className="commons-source-strip">
-            <span>任务：{currentRunId || runMeta?.run_id || '-'}</span>
-            <span>来源：{currentRunSourceLabel || dataRoot}</span>
-            <span>场景：{runMeta?.scenario_id || runMeta?.scenario_config?.meta?.scenario_id || '-'}</span>
-            <span>已读取指标：{metrics.length} 轮</span>
+            <span>Run: {currentRunId || runMeta?.run_id || '-'}</span>
+            <span>Source: {currentRunSourceLabel || dataRoot}</span>
+            <span>Scenario: {runMeta?.scenario_id || runMeta?.scenario_config?.meta?.scenario_id || '-'}</span>
+            <span>Metric turns: {metrics.length}</span>
           </div>
         </div>
       </section>
 
       <section className="commons-kpi-grid">
         <div className="commons-kpi-card">
-          <span>过度获取轮次</span>
+          <span>Overuse Turns</span>
           <strong>{summary.overuseDays}/{summary.roundCount}</strong>
-          <small>计划获取量高于可持续线</small>
+          <small>Planned acquisition exceeds the sustainable limit</small>
         </div>
         <div className="commons-kpi-card">
-          <span>平均计划获取</span>
+          <span>Mean Planned Acquisition</span>
           <strong>{formatNumber(summary.avgPlanned, 1)}</strong>
-          <small>可持续线：{formatNumber(summary.sustainable, 0)}</small>
+          <small>Sustainable limit: {formatNumber(summary.sustainable, 0)}</small>
         </div>
         <div className="commons-kpi-card warning">
-          <span>资源存量下降</span>
+          <span>Resource-Stock Decline</span>
           <strong>{formatNumber(summary.stockDrop, 1)}</strong>
-          <small>{formatPercent(summary.firstRatio)} 到 {formatPercent(summary.finalRatio)}</small>
+          <small>{formatPercent(summary.firstRatio)} to {formatPercent(summary.finalRatio)}</small>
         </div>
         <div className="commons-kpi-card warning">
-          <span>资源质量下降</span>
+          <span>Resource-Quality Decline</span>
           <strong>{formatPercent(summary.qualityDrop)}</strong>
-          <small>{formatPercent(summary.initialQuality)} 到 {formatPercent(summary.finalQuality)}</small>
+          <small>{formatPercent(summary.initialQuality)} to {formatPercent(summary.finalQuality)}</small>
         </div>
         <div className="commons-kpi-card">
-          <span>Agent 获取轮次</span>
+          <span>Agent Acquisition Turns</span>
           <strong>{summary.totalAgentRounds}/{summary.totalDecisionRounds}</strong>
-          <small>day0 之外由生产计划驱动</small>
+          <small>Driven by production plans after Day 0</small>
         </div>
         <div className="commons-kpi-card accent">
-          <span>主要获取者</span>
+          <span>Leading Acquirer</span>
           <strong>{summary.leadingEnterprise?.enterpriseId || '-'}</strong>
-          <small>累计计划 {formatNumber(summary.leadingEnterprise?.plannedTotal, 0)}</small>
+          <small>Cumulative plan {formatNumber(summary.leadingEnterprise?.plannedTotal, 0)}</small>
         </div>
       </section>
 
       <section className="commons-layout">
         <article className="commons-chart-card compact">
-          <div className="commons-card-title">资源池退化曲线</div>
+          <div className="commons-card-title">Resource-Pool Degradation</div>
           <p className="commons-card-note">
-            资源存量比例与资源质量持续下行，是判断公共资源被长期过度使用的直接证据。
+            Persistent declines in stock ratio and quality directly indicate sustained overuse of the common resource.
           </p>
           <LineSvgChart
             rows={metrics}
             max={1}
             percent
             series={[
-              { name: '资源存量比例', color: COMMONS_COLORS.stock, value: (row) => row.resource_stock_ratio },
-              { name: '资源质量', color: COMMONS_COLORS.quality, value: (row) => row.resource_quality },
-              { name: '预警线', color: COMMONS_COLORS.sustainable, value: () => warningThreshold, dashed: true },
+              { name: 'Resource-Stock Ratio', color: COMMONS_COLORS.stock, value: (row) => row.resource_stock_ratio },
+              { name: 'Resource Quality', color: COMMONS_COLORS.quality, value: (row) => row.resource_quality },
+              { name: 'Warning Threshold', color: COMMONS_COLORS.sustainable, value: () => warningThreshold, dashed: true },
             ]}
           />
         </article>
 
         <article className="commons-chart-card compact">
-          <div className="commons-card-title">计划获取量 vs 可持续线</div>
+          <div className="commons-card-title">Planned Acquisition vs. Sustainable Limit</div>
           <p className="commons-card-note">
-            当柱状图长期高于虚线，说明企业合计获取量超过公共资源可持续恢复能力。
+            Bars persistently above the dashed line indicate aggregate extraction beyond the resource's recovery capacity.
           </p>
           <AcquisitionSvgChart rows={metrics} />
         </article>
 
         <article className="commons-chart-card">
-          <div className="commons-card-title">企业获取贡献</div>
+          <div className="commons-card-title">Enterprise Acquisition Contributions</div>
           <p className="commons-card-note">
-            堆叠柱越高，说明该轮公共资源承压越强；颜色可定位主要贡献企业。
+            Taller stacked bars indicate greater pressure on the common resource, while color identifies contributing enterprises.
           </p>
           <StackedEnterpriseSvgChart rows={metrics} enterpriseIds={enterpriseIds} />
         </article>
 
         <article className="commons-chart-card">
-          <div className="commons-card-title">不同策略下的累计开采差异</div>
+          <div className="commons-card-title">Cumulative Acquisition across Strategies</div>
           <p className="commons-card-note">
-            将企业策略画像与累计计划/有效获取量放在同一视图中，直观看出不同经营倾向带来的资源占用差异。
+            Strategy profiles are aligned with cumulative planned and effective acquisition to reveal differences in resource use.
           </p>
           <StrategyDifferenceChart rows={strategyRows} />
         </article>
 
         <article className="commons-chart-card">
-          <div className="commons-card-title">有效产出折损</div>
+          <div className="commons-card-title">Effective-Yield Loss</div>
           <p className="commons-card-note">
-            资源质量下降后，同样的计划获取量会转化为更低的有效产出。
+            As resource quality declines, the same planned acquisition produces less effective output.
           </p>
           <LineSvgChart
             rows={metrics}
@@ -843,7 +842,7 @@ function CommonsTragedyView({
             percent
             series={[
               {
-                name: '有效/计划比',
+                name: 'Effective / Planned Ratio',
                 color: COMMONS_COLORS.yield,
                 value: (row) => (
                   row.total_planned_acquisition > 0
@@ -851,32 +850,31 @@ function CommonsTragedyView({
                     : 0
                 ),
               },
-              { name: '资源质量', color: COMMONS_COLORS.stock, value: (row) => row.resource_quality },
+              { name: 'Resource Quality', color: COMMONS_COLORS.stock, value: (row) => row.resource_quality },
             ]}
           />
         </article>
 
         <article className="commons-chart-card evidence-card">
-          <div className="commons-card-title">因果链：过度获取累积 vs 资源耗尽</div>
+          <div className="commons-card-title">Causal Chain: Cumulative Overuse vs. Resource Depletion</div>
           <p className="commons-card-note">
-            橙线表示累计过度获取指数，红线表示资源耗尽比例。如果两条线同步上行，说明资源下降不是自然波动，
-            而是企业计划获取量长期高于可持续线后的累积结果。
+            Joint increases in cumulative overuse and depletion distinguish extraction-driven degradation from ordinary resource fluctuation.
           </p>
           <LineSvgChart
             rows={causalityRows}
             max={1}
             percent
             series={[
-              { name: '累计过度获取指数', color: COMMONS_COLORS.overuse, value: (row) => row.cumulativeOveruseIndex },
-              { name: '资源耗尽比例', color: COMMONS_COLORS.depletion, value: (row) => row.depletionRatio },
+              { name: 'Cumulative Overuse Index', color: COMMONS_COLORS.overuse, value: (row) => row.cumulativeOveruseIndex },
+              { name: 'Resource-Depletion Ratio', color: COMMONS_COLORS.depletion, value: (row) => row.depletionRatio },
             ]}
           />
         </article>
 
         <article className="commons-chart-card">
-          <div className="commons-card-title">企业现金曲线</div>
+          <div className="commons-card-title">Enterprise Cash</div>
           <p className="commons-card-note">
-            现金跌破 0 表示资源退化和成本压力已经从公共资源层传导到企业经营层。
+            Cash below zero indicates that resource degradation and cost pressure have propagated into enterprise operations.
           </p>
           <LineSvgChart
             rows={cashRows}
@@ -890,9 +888,9 @@ function CommonsTragedyView({
         </article>
 
         <article className="commons-chart-card">
-          <div className="commons-card-title">企业净利润曲线</div>
+          <div className="commons-card-title">Enterprise Net Profit</div>
           <p className="commons-card-note">
-            净利润持续走低且转负，说明企业过度获取没有带来长期可持续收益。
+            Persistent profit decline indicates that aggressive acquisition does not produce sustainable returns.
           </p>
           <LineSvgChart
             rows={profitRows}
@@ -906,21 +904,21 @@ function CommonsTragedyView({
         </article>
 
         <article className="commons-chart-card wide">
-          <div className="commons-card-title">企业行为与收益对照</div>
+          <div className="commons-card-title">Enterprise Behavior and Outcomes</div>
           <div className="commons-table-wrapper">
             <table className="commons-table">
               <thead>
                 <tr>
-                  <th>企业</th>
-                  <th>累计计划获取</th>
-                  <th>累计有效获取</th>
-                  <th>Agent 计划轮次</th>
-                  <th>现金</th>
-                  <th>净利润</th>
-                  <th title={`累计资金不足失败达到 ${highFailureThreshold} 次及以上时加粗显示`}>资金不足失败</th>
-                  <th>完成订单</th>
-                  <th>违约订单</th>
-                  <th>最终库存</th>
+                  <th>Enterprise</th>
+                  <th>Cumulative Planned Acquisition</th>
+                  <th>Cumulative Effective Acquisition</th>
+                  <th>Agent Planning Turns</th>
+                  <th>Cash</th>
+                  <th>Net Profit</th>
+                  <th title={`Emphasized when cumulative insufficient-funds failures reach ${highFailureThreshold}`} >Insufficient-Funds Failures</th>
+                  <th>Completed Orders</th>
+                  <th>Defaulted Orders</th>
+                  <th>Ending Inventory</th>
                 </tr>
               </thead>
               <tbody>
@@ -956,22 +954,22 @@ function CommonsTragedyView({
         </article>
 
         <article className="commons-chart-card insight-card">
-          <div className="commons-card-title">本次 baseline 说明了什么</div>
+          <div className="commons-card-title">What the Baseline Demonstrates</div>
           <ul>
-            <li>公共资源不是隐藏背景，而是通过 `shared_resource_metrics` 每轮结算并反馈给 Agent。</li>
-            <li>无治理 baseline 中，企业可以为了订单和利润持续扩大或维持获取量。</li>
-            <li>只要总计划获取量长期越过 `360`，资源存量和质量就会逐步下降。</li>
-            <li>后续 quota/tax 场景应重点比较是否降低越线轮次、主要获取者贡献和质量下降速度。</li>
+            <li>`shared_resource_metrics` settles and exposes the common resource to agents every turn.</li>
+            <li>Without governance, enterprises may sustain or expand acquisition in pursuit of orders and profit.</li>
+            <li>Persistent aggregate acquisition above `360` reduces both resource stock and quality.</li>
+            <li>Quota and tax variants can be compared through threshold crossings, leading-acquirer contributions, and degradation rates.</li>
           </ul>
         </article>
 
         <article className="commons-chart-card insight-card">
-          <div className="commons-card-title">对照实验预留判据</div>
+          <div className="commons-card-title">Criteria for Governance Comparisons</div>
           <ul>
-            <li>配额组：总获取量应更接近 `360`，主要企业之间获取差异应缩小。</li>
-            <li>税收组：过度获取仍可能存在，但平均过度获取量应低于 baseline。</li>
-            <li>软提醒组：若仍长期越线，说明信息提示不足以解决公地悲剧。</li>
-            <li>治理有效的核心证据是资源质量下降变慢，而不是单轮利润最高。</li>
+            <li>Quota regimes should keep total acquisition near `360` and reduce differences among leading enterprises.</li>
+            <li>Tax regimes may retain some overuse but should reduce its average magnitude relative to baseline.</li>
+            <li>Persistent threshold crossings under soft reminders indicate that information alone is insufficient.</li>
+            <li>Effective governance is evidenced by slower quality degradation rather than the highest single-turn profit.</li>
           </ul>
         </article>
       </section>

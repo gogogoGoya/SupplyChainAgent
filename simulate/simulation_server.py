@@ -17,10 +17,10 @@ import math
 import json
 from fastapi import Body
 
-# 添加项目根目录到Python路径
+# Add Item Root Directory to Python Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# 配置日志
+# Configure Log
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -30,7 +30,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 引入你的引擎和适配器
+# Introduce your engine and adaptor.
 from simulate.simulation import SupplyChainSimulation
 from simulate.SimulationEnvAdapter import SimulationEnvAdapter
 from runtime.operations.http_router import create_operations_router
@@ -45,7 +45,7 @@ app.include_router(create_operations_router())
 
 
 def _sanitize_json_payload(value: Any) -> Any:
-    """将 NaN/Inf 清洗为 JSON 可序列化的值，避免 /state 500。"""
+    """Purge NaN/Inf to JSON sequencable value to avoid /state 500."""
     if isinstance(value, float):
         return value if math.isfinite(value) else None
     if isinstance(value, dict):
@@ -58,7 +58,7 @@ def _sanitize_json_payload(value: Any) -> Any:
 
 
 def _collect_nonfinite_paths(value: Any, path: str = "root", limit: int = 20) -> List[str]:
-    """收集非有限浮点字段路径，便于定位 observation 根因。"""
+    """Collects non-limited floating-point field paths that facilitate the location of observation root causes."""
     results: List[str] = []
 
     def walk(node: Any, current_path: str) -> None:
@@ -177,7 +177,7 @@ def _get_session(session_id: str) -> SimulationSession:
 
 @app.on_event("startup")
 async def startup_event():
-    """启动 API 服务；具体模拟实例由 /simulation_config 按需创建。"""
+    """Starts parameter service; specific simulation examples are created by / parameter on demand."""
     logger.info("Starting supply chain simulation server...")
     logger.info("Simulation server ready; no scenario is initialized until requested.")
 
@@ -186,7 +186,7 @@ def get_state(
     req: StateRequest,
     x_simulation_session_id: Optional[str] = Header(default=None),
 ):
-    """获取当前环境观察 (JSON/Text)"""
+    """Access to Current Environment Watch (JSON/Text)"""
     logger.debug("Received state request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -239,7 +239,7 @@ async def configure_simulation(
     req: SimulationConfigRequest,
     x_simulation_session_id: Optional[str] = Header(default=None),
 ):
-    """更新仿真级配置，例如最终轮次与外部需求模式。"""
+    """Update simulation-level configurations, such as the final round and external demand model."""
     try:
         session_id = _resolve_session_id(x_simulation_session_id)
         with simulation_sessions_lock:
@@ -429,7 +429,7 @@ def get_external_demand(
     enterprise_id: Optional[str] = None,
     x_simulation_session_id: Optional[str] = Header(default=None),
 ):
-    """获取外部市场需求与市场订单事件记录，供复盘和可视化使用。"""
+    """Access to external market demand and market order incident records for review and visualization."""
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
         return {
@@ -446,7 +446,7 @@ def get_external_demand(
 
 @app.get("/simulation_context")
 def get_simulation_context(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """获取当前仿真模式与交易模式，供 Agent 输入文件显式感知运行上下文。"""
+    """Gets the current simulation mode and transaction mode for Agent to enter a file to see the context."""
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
         return {
@@ -461,7 +461,7 @@ def get_simulation_context(x_simulation_session_id: Optional[str] = Header(defau
 
 @app.get("/bullwhip")
 def get_bullwhip_metrics(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """获取牛鞭效应所需的逐层订货序列与方差放大指标。"""
+    """A layer-by-sequence order-by-sequence magnification indicator for the acquisition of oxen whips."""
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
         return {
@@ -476,7 +476,7 @@ def get_bullwhip_metrics(x_simulation_session_id: Optional[str] = Header(default
 
 @app.get("/state/json")
 def get_state_json(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """获取JSON格式的完整状态"""
+    """Get complete status in JSON format"""
     logger.debug("Received JSON state request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -495,7 +495,7 @@ def get_state_json(x_simulation_session_id: Optional[str] = Header(default=None)
 
 @app.get("/actions")
 def get_available_actions(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """获取可用的业务动作列表"""
+    """Get a list of available business actions"""
     logger.debug("Received available actions request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -516,7 +516,7 @@ async def execute_action(
     req: ExecuteRequest,
     x_simulation_session_id: Optional[str] = Header(default=None),
 ):
-    """接收 Agents 的指令并执行"""
+    """Receive and execute Atgent commands"""
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
         result = await session.adapter.step(req.workflow, req.execute_type, req.enterprise_name, req.dept)
@@ -534,7 +534,7 @@ async def execute_action(
 
 @app.post("/next_turn")
 async def advance_time(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """推进到下一个工作日"""
+    """Move to the next business day."""
     logger.debug("Received advance time request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -556,7 +556,7 @@ async def advance_time(x_simulation_session_id: Optional[str] = Header(default=N
 
 @app.post("/check_orders")
 async def check_orders(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """校验订单情况"""
+    """Validation of orders"""
     logger.debug("Received check orders request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -572,7 +572,7 @@ async def check_orders(x_simulation_session_id: Optional[str] = Header(default=N
 
 @app.post("/statistics_orders")
 async def statistics_orders(x_simulation_session_id: Optional[str] = Header(default=None)):
-    """统计订单情况"""
+    """Statistics on orders"""
     logger.debug("Received statistics orders request")
     try:
         session = _get_session(_resolve_session_id(x_simulation_session_id))
@@ -586,7 +586,7 @@ async def statistics_orders(x_simulation_session_id: Optional[str] = Header(defa
 
 @app.get("/health")
 def health_check():
-    """健康检查端点"""
+    """Health check end"""
     return {
         "status": "healthy",
         "service": "SupplyChain Simulation Server",

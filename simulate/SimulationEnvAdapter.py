@@ -11,9 +11,9 @@ logger.setLevel(logging.INFO)
 
 class SimulationEnvAdapter:
     """
-    供应链仿真引擎与外部Agent系统的标准化适配器
-    实现统一的环境接口，支持多种Agent交互模式
-    """
+    Standardized adapter for supply chain simulation engines and external Agent systems
+    Achieve a unified environmental interface to support multiple Agent interactive modes
+        """
 
     def __init__(self, simulation_instance, runtime_injection_config: Optional[Dict[str, Any]] = None):
         self.sim = simulation_instance
@@ -34,7 +34,7 @@ class SimulationEnvAdapter:
         return self.runtime_injection_config or get_runtime_injection_config()
 
     def _propagate_runtime_injection_config(self) -> None:
-        """让企业业务模块能读取本次运行的真实实验策略。"""
+        """Allows enterprise business modules to read the real experimental strategy of this operation."""
         runtime_config = self.runtime_injection_config or {}
         controller = getattr(getattr(self, "sim", None), "controller", None)
         if controller is None:
@@ -50,9 +50,9 @@ class SimulationEnvAdapter:
 
     def normalize_executor_id(self, payload: list, enterprise_name: str, dept: str) -> list:
         """
-        将 payload 中所有 executor_id 强制修正为 正确的企业名称
-        同时把 module_type 也修正为正确的值
-        """
+        Force all < x17/ > in payload to correct enterprise name
+        Also amend module_type to the correct value
+                """
         if not isinstance(payload, list):
             raise ValueError("Payload must be a list")
         for item in payload:
@@ -71,7 +71,7 @@ class SimulationEnvAdapter:
 
 
     def _parse_parameters(self, params: Dict[str, str]) -> Tuple[Dict, List]:
-        """解析参数类型和必填性"""
+        """Parsing Parameter Type and Required Filling"""
         properties = {}
         required_params = []
 
@@ -81,30 +81,30 @@ class SimulationEnvAdapter:
                 "type": param_type,
                 "description": str(param_desc)
             }
-            if "可选" not in str(param_desc):
+            if "optional" not in str(param_desc).lower():
                 required_params.append(param_name)
 
         return properties, required_params
 
     def _parse_param_type(self, param_desc: str) -> str:
-        """解析参数类型"""
+        """Parsing Parameter Type"""
         desc = str(param_desc).lower()
         if "int" in desc:
             return "integer"
         elif "float" in desc or "decimal" in desc or "price" in desc or "cost" in desc:
             return "number"
-        elif "bool" in desc or "boolean" in desc or "是否" in desc:
+        elif "bool" in desc or "boolean" in desc or "whether" in desc:
             return "boolean"
-        elif "list" in desc or "array" in desc or "多个" in desc:
+        elif "list" in desc or "array" in desc or "multiple" in desc:
             return "array"
-        elif "dict" in desc or "object" in desc or "结构" in desc:
+        elif "dict" in desc or "object" in desc or "structure" in desc:
             return "object"
         return "string"
 
     def _cap_external_order_deadline(self, order: Dict[str, Any]) -> Dict[str, Any]:
         """
-        外部市场订单仍使用绝对交付截止日；如果超过本次仿真的最终可执行轮次，则截断。
-        """
+        External market orders still use the absolute delivery cut-off date; if beyond the current imitation is really final, round, cut off.
+                """
         if not isinstance(order, dict):
             return order
         deadline = order.get("delivery_deadline")
@@ -128,10 +128,10 @@ class SimulationEnvAdapter:
         current_day: int = None,
     ) -> List[str]:
         """
-        解析 daily 外部市场订单注入目标。
+        Parsing Daily External Market Order Injecting Targets.
 
-        新配置优先使用 external_market_order_policy；旧字段继续作为兜底，保证历史场景可复现。
-        """
+        The new configuration gives priority to external_market_order_policy; old fields continue to be used as a background to ensure that historical scenes can be repeated.
+                """
         policy = runtime_config.get("external_market_order_policy") or {}
         if policy.get("enabled") is False:
             return []
@@ -185,7 +185,7 @@ class SimulationEnvAdapter:
         runtime_config: Dict[str, Any],
         time_day: int,
     ) -> None:
-        """按配置策略生成并追加外部市场订单动作。"""
+        """Generate and add external market order actions to the configuration policy."""
         policy = runtime_config.get("external_market_order_policy") or {}
         for external_market_order_enterprise_id in self._get_external_market_order_targets(
             runtime_config,
@@ -276,9 +276,9 @@ class SimulationEnvAdapter:
 
     async def step(self, workflow: List[Dict[str, Any]], execute_type: str, enterprise_name: str, dept: str) -> str:
         """
-        标准化核心 2：执行动作
-        接收 Claude 的 Tool Calls，转换为引擎内部格式
-        """
+        Standard core 2: Implementing action
+        Received Tool Calls from Claude, converted to engine internal format
+                """
         try:
             if execute_type == "daily":
                 time_day = self.sim.controller.time_manager.get_day()
@@ -329,9 +329,9 @@ class SimulationEnvAdapter:
 
     def _get_observation(self, enterprise_name: str) -> str:
         """
-        标准化核心 3：获取环境状态文本
-        使用 StateObservation 类获取完整的企业状态
-        """
+        Standard core 3: Access to state of the environment text
+        Use the StateObservation class to get full enterprise status
+                """
         try:
             enterprise = self.sim.controller.enterprises.get(enterprise_name)
             if enterprise:
@@ -347,7 +347,7 @@ class SimulationEnvAdapter:
             return f"Error getting observation: {str(e)}"
 
     def get_available_actions(self) -> List[Dict]:
-        """获取可用动作的详细信息"""
+        """Get details of available actions"""
         actions = []
         for method_name, spec in self.action_registry.items():
             actions.append({

@@ -1,9 +1,9 @@
 """
-供应链模拟系统示例模块
+Example module of supply chain simulation system
 
-本模块提供供应链模拟系统的启动入口，支持预设企业网络架构、
-注册企业及功能部门，并在时间轴上模拟企业运营。
-包含模拟系统的启动入口和配置示例。
+This module provides access to the supply chain simulation system to support the pre-set enterprise network structure,
+Register enterprise and function department and simulate enterprise on the time axis.
+Include examples of start-up access and configuration of analog systems.
 """
 
 from .simulation import SupplyChainSimulation, main

@@ -2,10 +2,10 @@ import json
 import re
 from typing import Dict, List, Any, Set
 # ============================================================================
-# 面向CEO的状态观察类
+# Status observation class for CEOs
 # ============================================================================
 class StateObservation:
-    """基于各模块 get_state() 的完整状态观察"""
+    """Full state observations based on modules < x17/ >()"""
 
     def __init__(
         self,
@@ -19,14 +19,14 @@ class StateObservation:
     ):
         """
         Args:
-            enterprise_id: 企业ID
-            finance: 财务状态
-            production: 生产状态
-            procurement: 采购状态
-            inventory: 库存状态
-            sales: 销售状态
-            hr: 人力资源状态
-        """
+            enterprise_id: enterpriseID
+            Finance: Financial Status
+            Production:
+            Procurement status
+            Inventory: Stock
+            Sales:
+            hr: Human resources status
+                """
         self.enterprise_id = enterprise_id
         self.finance = finance
         self.production = production
@@ -36,7 +36,7 @@ class StateObservation:
         self.hr = hr
 
     def to_dict(self) -> Dict[str, Any]:
-        """转换为字典"""
+        """Convert to Dictionary"""
         return {
             "enterprise_id": self.enterprise_id,
             "finance": self.finance,
@@ -49,29 +49,29 @@ class StateObservation:
 
     @classmethod
     def from_enterprise(cls, enterprise) -> "StateObservation":
-        """从 Enterprise 对象创建观察（使用各模块的 get_state 方法）"""
+        """Create an observation from an Enterprise object (using the parameter method of each module)"""
 
         def get_module(module_type: str):
-            """获取指定类型的业务模块"""
+            """Get specified types of business modules"""
             if not hasattr(enterprise, 'business_modules'):
                 return None
             modules = enterprise.business_modules.get(module_type, [])
             return modules[0] if modules else None
 
         def extract_state_data(state_result):
-            """从 get_state() 结果中提取数据（处理 ModuleResponse 或字典）"""
+            """Extract data from parameter() results (processing ModuleResponse or dictionary)"""
             if state_result is None:
                 return {}
             elif hasattr(state_result, 'data'):
-                # ModuleResponse 对象
+                # ModeuleResponse Object
                 return state_result.data if isinstance(state_result.data, dict) else {}
             elif isinstance(state_result, dict):
-                # 已经是字典
+                # It's already a dictionary.
                 return state_result
             else:
                 return {}
 
-        # 获取各模块状态
+        # Get the module status
         finance_module = get_module('FinanceManager')
         finance_state = extract_state_data(finance_module.get_state() if finance_module else None)
 
@@ -101,38 +101,38 @@ class StateObservation:
         )
 
     def get_finance_state(self) -> Dict[str, Any]:
-        """获取财务部门状态"""
+        """Get Finance department Status"""
         return self.finance
 
     def get_production_state(self) -> Dict[str, Any]:
-        """获取生产部门状态"""
+        """Access to production department status"""
         return self.production
 
     def get_procurement_state(self) -> Dict[str, Any]:
-        """获取采购部门状态"""
+        """Get procurement department status"""
         return self.procurement
 
     def get_inventory_state(self) -> Dict[str, Any]:
-        """获取库存部门状态"""
+        """Access inventory department status"""
         return self.inventory
 
     def get_sales_state(self) -> Dict[str, Any]:
-        """获取销售部门状态"""
+        """Get sales department status"""
         return self.sales
 
     def get_hr_state(self) -> Dict[str, Any]:
-        """获取人力资源部门状态"""
+        """Get Human Resources department Status"""
         return self.hr
 
     def get_department_state(self, department_name: str) -> Dict[str, Any]:
-        """根据部门名称获取状态
-        
+        """Get status according to department name
+                
         Args:
-            department_name: 部门名称，可选值：'finance', 'production', 'procurement', 'inventory', 'sales', 'hr'
-            
+            department_name: department Name, optional: 'finance', 'protection', 'inventory', 'sales', 'hr'
+                        
         Returns:
-            指定部门的状态字典，如果部门名称无效则返回空字典
-        """
+            Specifies the status dictionary department and returns empty words if the name department is invalid General
+                """
         department_map = {
             'finance': self.finance,
             'production': self.production,
@@ -144,11 +144,11 @@ class StateObservation:
         return department_map.get(department_name.lower(), {})
 
     def get_all_departments_state(self) -> Dict[str, Dict[str, Any]]:
-        """获取所有部门状态
-        
+        """Get all department states
+                
         Returns:
-            包含所有部门状态的字典
-        """
+            Dictionary containing all department status
+                """
         return {
             'finance': self.finance,
             'production': self.production,

@@ -1,12 +1,12 @@
 {
   "action_name": "adjust_market_workers",
-  "description": "调整市场销售人员数量",
-  "description_detail": "对于已经开发好的外部市场，可以根据市场效益、订单与生产情况调整投入该市场的员工数量",
+  "description": "Adjust the number of sales workers assigned to a market.",
+  "description_detail": "For an established external market, adjust its assigned staff based on market performance, orders, and production capacity.",
   "guidelines": [
-    "市场销售效益与销售人员数量关系为:sales_effect=1 - exp(-k * sales_per_market)",
-    "sales_per_market为这个市场的负责销售人员数量(assigned_workers)",
-    "每个员工只能负责一个市场",
-    "调整后，市场销售效益将根据新的销售人员数量更新"
+    "Market sales effectiveness follows sales_effect = 1 - exp(-k * sales_per_market).",
+    "sales_per_market is the number of assigned_workers responsible for this market.",
+    "Each worker can be assigned to only one market.",
+    "Sales effectiveness is recalculated after the staffing adjustment."
   ],
   "required_parameters": [
     "market_id",
@@ -14,7 +14,7 @@
     "adjust_nums"
   ],
   "parameter_constraints": [
-    "adjust_type 必须是 increase 或 decrease",
-    "adjust_nums 必须大于等于 1，表示增加派遣或减少派遣的人数"
+    "adjust_type must be increase or decrease.",
+    "adjust_nums must be at least 1 and specifies how many workers to add or remove."
   ]
 }

@@ -24,7 +24,7 @@ from runtime.simulation_session_context import get_simulation_session_id
 from agent.policy_context import build_department_policy_context, build_enterprise_policy_context
 
 # =========================
-# 1. Config 配置类
+# Config Configuration Category
 # =========================
 class Config:
     BASE_URL = EnvironmentConfig.SIMULATION_API_BASE_URL
@@ -77,7 +77,7 @@ class Config:
 
 
 # =========================
-# 2. 日志系统
+# Log system
 # =========================
 class TraceIdFilter(logging.Filter):
     def filter(self, record):
@@ -124,7 +124,7 @@ logger = setup_logger()
 
 
 # =========================
-# 3. 核心工具类
+# 3. Core tool categories
 # =========================
 class StaticUtils:
     ACTIONABLE_PROPOSAL_STATUSES = {"pending", "open", "available", "proposed"}
@@ -181,7 +181,7 @@ class StaticUtils:
 
     @staticmethod
     def is_agent_endogenous_cobweb_context(agent_simulation_context: Dict[str, Any]) -> bool:
-        """判断当前是否处于 Agent 内生蛛网供给响应模式。"""
+        """It's not like you're in the Agent internal web supply response mode."""
         context = agent_simulation_context or {}
         cobweb_config = context.get("cobweb_config") or {}
         return bool(
@@ -191,7 +191,7 @@ class StaticUtils:
 
     @staticmethod
     def is_shared_resource_context(agent_simulation_context: Dict[str, Any]) -> bool:
-        """判断当前是否处于共享资源市场模式。"""
+        """To judge whether the current market model for shared resources is in place."""
         context = agent_simulation_context or {}
         shared_resource_config = context.get("shared_resource_config") or {}
         return bool(
@@ -202,7 +202,7 @@ class StaticUtils:
 
     @staticmethod
     def is_herding_context(agent_simulation_context: Dict[str, Any]) -> bool:
-        """判断当前是否处于羊群效应 / 信息级联市场模式。"""
+        """To judge whether or not it is currently in the sheep effect / information cascade market model."""
         context = agent_simulation_context or {}
         herding_config = context.get("herding_config") or {}
         return bool(
@@ -213,7 +213,7 @@ class StaticUtils:
 
     @staticmethod
     def get_shared_resource_product_id(agent_simulation_context: Dict[str, Any]) -> Optional[str]:
-        """从模拟上下文中读取共享资源对应的产品 ID。"""
+        """Reads the product ID of the shared resource from the simulation context."""
         context = agent_simulation_context or {}
         for key in ("shared_resource_config", "shared_resource_state"):
             source = context.get(key) or {}
@@ -224,7 +224,7 @@ class StaticUtils:
 
     @staticmethod
     def get_herding_product_id(agent_simulation_context: Dict[str, Any]) -> Optional[str]:
-        """从模拟上下文中读取羊群效应实验对应的产品 ID。"""
+        """Read the product ID of the sheep effect experiment in the context of the simulation."""
         context = agent_simulation_context or {}
         for key in ("herding_config", "herding_state"):
             source = context.get(key) or {}
@@ -239,12 +239,12 @@ class StaticUtils:
         agent_simulation_context: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        在 shared_resource 模式下降噪传统生产 guard。
+        Decline traditional noise production in shared_resource mode
 
-        共享资源场景中，空配方的目标产品代表“从共享资源池获取产品/资源”，不是缺少
-        BOM 原料。底层 guard 仍保留完整审计数据；这里只调整给 Agent 的决策视图，
-        避免 NO_MATERIAL_FEASIBILITY / MISSING_RECIPE_OR_ZERO_QUANTITY 被误解为硬阻塞。
-        """
+        In the shared resource landscape, the target product of the empty formulation represents “the acquisition of the product/resource from the shared resource pool”, not the lack
+        BOM raw material. The bottom guard still maintains complete audit data; this is only adjusted to Agent’s decision-making view.
+        To avoid NO_MATERIAL_FEASIBILITY/ MISSING_RECIPE_OR_ZERO_QUANTITY being misinterpreted as hard to block.
+                """
         if not StaticUtils.is_shared_resource_context(agent_simulation_context):
             return production_state
         if not isinstance(production_state, dict):
@@ -395,12 +395,12 @@ class StaticUtils:
         agent_simulation_context: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        在 herding_market 模式下降噪传统生产 guard。
+        Decline traditional noise production in herding_market mode
 
-        羊群效应场景中，目标产品用生产计划表达“基于市场热度和聚合同业信息形成
-        的投放/生产意愿”。空 raw_materials 是可运行配置，不应被旧的原料可行性
-        或 0 售价 margin guard 误读为硬阻塞。
-        """
+        In the sheep effect scenario, the target product is expressed in the production plan as “based on market heat and contract information”
+        * The present document is being issued without formal editing. Empty raw_materials is a functional configuration and should not be made available by raw material feasibility
+        Or 0 sales price margin guard is misread as hard blockage.
+                """
         if not StaticUtils.is_herding_context(agent_simulation_context):
             return production_state
         if not isinstance(production_state, dict):
@@ -575,7 +575,7 @@ class StaticUtils:
 
     @staticmethod
     def _compact_herding_product_recipes(recipes: Any, product_id: str) -> Any:
-        """羊群模式下压缩配方输入，避免空配方被误读成需补工程资料。"""
+        """Compressed formulation input in sheep model to avoid the misreading of empty formulations as additional project information."""
         if not isinstance(recipes, list):
             return recipes
         compacted = []
@@ -600,7 +600,7 @@ class StaticUtils:
 
     @staticmethod
     def _compact_herding_production_plans(plans: Any, product_id: str) -> Any:
-        """只保留生产决策需要的计划摘要，减少后期上下文膨胀。"""
+        """Only a summary of the plan required for production decision-making will be maintained to reduce later-stage inflate."""
         if not isinstance(plans, dict):
             return plans
         compacted: Dict[str, Any] = {}
@@ -633,7 +633,7 @@ class StaticUtils:
 
     @staticmethod
     def _compact_herding_production_lines(lines: Any) -> Any:
-        """压缩产线细节，只保留产能与可用状态。"""
+        """Compressed line details, only capacity and available status."""
         if not isinstance(lines, dict):
             return lines
         compacted = {
@@ -665,11 +665,11 @@ class StaticUtils:
         agent_simulation_context: Dict[str, Any],
     ) -> Dict[str, Any]:
         """
-        在 agent_endogenous 蛛网模式下裁剪 production Agent 输入中的恢复性目标量。
+        Crops the restorative target in the parameter spider web mode.
 
-        底层模块状态仍保留完整 recovery/cash/margin guard 数据；这里只处理给 Agent
-        的决策视图。C2压低非蛛网经营目标，C3保留经营结果证据但仍移除处方式推荐量。
-        """
+        The bottom modular status remains complete parameter guard data; only Agent is processed here
+        . C2 lowers the target for the non-spread web, and C3 retains evidence of the results of the operation but still removes the recommended amount.
+                """
         if not StaticUtils.is_agent_endogenous_cobweb_context(agent_simulation_context):
             return production_state
         if not isinstance(production_state, dict):
@@ -820,7 +820,7 @@ class StaticUtils:
         policy_context: Dict[str, Any],
         round_id: int,
     ) -> Dict[str, Any]:
-        """裁剪蛛网C3销售输入中的累计历史，保留全部可执行订单。"""
+        """The cumulative history of the web-based C3 sales input and the retention of all enforceable orders."""
         active_modes = (policy_context or {}).get("active_modes") or {}
         if not (
             active_modes.get("cobweb")
@@ -952,7 +952,7 @@ class StaticUtils:
 
     @staticmethod
     def _load_department_state_snapshot(enterprise_name: str, department: str, round_id: Optional[int]) -> Dict[str, Any]:
-        """读取指定企业部门的当轮状态快照，供动作规范化时参考。"""
+        """Reads the current state snapshot of enterprisedepartment specified for action."""
         if round_id is None or department not in {"procurement", "sales", "production", "hr", "inventory"}:
             return {}
         state_path = (
@@ -973,7 +973,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_pending_proposal_ids(state_snapshot: Dict[str, Any]) -> Set[str]:
-        """从部门状态快照中提取当前仍待响应的 proposal_id 集合。"""
+        """Extract from the department status snapshot the current set of proposal_id still to be responded to."""
         return set(StaticUtils._get_state_proposal_index(state_snapshot).keys())
 
     @staticmethod
@@ -1025,7 +1025,7 @@ class StaticUtils:
 
     @staticmethod
     def _proposal_is_pending_for_response(proposal: Dict[str, Any], department: Optional[str] = None) -> bool:
-        """判断 proposal 是否仍可由当前部门响应。"""
+        """This is a test of whether proposal can still be responded to by department."""
         return bool(
             StaticUtils._proposal_actionability_status(
                 proposal,
@@ -1045,7 +1045,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_state_proposal_index(state_snapshot: Dict[str, Any], department: Optional[str] = None) -> Dict[str, Dict[str, Any]]:
-        """返回部门状态中仍可响应的 proposal，按 proposal_id 索引。"""
+        """returns the proposal that is still responsive in department state, indexed to proposal_id."""
         proposal_index: Dict[str, Dict[str, Any]] = {}
         for proposal in StaticUtils._iter_state_proposals(state_snapshot):
             proposal_id = proposal.get("proposal_id")
@@ -1055,7 +1055,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_exchange_proposal_index(round_id: Optional[int]) -> Dict[str, Dict[str, Any]]:
-        """读取当前轮交易所事实状态，避免部门快照滞后导致重复/过期响应。"""
+        """Read the current round exchange de facto status and avoid department snapshot lags leading to duplicate/expired responses."""
         if round_id is None:
             return {}
         try:
@@ -1091,7 +1091,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_exchange_buy_request_index(round_id: Optional[int]) -> Dict[str, Dict[str, Any]]:
-        """读取当前轮 buy request 事实状态，用于阻断已 superseded/expired 的提案响应。"""
+        """Reads the current wheel buy reQuest de facto to block the response to a proposal already superseded/expired."""
         if round_id is None:
             return {}
         try:
@@ -1130,7 +1130,7 @@ class StaticUtils:
         state_snapshot: Dict[str, Any],
         proposal: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """估算采购接受 proposal 后的现金结果，作为执行前硬护栏。"""
+        """Estimating the cash result of procurement acceptance as a pre-implementation hard-guard."""
         self_state = state_snapshot.get("self_state", {}) if isinstance(state_snapshot, dict) else {}
         cash_guard = self_state.get("cash_guard") or state_snapshot.get("cash_guard") or {}
         cash_summary = cash_guard.get("cash_summary") or {}
@@ -1163,7 +1163,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_pending_proposal_material_ids(state_snapshot: Dict[str, Any]) -> Dict[str, str]:
-        """返回仍待响应 proposal 对应的物料/产品，供执行前二次校验。"""
+        """Returns the material/product that still responds to the proposal for the first second verification."""
         pending_materials: Dict[str, str] = {}
         for proposal in StaticUtils._get_state_proposal_index(state_snapshot).values():
             proposal_id = proposal.get("proposal_id")
@@ -1174,7 +1174,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_procurement_allowed_material_ids(state_snapshot: Dict[str, Any]) -> Set[str]:
-        """提取当前采购部门真实可采购 item，避免跨场景 backlog 污染补货候选。"""
+        """Extract the current procurement department real-equitable item and avoid the cross-scenes backlog pollution replenishment candidate."""
         if not isinstance(state_snapshot, dict):
             return set()
         self_state = state_snapshot.get("self_state") if isinstance(state_snapshot.get("self_state"), dict) else state_snapshot
@@ -1237,7 +1237,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_procurement_supplier_lookup(state_snapshot: Dict[str, Any]) -> Dict[str, Any]:
-        """构建 supplier_id/supplier_name 到执行模块所需 supplier_name 的映射。"""
+        """Builds a map of supplier_id/supplier_name to supplier_name required for the implementation module."""
         if not isinstance(state_snapshot, dict):
             return {}
         self_state = state_snapshot.get("self_state") if isinstance(state_snapshot.get("self_state"), dict) else state_snapshot
@@ -1378,7 +1378,7 @@ class StaticUtils:
         supplier_name: Any = None,
         supplier_id: Any = None,
     ) -> Optional[str]:
-        """把 Agent 常写出的 supplier_id 规整成模块执行接口需要的 supplier_name。"""
+        """The supplier_id frequently written by Agent is integrated into the supplier_name required for the implementation of the interface."""
         lookup = StaticUtils._get_procurement_supplier_lookup(state_snapshot)
         names: Set[str] = lookup.get("names") or set()
         lower_name_to_name: Dict[str, str] = lookup.get("lower_name_to_name") or {}
@@ -1638,7 +1638,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_available_sales_order_ids(state_snapshot: Dict[str, Any]) -> Set[str]:
-        """从销售状态快照中提取当前仍可响应的 available 订单。"""
+        """Draws the current avilable order from the sales status snapshot."""
         self_state = state_snapshot.get("self_state", {}) if isinstance(state_snapshot, dict) else {}
         sales_orders = self_state.get("sales_orders") or state_snapshot.get("sales_orders") or {}
         available_ids: Set[str] = set()
@@ -1668,7 +1668,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_available_sales_order_index(state_snapshot: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-        """从销售状态快照中提取 available 订单详情索引。"""
+        """Extracts an index of the details of the aviable order from the sales status snapshot."""
         self_state = state_snapshot.get("self_state", {}) if isinstance(state_snapshot, dict) else {}
         sales_orders = self_state.get("sales_orders") or state_snapshot.get("sales_orders") or {}
         order_index: Dict[str, Dict[str, Any]] = {}
@@ -1845,7 +1845,7 @@ class StaticUtils:
 
     @staticmethod
     def _is_zero_value_sales_order(order: Dict[str, Any]) -> bool:
-        """判断订单是否为零数量或零金额的占位/无效订单。"""
+        """Determines whether the order is a Zero or Zero Zero Zero Zero Zone / Invalid Zone."""
         if not isinstance(order, dict):
             return False
         quantity = StaticUtils._safe_float(order.get("quantity"), None)
@@ -2031,7 +2031,7 @@ class StaticUtils:
 
     @staticmethod
     def _build_action_pass_record(reason: str, department: str, enterprise_name: str) -> Dict[str, Any]:
-        """构造统一格式的 action_pass 记录，供兜底输出复用。"""
+        """Constructs action_pass records in a uniform format for re-use in the background output."""
         reason = StaticUtils._sanitize_single_enterprise_visible_text(str(reason or ""))
         module_type_map = {
             "sales": "SalesManager",
@@ -2635,7 +2635,7 @@ class StaticUtils:
         if production_recovery_needed:
             add_candidate("PRODUCTION", 2, 10, "生产存在 backlog/recovery 信号且生产人手不足")
 
-        # 单企业诊断中，采购部门若 0 人会让所有采购/补货动作必然校验失败。
+        # single-enterprise Diagnosis, if parameter 0 people will make all procurement/ replenishment actions necessarily fail.
         add_candidate("PROCUREMENT", 1, 20, "采购部门无可用人手，采购/补货动作无法落地")
         add_candidate("SALES", 1, 50, "销售部门无可用人手，市场/订单动作无法落地")
         add_candidate("INVENTORY", 1, 60, "仓储部门无可用人手，扩仓动作无法落地")
@@ -2829,7 +2829,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_already_responded_proposal_ids(action_dir: Path, department: str) -> Set[str]:
-        """扫描历史错误文件，识别已被本侧成功响应过的 proposal_id。"""
+        """Scan historical error files and identify proposal_id that have been successfully responded to on this side."""
         responded: Set[str] = set()
         if not action_dir.exists():
             return responded
@@ -3083,7 +3083,7 @@ class StaticUtils:
         round_id: Optional[int],
         action_dir: Optional[Path] = None,
     ) -> Any:
-        """在执行前收紧 procurement/sales 动作参数，并过滤重复或无效响应。"""
+        """procurement/sales Action Parameters are tightened before execution and filters duplicate or invalid responses."""
         if department not in {"procurement", "sales", "production", "hr", "inventory"} or not isinstance(payload, list):
             return payload
 
@@ -4319,12 +4319,12 @@ class StaticUtils:
 
     @staticmethod
     def new_trace():
-        """生成简短 trace_id，便于串联一次工具调用日志。"""
+        """Generates a short trace_id to enable a serial tool to call the log."""
         return str(uuid.uuid4())[:8]
 
     @staticmethod
     def build_agent_simulation_context(simulation_context: dict) -> dict:
-        """裁剪模拟上下文，只保留 Agent 决策所需字段。"""
+        """Crop simulation context, only the fields required for Agent decision-making."""
         if not isinstance(simulation_context, dict):
             simulation_context = {}
         agent_context = {
@@ -4416,7 +4416,7 @@ class StaticUtils:
     def _compact_cobweb_history(
         history: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
-        """保留可解释的价格-供给证据，移除重复方程和冗长来源明细。"""
+        """Retain interpretable price - supply evidence, remove duplicate equations and lengthy source details."""
         compacted = []
         for item in history or []:
             if not isinstance(item, dict):
@@ -4455,7 +4455,7 @@ class StaticUtils:
         *,
         visible_window_rounds: int,
     ) -> Dict[str, Any]:
-        """提供全程聚合趋势；完整逐轮证据仍只保存在市场归档中。"""
+        """Provides the whole-way aggregate trend; complete, round-the-clock evidence remains only in the market archive."""
         records = [item for item in history or [] if isinstance(item, dict)]
         prices = [
             value
@@ -4508,7 +4508,7 @@ class StaticUtils:
 
     @staticmethod
     def _compact_herding_history(history: List[Dict[str, Any]], peer_visible: bool = True) -> List[Dict[str, Any]]:
-        """保留羊群效应趋势指标，移除逐企业明细，避免 Agent 分页读取大文件。"""
+        """Keeps the Sheep Effect Trends Index, removes the enterprise detail and avoids the Agent page reading large files."""
         compacted = []
         for item in history or []:
             if not isinstance(item, dict):
@@ -4567,7 +4567,7 @@ class StaticUtils:
         state_snapshot: Optional[Dict[str, Any]] = None,
         agent_simulation_context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """为 C3 公地实验计算单企业本轮可持续获取上限。"""
+        """Calculate single-enterprise sustainable access ceiling for the current round for the C3 community experiment."""
         if not isinstance(policy_context, dict):
             return {"enabled": False}
         active_modes = policy_context.get("active_modes") or {}
@@ -4690,7 +4690,7 @@ class StaticUtils:
         agent_simulation_context: Dict[str, Any],
         round_id: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """提炼蛛网模型的当轮生产信号，避免生产部门从 backlog 中重复推导数量。"""
+        """The current-cycle production signal for the refining of the web model avoids re-exporting department from the backlog."""
         if not isinstance(agent_simulation_context, dict):
             return {}
         is_cobweb_mode = bool(
@@ -5166,7 +5166,7 @@ class StaticUtils:
         agent_simulation_context: Dict[str, Any],
         round_id: Optional[int] = None,
     ) -> Dict[str, Any]:
-        """提炼羊群效应的可见市场/同行聚合信号，避免 Agent 读取原始同行文件。"""
+        """Visible market/peer aggregating signals to extract sheep effects avoid Agent reading original peer files."""
         if not StaticUtils.is_herding_context(agent_simulation_context):
             return {}
         context = agent_simulation_context or {}
@@ -5255,7 +5255,7 @@ class StaticUtils:
 
     @staticmethod
     def filter_agent_observation(observation):
-        """过滤 observation 中的 simulation_context，避免暴露冗余字段。"""
+        """Filter simulation_context in observation to avoid exposure to redundant fields."""
         if isinstance(observation, dict) and "simulation_context" in observation:
             observation = dict(observation)
             observation["simulation_context"] = StaticUtils.build_agent_simulation_context(
@@ -5265,7 +5265,7 @@ class StaticUtils:
 
     @staticmethod
     def inject_policy_context_for_observation(observation: Dict[str, Any], enterprise_name: str, round_id: int) -> Dict[str, Any]:
-        """为 analyst observation 注入企业级结构化策略上下文。"""
+        """parameter Level Structured Context."""
         if not isinstance(observation, dict):
             return observation
 
@@ -5316,7 +5316,7 @@ class StaticUtils:
 
     @staticmethod
     def save_observation(output_dir: Path = Config.OBSERVATION_DIR, enterprise_name: str = "Manufacturer"):
-        """从模拟服务读取 observation，并保存到本地文件。"""
+        """Reads from the simulation service and saves it to local files."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
 
@@ -5362,45 +5362,45 @@ class StaticUtils:
 
     @staticmethod
     def execute_hr_action(round_id,retry_time):
-        """执行旧单企业工作区中的 HR 动作。"""
+        """Performs HR actions in the old single-enterprise workspace."""
         response = StaticUtils.execute_action(Config.HR_ACTION, Config.HR_RESULT, "run", Config.HR_ERROR,"hr", round_id,retry_time)
         result = StaticUtils.handle_execute_response(response)
         return result
 
     @staticmethod
     def execute_inventory_action(round_id,retry_time):
-        """执行旧单企业工作区中的 Inventory 动作。"""
+        """Performs the Inventory action in the old single-enterprise workspace."""
         response = StaticUtils.execute_action(Config.INVENTORY_ACTION, Config.INVENTORY_RESULT, "run", Config.INVENTORY_ERROR,"inventory", round_id,retry_time)
         result = StaticUtils.handle_execute_response(response)
         return result
 
     @staticmethod
     def execute_procurement_action(round_id,retry_time):
-        """执行旧单企业工作区中的 Procurement 动作。"""
+        """Performs the Project action in the old single-enterprise workspace."""
         response = StaticUtils.execute_action(Config.PROCUREMENT_ACTION, Config.PROCUREMENT_RESULT, "run", Config.PROCUREMENT_ERROR,"procurement", round_id,retry_time) 
         result = StaticUtils.handle_execute_response(response)
         return result
 
     @staticmethod
     def execute_sales_action(round_id,retry_time):
-        """执行旧单企业工作区中的 Sales 动作。"""
+        """Execute Sales action in the old single-enterprise working area."""
         response = StaticUtils.execute_action(Config.SALES_ACTION, Config.SALES_RESULT, "run", Config.SALES_ERROR,"sales", round_id,retry_time) 
         result = StaticUtils.handle_execute_response(response)
         return result
 
     @staticmethod
     def execute_production_action(round_id,retry_time):
-        """执行旧单企业工作区中的 Production 动作。"""
+        """Performs a project action in the old single-enterprise workspace."""
         response = StaticUtils.execute_action(Config.PRODUCTION_ACTION, Config.PRODUCTION_RESULT, "run", Config.PRODUCTION_ERROR,"production", round_id,retry_time)
         result = StaticUtils.handle_execute_response(response)
         return result
 
     # ----------------------------
-    # 通用部门执行
+    # Generic department Implementation
     # ----------------------------
     @staticmethod
     def execute_dept_action(input_file: Path, output_file: Path, error_file: Path, department: str, round_id: int, retry_time: int, enterprise_name: str, execute_type: str = "run",blackboard_path: Path = None):
-        """执行单个企业部门动作，并统一转换成上层可判断的结果结构。"""
+        """Perform a single enterprise department action, and convert it into a uniform top-level, judgementable result structure."""
         response = StaticUtils.execute_action(input_file, output_file, execute_type, error_file, department, round_id, retry_time, enterprise_name,blackboard_path)
         result = StaticUtils.handle_execute_response(response)
         return result
@@ -5408,7 +5408,7 @@ class StaticUtils:
     
     @staticmethod
     def handle_execute_response(response):
-        """规整执行接口返回值，把 need-retry 与 success 两类结果标准化。"""
+        """Regulates the return value of the performance interface and standardizes < x17/ > with the results of the session."""
         if response.get("status") != "success" and response.get("message") == "need-retry":
             return {
                 "status": "error", 
@@ -5422,7 +5422,7 @@ class StaticUtils:
 
     @staticmethod
     def check_and_reTry():
-        """读取重试计划，并在存在失败动作时发起 retry 执行。"""
+        """Reads the retry schedule and initiates the retry execution when a failed action exists."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
 
@@ -5445,7 +5445,7 @@ class StaticUtils:
 
     @staticmethod
     def run_day():
-        """调用 next_turn 接口，推进模拟进入下一轮。"""
+        """Call next_turn interface to advance simulation into the next round."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
 
@@ -5470,7 +5470,7 @@ class StaticUtils:
         shared_resource_config: dict = None,
         herding_config: dict = None
     ):
-        """向模拟服务写入运行配置参数。"""
+        """Writes operational configuration parameters to the simulation service."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
         payload = {
@@ -5735,7 +5735,7 @@ class StaticUtils:
 
     @staticmethod
     def check_orders():
-        """触发交易所检查订单并推进撮合。"""
+        """Trigger exchange to check the order and push the setup."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
 
@@ -5750,7 +5750,7 @@ class StaticUtils:
 
     @staticmethod
     def statistics_orders():
-        """触发交易统计汇总。"""
+        """Trigger transaction statistics summary."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
 
@@ -5765,22 +5765,22 @@ class StaticUtils:
 
     @staticmethod
     def handle_init_action():
-        """执行初始化动作文件。"""
+        """Execute the initialised action file."""
         StaticUtils.execute_action(Config.INIT_ACTION, Config.INIT_RESULT, "init", Config.HR_ERROR)
 
     @staticmethod
     def handle_daily_action():
-        """执行每日固定动作文件。"""
+        """Execute daily fixed action files."""
         StaticUtils.execute_action(Config.DAILY_ACTION, Config.DAILY_RESULT, "daily")
 
     @staticmethod
     def handle_test_action():
-        """执行测试动作文件。"""
+        """Execute the test action file."""
         StaticUtils.execute_action(Config.TEST_ACTION, Config.TEST_RESULT, "test")
 
     @staticmethod
     def execute_action(input_file: Path, output_file: Path, execute_type: str, error_file: Path = None, department: str = None, round_id: str = None, retry_time: int = 0, enterprise_name: str = "Manufacturer", blackboard_path: Path = None):
-        """读取动作文件、按需规范化 payload，并调用模拟执行接口落盘结果。"""
+        """Read the action file, regularize the payload as required and call the results of the mock implementation interface persist."""
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
         if not input_file.exists():
@@ -5900,7 +5900,7 @@ class StaticUtils:
             #     else:
             #         payload = raw_actions
             #     # try:
-            #     #     # 确保 communications 是一个字典
+            # # Make sure Communiations are a dictionary
             #     #     if len(data) > 1 and data[1]:
             #     #         if isinstance(data[1], dict):
             #     #             communications = data[1]
@@ -5915,7 +5915,7 @@ class StaticUtils:
             #     #     error_msg += f"data content: {data}\n"
             #     #     error_msg += f"data[1] content: {data[1] if len(data) > 1 else 'N/A'}\n"
             #     #     print(error_msg)
-            #     #     # 写入错误信息到文件
+            # # Write the wrong message to the file
             #     #     error_log_path = Config.WORKSPACE / "error_log.txt"
             #     #     with open(error_log_path, "a", encoding="utf-8") as f:
             #     #         f.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]\n{error_msg}\n")
@@ -5949,7 +5949,7 @@ class StaticUtils:
             logger.error(f"Invalid JSON in {input_file}: {e}", extra=extra)
             return {"status": "error", "message": f"Invalid JSON in {input_file}: {e}"}
         try:
-            # 构建请求数据
+            # Build Request Data
             request_data = {
                 "workflow": payload,
                 "execute_type": execute_type,
@@ -5964,21 +5964,21 @@ class StaticUtils:
                 timeout=30,
             )
             
-            # 记录响应信息
+            # Record response information
 
             
-            # 确保日志目录存在
+            # Ensure log directory exists
             log_dir = Config.LOG_DIR
             log_dir.mkdir(parents=True, exist_ok=True)
             
-            # 生成日志文件名
+            # Generate log filename
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             log_file = log_dir / f"static_utils_execute_{timestamp}.json"
             
             if r.status_code == 200:
                 result = r.json()
             else:
-                # 记录错误响应
+                # Record error response
                 log_data = {
                     "request": request_data,
                     "status_code": r.status_code,
@@ -6062,7 +6062,7 @@ class StaticUtils:
                     file_name.write_text(json.dumps(failed_output, ensure_ascii=False, indent=2), encoding="utf-8")
 
                     archive_dir = input_file.parent
-                    # 文件路径替换 --- 单企业和多企业此处有差异，archive_dir两种情况，上面是多企业，下面是单企业
+                    # File path replacement --- < x0/> and multi-enterprise There's a difference here. Archive dir, above multi-enterprise and below single-enterprise
                     # archive_dir = Config.WORKSPACE / "department" / department / f"day{round_id}"
                     # archive_dir.mkdir(parents=True, exist_ok=True)
                     if execute_type == "run":
@@ -6089,7 +6089,7 @@ class StaticUtils:
 
     @staticmethod
     def save_messages(round_id: int, messages: list):
-        """按轮次保存对话消息。"""
+        """Keep message for the dialogue by round."""
         output_dir = Config.WORKSPACE / "dialogues"
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -6109,14 +6109,14 @@ class StaticUtils:
 
     @staticmethod
     def archive_json_files(round_id):
-        """归档旧工作区中本轮生成的关键 JSON 文件。"""
+        """Archive key JSON files generated by this round in the old working area."""
         if not Config.WORKSPACE.exists():
             raise ValueError(f"Workspace not found: {Config.WORKSPACE}")
         files = [
             "analysis.json",
             "daily_result.json" 
         ]
-        # 生成目录名
+        # Generate directory name
         archive_dir = Config.WORKSPACE / "records" / f"day{round_id}"
         archive_dir.mkdir(parents=True, exist_ok=True)
 
@@ -6137,7 +6137,7 @@ class StaticUtils:
         round_id: int,
         workspace=Config.WORKSPACE
     ):
-        """归档指定部门在本轮生成的动作、结果与状态文件。"""
+        """Archive specifies the actions, results and status files department generated during this round."""
         files = [
             f"{department}_action.json",
             f"{department}_result.json",
@@ -6160,7 +6160,7 @@ class StaticUtils:
 
     @staticmethod
     def extract_failed():
-        """汇总各部门 failed 结果，并返回失败部门列表。"""
+        """Summarizes department failed results and returns the list of failed department."""
         fail_list = []
         if StaticUtils.extract_failed_results("hr_result.json", "hr_failed_result.json"):
             fail_list.append("hr")
@@ -6179,7 +6179,7 @@ class StaticUtils:
         input_file: str = "result.json",
         output_file: str = "failed_result.json"
     ):
-        """从执行结果中提取 failed 节点并单独落盘。"""
+        """Draws failed nodes from the implementation results and separates persist."""
         input_file = Config.WORKSPACE / input_file
         output_file = Config.WORKSPACE / output_file
 
@@ -6187,7 +6187,7 @@ class StaticUtils:
             print(f"{input_file} 不存在")
             return False
 
-        # 读取输入文件
+        # Read input files
         with open(input_file, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -6200,7 +6200,7 @@ class StaticUtils:
             print(f"未发现 {input_file} failed 结果，不生成 failed_result.json")
             return False
 
-        # 写入 failed 结果
+        # Write failed results
         output_file.write_text(
             json.dumps(
                 failed_list,
@@ -6303,7 +6303,7 @@ class StaticUtils:
         round_id: int = 0,
         analysis_file: str = "analysis.json"
     ):
-        """拆分 observation，生成部门状态、blackboard 与交易决策卡文件。"""
+        """Split observation, generate department status, blackboard and transaction decision card files."""
         with open(input_file, "r", encoding="utf-8") as f:
                 obs = json.load(f)
 
@@ -7722,8 +7722,8 @@ class StaticUtils:
 
         def build_department_target_map(public_targets: list) -> dict:
             """
-            将公共目标列表转换为 dept -> target info 的映射
-            """
+            Convert the public target list to the map of dept->targetinfo
+                        """
             target_map = {}
 
             for item in public_targets:
@@ -7935,7 +7935,7 @@ class StaticUtils:
             policy_context: Dict[str, Any],
             self_state: Dict[str, Any],
         ) -> Dict[str, Any]:
-            """按结构化策略净化部门目标，避免低频 analysis 目标覆盖模式主目标。"""
+            """department objectives are cleansed by a structured strategy to avoid low-frequency objective coverage of the main target of the mode."""
             action_constraints = (policy_context or {}).get("action_constraints") or {}
             active_modes = (policy_context or {}).get("active_modes") or {}
             single_case_policy = (
@@ -8259,7 +8259,7 @@ class StaticUtils:
             policy_context: Dict[str, Any],
             target_info: Dict[str, Any],
         ) -> Dict[str, Any]:
-            """为 Skill 提供靠前的决策索引，减少分页读取大 JSON 的概率。"""
+            """Skill provides a forward index for decision-making and reduces the probability of reading a large < x17/> page."""
             action_constraints = (policy_context or {}).get("action_constraints") or {}
             active_modes = (policy_context or {}).get("active_modes") or {}
             relevant_policies = (policy_context or {}).get("relevant_policies") or {}
@@ -9320,10 +9320,10 @@ class StaticUtils:
                     if item_id is None:
                         continue
 
-                    # 全量映射
+                    # Full Map
                     all_items[item_id] = quantity
 
-                    # 分类映射
+                    # Classification Map
                     if item_type == "raw_material":
                         raw_materials[item_id] = quantity
                     elif item_type == "product":
@@ -9522,40 +9522,40 @@ class StaticUtils:
     @staticmethod
     def archive_workspace(custom_name=None):
         """
-        将workspace目录下的所有子目录内容剪切到history目录中，并用一个新的workspace目录包裹
-        命名格式为：workspace_当前日期_序号
-        
+        Cuts all subdirectories in the workspace directory to the headory directory and packages them in a new workspace directory
+        Named as: workspace current date serial number
+                
         Args:
-            custom_name (str, optional): 自定义的workspace目录名称. 默认为None，使用默认命名格式
-        """
+            custom_name (str, option): Custom workspace directory name. Default is None, using default naming format
+                """
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
         
-        # 确定history目录路径
+        # Determine the path of the headory directory
         history_dir = Config.WORKSPACE.parent / "history"
         history_dir.mkdir(exist_ok=True)
         
-        # 确定新的workspace目录名称
+        # Determine new workspace directory name
         if custom_name:
-            # 使用自定义名称，检查是否已存在
+            # Use custom name to check if it exists
             base_name = custom_name
             counter = 1
             new_workspace_dir = history_dir / base_name
             
-            # 检查是否已存在同名目录，如果存在则添加序号
+            # Check if a directory with the same name exists and if so add a serial number
             while new_workspace_dir.exists():
                 new_workspace_dir = history_dir / f"{base_name}_{counter}"
                 counter += 1
         else:
-            # 使用默认命名格式
-            # 生成当前日期（格式：月.日）
+            # Use default naming format
+            # Generates the current date (format: month.)
             current_date = datetime.now().strftime("%m.%d").lstrip('0')
             
-            # 计算序号
+            # Calculate Serial Number
             prefix = f"workspace_{current_date}_"
             existing_dirs = [d for d in history_dir.iterdir() if d.is_dir() and d.name.startswith(prefix)]
             
-            # 提取序号并找到最大的
+            # Extract the serial number and find the largest
             max_seq = -1
             for d in existing_dirs:
                 try:
@@ -9565,42 +9565,42 @@ class StaticUtils:
                 except (ValueError, IndexError):
                     pass
             
-            # 新序号
+            # New Serial Number
             new_seq = max_seq + 1
             
-            # 创建新的workspace目录
+            # Create a new workspace directory
             new_workspace_dir = history_dir / f"workspace_{current_date}_{new_seq}"
         
-        # 创建新的workspace目录
+        # Create a new workspace directory
         new_workspace_dir.mkdir(parents=True, exist_ok=True)
         
-        # 定义需要复制的文件和目录
-        copy_files = ["business_templates.md", "daily_action.json", "init_action.json", "re_action_plan.json"]
+        # Define files and directories that need to be copied
+        copy_files = ["daily_action.json", "init_action.json", "re_action_plan.json"]
         copy_dirs = ["visualization"]
         
-        # 处理workspace目录下的所有内容
+        # Process all content in workspace directory
         for item in Config.WORKSPACE.iterdir():
             target_path = new_workspace_dir / item.name
             try:
-                # 检查是否为需要复制的文件
+                # Check if files need to be copied
                 if item.is_file() and item.name in copy_files:
                     shutil.copy2(str(item), str(target_path))
                     logger.info(f"Copied {item.name} to {target_path}", extra=extra)
-                # 检查是否为需要复制的目录
+                # Check if a directory needs to be copied
                 elif item.is_dir() and item.name in copy_dirs:
-                    # 递归复制目录
+                    # Recursive Copy Directory
                     if target_path.exists():
                         shutil.rmtree(str(target_path))
                     shutil.copytree(str(item), str(target_path))
                     logger.info(f"Copied directory {item.name} to {target_path}", extra=extra)
-                # 其他文件和目录使用移动
+                # Move other files and directories
                 else:
                     shutil.move(str(item), str(target_path))
                     logger.info(f"Moved {item.name} to {target_path}", extra=extra)
             except Exception as e:
                 logger.error(f"Failed to process {item.name}: {e}", extra=extra)
         
-        # 重新创建空的workspace目录
+        # Recreate empty workspace directory
         Config.WORKSPACE.mkdir(exist_ok=True)
         
         logger.info(f"Workspace archived to {new_workspace_dir}", extra=extra)
@@ -9609,9 +9609,9 @@ class StaticUtils:
     @staticmethod
     def handle_reproduction(workspace_name: str, re_step: int):
         """
-        复现指定step数的模拟
-        """
-        # 定位到history目录下的具体workspace目录
+        Revert simulation of specified step numbers
+                """
+        # Position specific workspace directory under history directory
         trace_id = StaticUtils.new_trace()
         extra = {"trace_id": trace_id}
         history_dir = Config.WORKSPACE.parent / "history"
@@ -9621,18 +9621,18 @@ class StaticUtils:
             logger.error(f"Workspace {workspace_name} not found in history directory")
             return
         
-        # 进入department目录
+        # Enter Department Directory
         department_dir = target_workspace / "department"
         if not department_dir.exists() or not department_dir.is_dir():
             logger.error(f"Department directory not found in {workspace_name}")
             return
-        # 遍历五个部门目录
+        # Through five directories department
         departments = ["hr", "inventory", "procurement", "sales", "production"]
         
         StaticUtils.handle_init_action()
         for step in range(re_step):
             StaticUtils.handle_daily_action()
-            # 遍历每个部门
+            # All over department
             for dept in departments:
                 dept_dir = department_dir / dept
                 if not dept_dir.exists() or not dept_dir.is_dir():
@@ -9641,7 +9641,7 @@ class StaticUtils:
                 if not day_dir.exists() or not day_dir.is_dir():
                     continue
                 
-                # 查找_action.json文件
+                # Find action.json files
                 action_files = list(day_dir.glob("*_action.json"))
                 if not action_files:
                     continue
@@ -9659,8 +9659,8 @@ class StaticUtils:
                     timeout=30,
                 )
             StaticUtils.run_day()
-        # 将workspace_name目录下的相关文件复制到workspace下
-        # 需要复制的目录
+        # Copy related files under workspace name directory to workspace
+        # Directory to Copy
         dirs_to_copy = ["department", "dialogues", "observations", "records"]
         
         all_flie = ["finance", "hr", "inventory", "procurement", "sales", "production", "blackboard"]
@@ -9671,12 +9671,12 @@ class StaticUtils:
             if not source_dir.exists() or not source_dir.is_dir():
                 continue
             
-            # 创建目标目录
+            # Create destination directory
             target_dir.mkdir(parents=True, exist_ok=True)
             
-            # 复制目录内容
+            # Copy directory contents
             if dir_name == "department":
-                # 对于department目录，只复制0-re_step范围内的文件
+                # Only files in the 0-re step range are copied for the description directory
                 for dept in all_flie:
                     dept_source = source_dir / dept
                     dept_target = target_dir / dept
@@ -9695,13 +9695,13 @@ class StaticUtils:
                         
                         day_target.mkdir(parents=True, exist_ok=True)
                         
-                        # 复制day目录下的所有文件
+                        # Copy all files in the day directory
                         for file in day_source.iterdir():
                             if file.is_file():
                                 shutil.copy2(str(file), str(day_target / file.name))
                                 logger.info(f"Copied {file.name} to {day_target}", extra=extra)
             elif dir_name == "dialogues":
-                # 对于dialogues目录，只复制round_0到round_re_step的文件
+                # For dialogues directories, only round 0 to round re step files
                 for step in range(re_step):
                     source_file = source_dir / f"round_{step}.json"
                     target_file = target_dir / f"round_{step}.json"
@@ -9710,7 +9710,7 @@ class StaticUtils:
                         shutil.copy2(str(source_file), str(target_file))
                         logger.info(f"Copied {source_file.name} to {target_dir}", extra=extra)
             elif dir_name == "observations":
-                # 对于observations目录，只复制observation_day0到observation_dayre_step的文件
+                # For observations directories, only files from observation day0 to observation dayre step
                 for step in range(re_step):
                     source_file = source_dir / f"observation_day{step}.txt"
                     target_file = target_dir / f"observation_day{step}.txt"
@@ -9719,7 +9719,7 @@ class StaticUtils:
                         shutil.copy2(str(source_file), str(target_file))
                         logger.info(f"Copied {source_file.name} to {target_dir}", extra=extra)
             elif dir_name == "records":
-                # 对于records目录，只复制day0到dayre_step的目录
+                # For records directories, copy only the directories from day0 to dayre step
                 for step in range(re_step):
                     source_day_dir = source_dir / f"day{step}"
                     target_day_dir = target_dir / f"day{step}"
@@ -9729,7 +9729,7 @@ class StaticUtils:
                     
                     target_day_dir.mkdir(parents=True, exist_ok=True)
                     
-                    # 复制day目录下的所有文件
+                    # Copy all files in the day directory
                     for file in source_day_dir.iterdir():
                         if file.is_file():
                             shutil.copy2(str(file), str(target_day_dir / file.name))

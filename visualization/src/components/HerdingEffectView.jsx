@@ -294,7 +294,7 @@ const Legend = ({ items }) => (
   </div>
 );
 
-const EmptyChart = ({ message = '暂无可绘制数据', detail = null }) => (
+const EmptyChart = ({ message = 'No chart data available', detail = null }) => (
   <div className="herding-svg-empty">
     <strong>{message}</strong>
     {detail && <span>{detail}</span>}
@@ -308,7 +308,7 @@ const LineSvgChart = ({
   min = null,
   percent = false,
   floorZero = true,
-  emptyMessage = '暂无可绘制数据',
+  emptyMessage = 'No chart data available',
   emptyDetail = null,
 }) => {
   if (!rows.length || !series.length) {
@@ -376,9 +376,9 @@ const BarLineSvgChart = ({ rows }) => {
     <div className="herding-svg-chart-wrap">
       <Legend
         items={[
-          { name: '总计划量', color: HERDING_COLORS.planned },
-          { name: '真实需求', color: HERDING_COLORS.demand },
-          { name: '可见需求信号', color: HERDING_COLORS.heat },
+          { name: 'Total Planned Quantity', color: HERDING_COLORS.planned },
+          { name: 'Actual Demand', color: HERDING_COLORS.demand },
+          { name: 'Visible Demand Signal', color: HERDING_COLORS.heat },
         ]}
       />
       <svg className="herding-svg-chart" viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`} role="img">
@@ -397,13 +397,13 @@ const BarLineSvgChart = ({ rows }) => {
               fill={HERDING_COLORS.planned}
               opacity="0.72"
             >
-              <title>{`D${row.round} 总计划量: ${formatNumber(row.total_planned_quantity, 2)}`}</title>
+              <title>{`D${row.round} total planned quantity: ${formatNumber(row.total_planned_quantity, 2)}`}</title>
             </rect>
           );
         })}
         {[
-          { name: '真实需求', color: HERDING_COLORS.demand, value: (row) => row.true_demand_quantity },
-          { name: '可见需求信号', color: HERDING_COLORS.heat, value: (row) => row.visible_demand_signal, dashed: true },
+          { name: 'Actual Demand', color: HERDING_COLORS.demand, value: (row) => row.true_demand_quantity },
+          { name: 'Visible Demand Signal', color: HERDING_COLORS.heat, value: (row) => row.visible_demand_signal, dashed: true },
         ].map((entry) => {
           const points = rows.map((row, index) => ({
             x: helpers.x(index),
@@ -464,19 +464,19 @@ const EnterpriseConvergenceChart = ({ rows, enterpriseIds }) => {
       percent
       series={[
         {
-          name: '生产差异度',
+          name: 'Production Dispersion',
           color: HERDING_COLORS.herding,
           value: (row) => row.productionDifference,
           bold: true,
         },
         {
-          name: '极差差异度',
+          name: 'Production Range',
           color: HERDING_COLORS.heat,
           value: (row) => row.productionSpread,
           dashed: true,
         },
         {
-          name: '行为同步度',
+          name: 'Behavioral Synchronization',
           color: HERDING_COLORS.sync,
           value: (row) => row.synchronization_index,
           bold: true,
@@ -503,9 +503,9 @@ const MiniOperationTrend = ({ rows, enterpriseId, enterpriseCount }) => {
     };
   });
   const series = [
-    { key: 'planned', name: '生产计划', color: HERDING_COLORS.planned },
-    { key: 'salesOrDemand', name: hasSalesData ? '销售完成' : '需求输入', color: HERDING_COLORS.demand },
-    { key: 'inventory', name: '期末库存', color: HERDING_COLORS.inventory },
+    { key: 'planned', name: 'Production Plan', color: HERDING_COLORS.planned },
+    { key: 'salesOrDemand', name: hasSalesData ? 'Completed Sales' : 'Demand Input', color: HERDING_COLORS.demand },
+    { key: 'inventory', name: 'Ending Inventory', color: HERDING_COLORS.inventory },
   ];
   const values = points.flatMap((point) => series.map((entry) => point[entry.key]));
   const scale = buildScale(values);
@@ -565,7 +565,7 @@ const MiniOperationTrend = ({ rows, enterpriseId, enterpriseCount }) => {
 
 const EnterpriseOperationMatrix = ({ rows, enterpriseIds, strategyMap }) => {
   if (!rows.length || !enterpriseIds.length) {
-    return <EmptyChart message="暂无企业运营数据" />;
+    return <EmptyChart message="No enterprise operating data" />;
   }
   return (
     <div className="herding-operation-matrix">
@@ -591,13 +591,13 @@ const EnterpriseOperationMatrix = ({ rows, enterpriseIds, strategyMap }) => {
                 <i style={{ background: ENTERPRISE_COLORS[enterpriseId] || '#52616a' }} />
                 {enterpriseId}
               </span>
-              <strong>{profile?.label || profile?.profile_id || '未声明策略'}</strong>
+              <strong>{profile?.label || profile?.profile_id || 'Strategy not specified'}</strong>
             </div>
             <MiniOperationTrend rows={rows} enterpriseId={enterpriseId} enterpriseCount={enterpriseIds.length} />
             <div className="herding-operation-values">
-              <span>累计生产计划 {formatNumber(cumulativePlanned, 0)}</span>
-              <span>累计销售/需求 {formatNumber(cumulativeDemand, 0)}</span>
-              <span>期末库存 {formatNumber(finalInventory, 0)}</span>
+              <span>Cumulative production plan {formatNumber(cumulativePlanned, 0)}</span>
+              <span>Cumulative sales/demand {formatNumber(cumulativeDemand, 0)}</span>
+              <span>Ending inventory {formatNumber(finalInventory, 0)}</span>
             </div>
           </div>
         );
@@ -651,9 +651,9 @@ const buildEnterpriseBehaviorRows = (metrics, enterpriseIds, strategyMap) => {
 
 const buildSummary = (metrics, enterpriseIds, behaviorRows) => {
   const windows = [
-    { key: 'heatRise', label: '热度上升', start: 3, end: 5 },
-    { key: 'herding', label: '羊群窗口', start: 6, end: 9 },
-    { key: 'late', label: '后段低热度', start: 10, end: 16 },
+    { key: 'heatRise', label: 'Rising Attention', start: 3, end: 5 },
+    { key: 'herding', label: 'Herding Window', start: 6, end: 9 },
+    { key: 'late', label: 'Late Low-Attention Phase', start: 10, end: 16 },
   ];
   const windowStats = buildWindowStats(metrics, windows);
   const last = metrics[metrics.length - 1] || {};
@@ -683,10 +683,10 @@ const buildSummary = (metrics, enterpriseIds, behaviorRows) => {
 
 const StrategySensitivityBars = ({ profile }) => {
   const items = [
-    ['市场热度', profile?.market_heat_sensitivity],
-    ['同业信号', profile?.peer_signal_sensitivity],
-    ['库存风险', profile?.inventory_risk_sensitivity],
-    ['现金风险', profile?.cash_risk_sensitivity],
+    ['Market Attention', profile?.market_heat_sensitivity],
+    ['Peer Signal', profile?.peer_signal_sensitivity],
+    ['Inventory Risk', profile?.inventory_risk_sensitivity],
+    ['Cash Risk', profile?.cash_risk_sensitivity],
   ];
   return (
     <div className="herding-sensitivity-bars">
@@ -705,7 +705,7 @@ const StrategySensitivityBars = ({ profile }) => {
 
 const StrategyBehaviorPanel = ({ rows }) => {
   if (!rows.length) {
-    return <EmptyChart message="暂无企业策略数据" detail="当前运行元数据没有 strategy_profile，无法展示策略差异。" />;
+    return <EmptyChart message="No enterprise strategy data" detail="The run metadata does not contain strategy_profile." />;
   }
   const maxPlanned = Math.max(...rows.map((row) => Number(row.cumulativePlanned || 0)), 1);
   return (
@@ -717,7 +717,7 @@ const StrategyBehaviorPanel = ({ rows }) => {
               <i style={{ background: ENTERPRISE_COLORS[row.enterpriseId] || '#52616a' }} />
               {row.enterpriseId}
             </span>
-            <strong>{row.profile?.label || row.profile?.profile_id || '未声明策略'}</strong>
+            <strong>{row.profile?.label || row.profile?.profile_id || 'Strategy not specified'}</strong>
           </div>
           <StrategySensitivityBars profile={row.profile} />
           <div className="herding-strategy-output">
@@ -730,10 +730,10 @@ const StrategyBehaviorPanel = ({ rows }) => {
               />
             </div>
             <div className="herding-strategy-values">
-              <span>累计计划 {formatNumber(row.cumulativePlanned, 0)}</span>
-              <span>峰值 {formatNumber(row.maxPlanned, 0)}</span>
-              <span>高于需求份额 {row.highOutputRounds} 轮</span>
-              <span>最终库存 {formatNumber(row.finalInventory, 0)}</span>
+              <span>Cumulative plan {formatNumber(row.cumulativePlanned, 0)}</span>
+              <span>Peak {formatNumber(row.maxPlanned, 0)}</span>
+              <span>Above demand share in {row.highOutputRounds} turns</span>
+              <span>Ending inventory {formatNumber(row.finalInventory, 0)}</span>
             </div>
           </div>
           {row.profile?.decision_note && (
@@ -750,10 +750,10 @@ const EnterpriseContributionRecords = ({ rows }) => {
     return null;
   }
   return (
-    <section className="herding-contribution-records" aria-label="不同企业累计扩产贡献记录">
+    <section className="herding-contribution-records" aria-label="Cumulative expansion contribution by enterprise">
       <div className="herding-records-title">
-        <span>不同企业累计扩产贡献</span>
-        <small>由各企业逐轮生产计划累计得到，用于判断哪类策略贡献了更多扩产。</small>
+        <span>Cumulative Expansion Contribution by Enterprise</span>
+        <small>Derived from each enterprise's per-turn production plans to identify which strategy contributes most to expansion.</small>
       </div>
       <div className="herding-record-grid">
         {rows.map((row) => (
@@ -766,18 +766,18 @@ const EnterpriseContributionRecords = ({ rows }) => {
               <strong>{formatPercent(row.totalShare)}</strong>
             </div>
             <dl>
-              <dt>累计计划</dt>
+              <dt>Cumulative Plan</dt>
               <dd>{formatNumber(row.cumulativePlanned, 0)}</dd>
-              <dt>平均计划</dt>
+              <dt>Mean Plan</dt>
               <dd>{formatNumber(row.averagePlanned, 1)}</dd>
-              <dt>需求份额差</dt>
+              <dt>Demand-Share Gap</dt>
               <dd className={Number(row.avgDemandShareGap || 0) > 0 ? 'warning' : ''}>
                 {formatNumber(row.avgDemandShareGap, 1)}
               </dd>
-              <dt>最终库存</dt>
+              <dt>Ending Inventory</dt>
               <dd>{formatNumber(row.finalInventory, 0)}</dd>
             </dl>
-            <small>{row.profile?.label || row.profile?.profile_id || '未声明策略'}</small>
+            <small>{row.profile?.label || row.profile?.profile_id || 'Strategy not specified'}</small>
           </div>
         ))}
       </div>
@@ -794,13 +794,13 @@ const WindowStatsPanel = ({ rows }) => (
           <strong>D{row.start}-D{row.end}</strong>
         </div>
         <dl>
-          <dt>同步度</dt>
+          <dt>Synchronization</dt>
           <dd>{formatNumber(row.sync, 3)}</dd>
-          <dt>羊群指数</dt>
+          <dt>Herding Index</dt>
           <dd>{formatNumber(row.herding, 3)}</dd>
-          <dt>过度生产比</dt>
+          <dt>Overproduction Ratio</dt>
           <dd>{formatNumber(row.overRatio, 2)}</dd>
-          <dt>总计划均值</dt>
+          <dt>Mean Total Plan</dt>
           <dd>{formatNumber(row.total, 1)}</dd>
         </dl>
       </div>
@@ -810,7 +810,7 @@ const WindowStatsPanel = ({ rows }) => (
 
 const EnterpriseHeatTable = ({ rows, enterpriseIds }) => {
   if (!rows.length || !enterpriseIds.length) {
-    return <EmptyChart message="暂无企业计划数据" />;
+    return <EmptyChart message="No enterprise planning data" />;
   }
   const maxPlan = Math.max(
     ...rows.flatMap((row) => enterpriseIds.map((enterpriseId) => Number(row?.enterprises?.[enterpriseId]?.planned_quantity || 0))),
@@ -821,12 +821,12 @@ const EnterpriseHeatTable = ({ rows, enterpriseIds }) => {
       <table className="herding-table">
         <thead>
           <tr>
-            <th>轮次</th>
+            <th>Turn</th>
             {enterpriseIds.map((enterpriseId) => (
               <th key={enterpriseId}>{enterpriseId}</th>
             ))}
-            <th>同步度</th>
-            <th>总计划 / 真实需求</th>
+            <th>Synchronization</th>
+            <th>Total Plan / Actual Demand</th>
           </tr>
         </thead>
         <tbody>
@@ -891,7 +891,7 @@ function HerdingEffectView({
         }
       } catch (loadError) {
         if (!cancelled) {
-          setError(loadError.message || '加载羊群效应数据失败');
+          setError(loadError.message || 'Failed to load herding-effect data');
         }
       } finally {
         if (!cancelled) {
@@ -930,10 +930,10 @@ function HerdingEffectView({
 
   const scenarioId = bundle.runMeta?.scenario_id || bundle.runMeta?.scenario_config?.meta?.scenario_id;
   const herdingConfig = bundle.runMeta?.scenario_config?.simulation?.herding_config || {};
-  const peerVisibleLabel = summary.peerVisible ? '同业摘要可见' : '仅市场热度可见';
+  const peerVisibleLabel = summary.peerVisible ? 'Peer Summary Visible' : 'Market Attention Only';
 
   if (loading) {
-    return <div className="herding-empty-state">正在加载羊群效应实验数据...</div>;
+    return <div className="herding-empty-state">Loading herding-effect experiment data...</div>;
   }
 
   if (error) {
@@ -943,7 +943,7 @@ function HerdingEffectView({
   if (!bundle.metrics.length) {
     return (
       <div className="herding-empty-state warning">
-        当前任务未读取到 `herding_metrics.json`，请选择 herding_market 场景。
+        The current run does not contain `herding_metrics.json`. Select a herding_market scenario.
       </div>
     );
   }
@@ -953,59 +953,57 @@ function HerdingEffectView({
       <section className="herding-hero">
         <div className="herding-hero-copy">
           <span className="herding-eyebrow">Herding Effect</span>
-          <h2>羊群效应单组运行分析</h2>
+          <h2>Herding-Effect Run Analysis</h2>
           <p>
-            本页面只读取当前选中的模拟任务，展示该组实验内部的市场信号、生产同步、过度生产和企业策略差异。
-            是否能验证羊群效应，需要观察：同业信号是否可见、同步度是否在市场回落后仍维持、以及不同策略企业是否呈现不同扩产强度。
+            This view analyzes the selected run's market signals, production synchronization, overproduction, and strategy heterogeneity. Evidence of herding combines peer-signal visibility, persistent synchronization after attention declines, and differentiated expansion across enterprise strategies.
           </p>
           <div className="herding-source-strip">
-            <span>当前任务：{currentRunId || bundle.runMeta?.run_id || '-'}</span>
-            <span>当前来源：{currentRunSourceLabel || dataRoot}</span>
-            <span>当前场景：{scenarioId || '-'}</span>
-            <span>商品：{herdingConfig.product_id || summary.productId}</span>
-            <span>同业信号：{peerVisibleLabel}</span>
+            <span>Current run: {currentRunId || bundle.runMeta?.run_id || '-'}</span>
+            <span>Data source: {currentRunSourceLabel || dataRoot}</span>
+            <span>Scenario: {scenarioId || '-'}</span>
+            <span>Product: {herdingConfig.product_id || summary.productId}</span>
+            <span>Peer signal: {peerVisibleLabel}</span>
           </div>
         </div>
         <aside className="herding-proof-card">
-          <span>本组读数</span>
-          <strong>{summary.peerVisible ? '可观察羊群形成' : '观察无同业对照'}</strong>
+          <span>Run Summary</span>
+          <strong>{summary.peerVisible ? 'Herding Formation Observable' : 'Peer-Hidden Reference'}</strong>
           <p>
-            D3 后平均同步度 {formatNumber(summary.avgSync, 3)}，平均羊群指数 {formatNumber(summary.avgHerding, 3)}。
-            过度生产轮次 {summary.overProductionRounds}/{summary.roundCount}，最高过度生产比 {formatNumber(summary.maxOverRatio, 2)}。
+            Mean post-D3 synchronization is {formatNumber(summary.avgSync, 3)}, and mean herding index is {formatNumber(summary.avgHerding, 3)}. Overproduction occurs in {summary.overProductionRounds}/{summary.roundCount} turns, with a maximum ratio of {formatNumber(summary.maxOverRatio, 2)}.
           </p>
         </aside>
       </section>
 
       <section className="herding-kpi-grid">
         <div className="herding-kpi-card accent">
-          <span>当前场景类型</span>
+          <span>Current Scenario Type</span>
           <strong>{peerVisibleLabel}</strong>
           <small>{scenarioId || '-'}</small>
         </div>
         <div className="herding-kpi-card">
-          <span>D3 后平均同步度</span>
+          <span>Mean Synchronization after D3</span>
           <strong>{formatNumber(summary.avgSync, 3)}</strong>
-          <small>0.72 以上代表高度趋同</small>
+          <small>Values above 0.72 indicate strong convergence</small>
         </div>
         <div className="herding-kpi-card">
-          <span>D3 后平均羊群指数</span>
+          <span>Mean Herding Index after D3</span>
           <strong>{formatNumber(summary.avgHerding, 3)}</strong>
-          <small>综合同步、热度与过度生产</small>
+          <small>Combines synchronization, attention, and overproduction</small>
         </div>
         <div className="herding-kpi-card warning">
-          <span>过度生产轮次</span>
+          <span>Overproduction Turns</span>
           <strong>{summary.overProductionRounds}/{summary.roundCount}</strong>
-          <small>阈值：总计划 / 真实需求 &gt; 1.15</small>
+          <small>Threshold: total plan / actual demand &gt; 1.15</small>
         </div>
         <div className="herding-kpi-card">
-          <span>主要扩产企业</span>
+          <span>Leading Expansion Enterprise</span>
           <strong>{summary.leading?.enterpriseId || '-'}</strong>
-          <small>累计计划 {formatNumber(summary.leading?.cumulativePlanned, 0)}</small>
+          <small>Cumulative plan {formatNumber(summary.leading?.cumulativePlanned, 0)}</small>
         </div>
         <div className="herding-kpi-card accent">
-          <span>最高风险敏感</span>
+          <span>Highest Risk Sensitivity</span>
           <strong>{summary.cautious?.enterpriseId || '-'}</strong>
-          <small>{summary.cautious?.profile?.label || '未声明策略'}</small>
+          <small>{summary.cautious?.profile?.label || 'Strategy not specified'}</small>
         </div>
       </section>
 
@@ -1013,32 +1011,32 @@ function HerdingEffectView({
 
       <section className="herding-layout">
         <article className="herding-chart-card evidence-card">
-          <div className="herding-card-title">市场背景：真实需求与可见信号</div>
+          <div className="herding-card-title">Market Context: Actual Demand and Visible Signals</div>
           <p className="herding-card-note">
-            保留外部环境变化作为参照：真实需求、Agent 可见需求信号与市场热度。企业行为差异放到右侧矩阵中观察。
+            Actual demand, the signal visible to agents, and market attention provide the external reference for the enterprise-level trajectories.
           </p>
           <LineSvgChart
             rows={bundle.metrics}
             series={[
-              { name: '真实需求', color: HERDING_COLORS.demand, value: (row) => row.true_demand_quantity, bold: true },
-              { name: '可见需求信号', color: HERDING_COLORS.heat, value: (row) => row.visible_demand_signal, dashed: true },
-              { name: '市场热度 ×100', color: HERDING_COLORS.marketHeat, value: (row) => Number(row.market_heat || 0) * 100, opacity: 0.82 },
+              { name: 'Actual Demand', color: HERDING_COLORS.demand, value: (row) => row.true_demand_quantity, bold: true },
+              { name: 'Visible Demand Signal', color: HERDING_COLORS.heat, value: (row) => row.visible_demand_signal, dashed: true },
+              { name: 'Market Attention ×100', color: HERDING_COLORS.marketHeat, value: (row) => Number(row.market_heat || 0) * 100, opacity: 0.82 },
             ]}
           />
         </article>
 
         <article className="herding-chart-card evidence-card">
-          <div className="herding-card-title">企业生产-销售-库存差异</div>
+          <div className="herding-card-title">Enterprise Production–Sales–Inventory Differences</div>
           <p className="herding-card-note">
-            每个小面板对应一家企业，展示生产计划、销售完成或需求输入、期末库存的连续变化，用来观察不同策略是否带来不同经营轨迹。
+            Each panel traces one enterprise's production plan, completed sales or demand input, and ending inventory to reveal strategy-dependent operating trajectories.
           </p>
           <EnterpriseOperationMatrix rows={bundle.metrics} enterpriseIds={enterpriseIds} strategyMap={strategyMap} />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">同步度与羊群指数</div>
+          <div className="herding-card-title">Synchronization and Herding Index</div>
           <p className="herding-card-note">
-            同步度直接描述企业计划是否趋同；羊群指数用于综合识别同步扩产、热度和过度生产。
+            Synchronization measures convergence in enterprise plans; the herding index combines synchronized expansion, market attention, and overproduction.
           </p>
           <LineSvgChart
             rows={bundle.metrics}
@@ -1046,64 +1044,64 @@ function HerdingEffectView({
             min={0}
             percent
             series={[
-              { name: '同步度', color: HERDING_COLORS.sync, value: (row) => row.synchronization_index, bold: true },
-              { name: '羊群指数', color: HERDING_COLORS.herding, value: (row) => row.herding_index },
-              { name: '同步阈值 0.72', color: HERDING_COLORS.threshold, value: () => 0.72, dashed: true },
+              { name: 'Synchronization', color: HERDING_COLORS.sync, value: (row) => row.synchronization_index, bold: true },
+              { name: 'Herding Index', color: HERDING_COLORS.herding, value: (row) => row.herding_index },
+              { name: 'Synchronization Threshold 0.72', color: HERDING_COLORS.threshold, value: () => 0.72, dashed: true },
             ]}
           />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">企业差异到趋同路径</div>
+          <div className="herding-card-title">Path from Heterogeneity to Convergence</div>
           <p className="herding-card-note">
-            红线表示企业生产计划的离散程度，蓝线表示行为同步度。若红线从高位回落、蓝线同步上升，就能直观看到“原本有差异，随后被羊群效应推向趋同”的过程。
+            Production-plan dispersion and behavioral synchronization jointly reveal whether initially heterogeneous firms converge over time.
           </p>
           <EnterpriseConvergenceChart rows={bundle.metrics} enterpriseIds={enterpriseIds} />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">阶段窗口读数</div>
+          <div className="herding-card-title">Phase-Window Metrics</div>
           <p className="herding-card-note">
-            将本组运行分为热度上升、羊群窗口和后段低热度，便于判断同步是否只是短期共同信号，还是持续惯性。
+            Rising attention, the herding window, and the late low-attention phase distinguish transient common signals from persistent behavioral inertia.
           </p>
           <WindowStatsPanel rows={summary.windowStats} />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">企业生产计划曲线</div>
+          <div className="herding-card-title">Enterprise Production Plans</div>
           <p className="herding-card-note">
-            若曲线聚拢，说明企业行为趋同；若曲线分叉，说明策略、库存或风险约束让企业出现差异化反应。
+            Converging curves indicate similar behavior; divergence reflects differentiated responses to strategy, inventory, or risk constraints.
           </p>
           <EnterprisePlanChart rows={bundle.metrics} enterpriseIds={enterpriseIds} />
         </article>
 
         <article className="herding-chart-card wide">
-          <div className="herding-card-title">策略画像 vs 实际生产行为</div>
+          <div className="herding-card-title">Strategy Profiles vs. Observed Production</div>
           <p className="herding-card-note">
-            左侧是配置中心写入 Agent 观察层的策略偏好，右侧是本次运行实际计划量。用它判断不同策略是否真的带来不同企业行为。
+            Configured strategy preferences are compared with observed planning behavior to assess whether profiles produce distinct enterprise responses.
           </p>
           <StrategyBehaviorPanel rows={behaviorRows} />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">库存压力与过度生产</div>
+          <div className="herding-card-title">Inventory Pressure and Overproduction</div>
           <p className="herding-card-note">
-            如果过度生产比上升后库存压力也上行，说明同步扩产开始传导为经营后果。
+            A rise in inventory pressure after overproduction indicates that synchronized expansion has propagated into operating outcomes.
           </p>
           <LineSvgChart
             rows={bundle.metrics}
             series={[
-              { name: '过度生产比', color: HERDING_COLORS.planned, value: (row) => row.overproduction_ratio },
-              { name: '库存压力', color: HERDING_COLORS.inventory, value: (row) => row.inventory_pressure },
-              { name: '过度生产阈值 1.15', color: HERDING_COLORS.threshold, value: () => 1.15, dashed: true },
+              { name: 'Overproduction Ratio', color: HERDING_COLORS.planned, value: (row) => row.overproduction_ratio },
+              { name: 'Inventory Pressure', color: HERDING_COLORS.inventory, value: (row) => row.inventory_pressure },
+              { name: 'Overproduction Threshold 1.15', color: HERDING_COLORS.threshold, value: () => 1.15, dashed: true },
             ]}
           />
         </article>
 
         <article className="herding-chart-card">
-          <div className="herding-card-title">逐轮企业计划热力表</div>
+          <div className="herding-card-title">Per-Turn Enterprise Plan Heatmap</div>
           <p className="herding-card-note">
-            颜色越深表示该企业该轮计划量越高；同步度和过度生产比高亮用于定位羊群窗口。
+            Darker cells indicate larger plans; synchronization and overproduction highlights locate the herding window.
           </p>
           <EnterpriseHeatTable rows={bundle.metrics} enterpriseIds={enterpriseIds} />
         </article>

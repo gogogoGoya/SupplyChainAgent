@@ -237,7 +237,7 @@ const GlobalSimulationView = ({
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
       yAxis: { type: 'value' },
       series: flowMeta.companies.map((company) => ({
-        name: `${flowMeta.companyNameMap[company] || company} 现金`,
+        name: `${flowMeta.companyNameMap[company] || company} Cash`,
         type: 'line',
         smooth: true,
         data: availableDays.map((day) => rows.find((row) => row.company === company && row.day === day)?.finance.cash || 0),
@@ -254,17 +254,17 @@ const GlobalSimulationView = ({
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('订单量', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Order Quantity', quantityView) },
       series: [
         ...flowMeta.exchangeEntries.flatMap(({ exchangeId, label }) => [
           {
-            name: `${label} 订单量`,
+            name: `${label} Order Quantity`,
             type: 'line',
             smooth: true,
             data: exchangeRows.map((row) => row.exchanges[exchangeId]?.orderQuantity || 0),
           },
           {
-            name: `${label} 提案数`,
+            name: `${label} Proposals`,
             type: 'line',
             smooth: true,
             lineStyle: { type: 'dashed' },
@@ -304,19 +304,19 @@ const GlobalSimulationView = ({
       yAxis: { type: 'value' },
       series: [
         {
-          name: '累计产量',
+          name: 'Cumulative Output',
           type: 'line',
           smooth: true,
           data: productionRows.map((row) => row?.production.production_metrics?.total_production || 0),
         },
         {
-          name: `${getDisplayItemLabel(outputItemId, quantityView)} 库存`,
+          name: `${getDisplayItemLabel(outputItemId, quantityView)} Inventory`,
           type: 'line',
           smooth: true,
           data: productionRows.map((row) => convertQuantityByItem(getInventoryQuantity(row?.inventory, outputItemId), outputItemId, quantityView)),
         },
         ...(rawItemId ? [{
-          name: `${getDisplayItemLabel(rawItemId, quantityView)} 库存`,
+          name: `${getDisplayItemLabel(rawItemId, quantityView)} Inventory`,
           type: 'bar',
           data: productionRows.map((row) => convertQuantityByItem(getInventoryQuantity(row?.inventory, rawItemId), rawItemId, quantityView)),
         }] : []),
@@ -401,10 +401,10 @@ const GlobalSimulationView = ({
       ), 0);
       chart.setOption({
         title: {
-          text: '暂无已确认订单流向',
+          text: 'No Confirmed Order Flow',
           subtext: proposalCount > 0
-            ? `最新轮已有 ${proposalCount} 个交易提案，但尚未形成 confirmed order。`
-            : '最新轮尚未形成可绘制的企业间订单。',
+            ? `The latest turn contains ${proposalCount} trade proposals but no confirmed orders.`
+            : 'The latest turn contains no inter-enterprise orders to visualize.',
           left: 'center',
           top: 'middle',
           textStyle: { color: '#475569', fontSize: 18, fontWeight: 700 },
@@ -423,7 +423,7 @@ const GlobalSimulationView = ({
           if (params.dataType === 'edge') {
             const productLabel = getDisplayItemLabel(params.data.product, quantityView);
             if (params.data.converted) {
-              return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}<br/>原始数量: ${formatNumber(params.data.originalQuantity)}`;
+              return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}<br/>Original quantity: ${formatNumber(params.data.originalQuantity)}`;
             }
             return `${params.data.source} → ${params.data.target}<br/>${productLabel}: ${formatNumber(params.data.rawQuantity)}`;
           }
@@ -458,38 +458,38 @@ const GlobalSimulationView = ({
     : 0;
 
   if (loading) {
-    return <div className="loading">加载全局复盘数据...</div>;
+    return <div className="loading">Loading global review data...</div>;
   }
 
   return (
     <div className="global-page">
       <div className="global-kpi-grid">
         <div className="global-kpi-card">
-          <span>模拟轮数</span>
+          <span>Simulated Turns</span>
           <strong>{availableDays.length}</strong>
         </div>
         <div className="global-kpi-card">
-          <span>{flowMeta.bottomCompanyName} 期末现金</span>
+          <span>{flowMeta.bottomCompanyName} Ending Cash</span>
           <strong>{formatMoney(bottomRow?.finance.cash)}</strong>
         </div>
         <div className="global-kpi-card">
-          <span>末层累计订单量</span>
+          <span>Downstream Cumulative Orders</span>
           <strong>{formatNumber(downstreamExchange?.orderQuantity || 0)}</strong>
         </div>
         {flowMeta.productionNodeId ? (
           <>
             <div className="global-kpi-card">
-              <span>{flowMeta.productionNodeName} {getDisplayItemLabel(outputItemId, quantityView)} 库存</span>
+              <span>{flowMeta.productionNodeName} {getDisplayItemLabel(outputItemId, quantityView)} Inventory</span>
               <strong>{formatNumber(productionOutputInventory)}</strong>
             </div>
             <div className="global-kpi-card warning">
-              <span>{flowMeta.productionNodeName} {getDisplayItemLabel(rawItemId || 'raw', quantityView)} 库存</span>
+              <span>{flowMeta.productionNodeName} {getDisplayItemLabel(rawItemId || 'raw', quantityView)} Inventory</span>
               <strong>{formatNumber(productionRawInventory)}</strong>
             </div>
           </>
         ) : (
           <div className="global-kpi-card">
-            <span>{flowMeta.topCompanyName} 期末现金</span>
+            <span>{flowMeta.topCompanyName} Ending Cash</span>
             <strong>{formatMoney(latestCompanyRows.find((row) => row.company === flowMeta.topCompanyId)?.finance.cash)}</strong>
           </div>
         )}
@@ -497,41 +497,41 @@ const GlobalSimulationView = ({
 
       <div className="global-layout">
         <div className="global-chart-card wide">
-          <div className="global-card-title">全链路累计流向</div>
+          <div className="global-card-title">Cumulative End-to-End Flow</div>
           <div className="global-sankey-chart" ref={sankeyRef} />
         </div>
         <div className="global-chart-card">
-          <div className="global-card-title">企业现金趋势</div>
+          <div className="global-card-title">Enterprise Cash Trends</div>
           <div className="global-chart" ref={financeRef} />
         </div>
         <div className="global-chart-card">
           <div className="global-card-title">
             {(includeUpstreamExternalSupplierMode || includeDownstreamExternalMarketMode)
               ? (quantityView?.enabled
-                ? `交易所与外部交易订单走势（原料层折合 ${quantityView.productId}）`
-                : '交易所与外部交易订单走势')
+                ? `Exchange and External Order Trends (Raw Materials as ${quantityView.productId} Equivalents)`
+                : 'Exchange and External Order Trends')
               : (quantityView?.enabled
-                ? `交易所订单量与提案堆积（原料层折合 ${quantityView.productId}）`
-                : '交易所订单量与提案堆积')}
+                ? `Exchange Orders and Proposal Backlog (Raw Materials as ${quantityView.productId} Equivalents)`
+                : 'Exchange Orders and Proposal Backlog')}
           </div>
           <div className="global-chart" ref={exchangeRef} />
         </div>
         <div className="global-chart-card">
           <div className="global-card-title">
-            {flowMeta.productionNodeId ? `${flowMeta.productionNodeName} 生产与关键库存` : '生产节点观察'}
+            {flowMeta.productionNodeId ? `${flowMeta.productionNodeName} Production and Key Inventory` : 'Production-Node Overview'}
           </div>
           {flowMeta.productionNodeId ? (
             <div className="global-chart" ref={productionRef} />
           ) : (
-            <div className="global-empty-state">当前场景没有生产节点，已跳过生产视图。</div>
+            <div className="global-empty-state">This scenario has no production node, so the production view is omitted.</div>
           )}
         </div>
         <div className="global-chart-card insight-card">
-          <div className="global-card-title">全局观察</div>
+          <div className="global-card-title">System-Level Observations</div>
           <ul>
-            <li>末层链路 `{flowMeta.exchangeEntries[flowMeta.exchangeEntries.length - 1]?.label || 'N/A'}` 的订单与提案可直接反映终端履约压力。</li>
-            <li>全链路现金图可快速识别哪一层在放大量传导中承担了主要资金压力。</li>
-            <li>若存在生产节点，可结合其库存与累计产量判断放大是否被供给侧截断。</li>
+            <li>Orders and proposals on the downstream link `{flowMeta.exchangeEntries[flowMeta.exchangeEntries.length - 1]?.label || 'N/A'}` reveal terminal fulfillment pressure.</li>
+            <li>The end-to-end cash chart identifies which tier bears the greatest financial pressure as fluctuations propagate.</li>
+            <li>When a production node is present, its inventory and cumulative output indicate whether supply constraints interrupt amplification.</li>
           </ul>
         </div>
       </div>

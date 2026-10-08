@@ -402,7 +402,7 @@ def _build_production_cost_sensitivity(
     finance_metrics: Dict[str, Any],
     operating_metrics: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """补充不改写官方账本的售出产品成本敏感性口径。"""
+    """Complements the cost-sensitive calibre of products sold without rewriting official books."""
     net_profit = _safe_number(finance_metrics.get("net_profit"))
     sales = _safe_dict(operating_metrics.get("sales"))
     inventory = _safe_dict(operating_metrics.get("inventory"))

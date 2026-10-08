@@ -1,7 +1,7 @@
 """
-消息处理器模块
+Message Processor Module
 
-定义各种类型消息的处理器
+Defines the processor for all types of messages
 """
 
 from typing import Dict, List, Any, Optional
@@ -10,51 +10,51 @@ from abc import ABC, abstractmethod
 
 class MessageHandler(ABC):
     """
-    消息处理器基类
-    """
+    Message Processor Base Category
+        """
     @abstractmethod
     def handle(self, message: Dict, state: Dict = None) -> Any:
         """
-        处理消息
-        
+        Can not open message
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            处理结果
-        """
+            Process Results
+                """
         pass
     
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         pass
 
 
 class OrderHandler(MessageHandler):
     """
-    订单消息处理器
-    """
+    Order Message Processor
+        """
     def __init__(self):
         self.message_types = ["order_placed", "order_confirmed", "order_shipped", "order_delivered"]
     
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理订单相关消息
-        
+        Processing order-related messages
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         msg_type = message["type"]
         content = message["content"]
         result = {"status": "handled", "message_type": msg_type}
@@ -73,79 +73,79 @@ class OrderHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        返回第一个消息类型（基类要求）
-        
+        Returns the first message type (base category requirement)
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return self.message_types[0]
     
     def _handle_order_placed(self, content: Dict, state: Dict = None) -> str:
         """
-        处理订单已下单消息
-        
+        Processing order has been sent a message
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            str: 处理动作
-        """
-        # 检查库存、生成订单记录等
+            st: Process Action
+                """
+        # Check inventory, generate order records, etc.
         order_id = content.get("order_id", "")
         product_id = content.get("product_id", "")
         quantity = content.get("quantity", 0)
         
-        # 在实际应用中，这里应该与库存系统交互
+        # In practical application, this should interact with the inventory system.
         if state and "enterprises" in state:
             receiver_id = content.get("receiver_id", "")
             if receiver_id in state["enterprises"]:
                 enterprise = state["enterprises"][receiver_id]
-                # 检查库存等逻辑
+                # Logical check of inventory
                 pass
         
         return f"Created order {order_id} for product {product_id}, quantity {quantity}"
     
     def _handle_order_confirmed(self, content: Dict, state: Dict = None) -> str:
         """
-        处理订单已确认消息
-        
+        Can not open message
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            str: 处理动作
-        """
+            st: Process Action
+                """
         order_id = content.get("order_id", "")
         return f"Confirmed order {order_id}"
     
     def _handle_order_shipped(self, content: Dict, state: Dict = None) -> str:
         """
-        处理订单已发货消息
-        
+        Processing orders sent messages
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            str: 处理动作
-        """
+            st: Process Action
+                """
         order_id = content.get("order_id", "")
         tracking_number = content.get("tracking_number", "")
         return f"Shipped order {order_id} with tracking {tracking_number}"
     
     def _handle_order_delivered(self, content: Dict, state: Dict = None) -> str:
         """
-        处理订单已送达消息
-        
+        Processing orders served
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            str: 处理动作
-        """
+            st: Process Action
+                """
         order_id = content.get("order_id", "")
         delivery_time = content.get("delivery_time", "")
         return f"Delivered order {order_id} at {delivery_time}"
@@ -153,19 +153,19 @@ class OrderHandler(MessageHandler):
 
 class PaymentHandler(MessageHandler):
     """
-    支付消息处理器
-    """
+    Pay Message Processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理支付相关消息
-        
+        Can not open message
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         content = message["content"]
         order_id = content.get("order_id", "")
         amount = content.get("amount", 0)
@@ -178,7 +178,7 @@ class PaymentHandler(MessageHandler):
                 "action": f"Requested payment of {amount} for order {order_id}"
             }
         elif message["type"] == "payment_confirmed":
-            # 更新订单状态、财务记录等
+            # Update order status, financial records, etc.
             transaction_id = content.get("transaction_id", "")
             return {
                 "status": "payment_confirmed",
@@ -193,40 +193,40 @@ class PaymentHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "payment_request"
 
 
 class InventoryHandler(MessageHandler):
     """
-    库存更新消息处理器
-    """
+    Inventory Update Message Processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理库存更新消息
-        
+        Process inventory updates
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         content = message["content"]
         product_id = content.get("product_id", "")
         new_quantity = content.get("quantity", 0)
         previous_quantity = content.get("previous_quantity", 0)
         
-        # 更新库存记录
+        # Updating of inventory records
         if state and "enterprises" in state:
             enterprise_id = message["sender"]
             if enterprise_id in state["enterprises"]:
                 enterprise = state["enterprises"][enterprise_id]
-                # 更新企业库存
+                # Update enterprise Inventory
                 if "inventory" not in enterprise:
                     enterprise["inventory"] = {}
                 enterprise["inventory"][product_id] = new_quantity
@@ -243,41 +243,41 @@ class InventoryHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "inventory_update"
 
 
 class PriceChangeHandler(MessageHandler):
     """
-    价格变动消息处理器
-    """
+    Price Change Message Processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理价格变动消息
-        
+        Deal with information on price changes
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         content = message["content"]
         product_id = content.get("product_id", "")
         new_price = content.get("price", 0)
         previous_price = content.get("previous_price", 0)
         effective_date = content.get("effective_date", None)
         
-        # 更新价格记录
+        # Update price records
         if state and "enterprises" in state:
             enterprise_id = message["sender"]
             if enterprise_id in state["enterprises"]:
                 enterprise = state["enterprises"][enterprise_id]
-                # 更新企业产品价格
+                # Update product prices enterprise
                 if "products" not in enterprise:
                     enterprise["products"] = {}
                 if product_id not in enterprise["products"]:
@@ -297,29 +297,29 @@ class PriceChangeHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "price_change"
 
 
 class SupplyChainEventHandler(MessageHandler):
     """
-    供应链事件处理器
-    """
+    Supply chain event processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理供应链事件消息
-        
+        Processing supply chain incident messages
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         msg_type = message["type"]
         content = message["content"]
         
@@ -338,24 +338,24 @@ class SupplyChainEventHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "demand_forcast"
     
     def _handle_demand_forcast(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理需求预测消息
-        
+        Processing demand forecasting messages
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         product_id = content.get("product_id", "")
         period = content.get("period", "")
         forecast_quantity = content.get("quantity", 0)
@@ -372,27 +372,27 @@ class SupplyChainEventHandler(MessageHandler):
     
     def _handle_supply_disruption(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理供应中断消息
-        
+        Process supply interruption messages
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         supplier_id = content.get("supplier_id", "")
         product_id = content.get("product_id", "")
         reason = content.get("reason", "")
         start_date = content.get("start_date", "")
         end_date = content.get("end_date", "")
         
-        # 触发应急计划
+        # Trigger contingency plan
         emergency_actions = []
         if state and "network" in state:
-            # 寻找替代供应商
-            # 调整生产计划
-            # 通知下游企业
+            # Finding alternative suppliers
+            # Adjustment of production plans
+            # Notification downstream enterprise
             pass
         
         return {
@@ -408,21 +408,21 @@ class SupplyChainEventHandler(MessageHandler):
     
     def _handle_quality_issue(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理质量问题消息
-        
+        Process quality information
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         product_id = content.get("product_id", "")
         batch_number = content.get("batch_number", "")
         issue_description = content.get("description", "")
         severity = content.get("severity", "medium")
         
-        # 启动质量控制流程
+        # Start quality control process
         quality_actions = []
         if severity in ["high", "critical"]:
             quality_actions.append("Initiate product recall")
@@ -441,22 +441,22 @@ class SupplyChainEventHandler(MessageHandler):
     
     def _handle_maintenance_schedule(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理维护计划消息
-        
+        Process maintenance plan messages
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         equipment_id = content.get("equipment_id", "")
         maintenance_type = content.get("type", "scheduled")
         start_time = content.get("start_time", "")
         end_time = content.get("end_time", "")
         impact = content.get("impact", "minimal")
         
-        # 调整生产计划
+        # Adjustment of production plans
         production_adjustments = []
         if impact in ["significant", "critical"]:
             production_adjustments.append("Reschedule affected production runs")
@@ -476,19 +476,19 @@ class SupplyChainEventHandler(MessageHandler):
 
 class BusinessDevelopmentHandler(MessageHandler):
     """
-    业务发展消息处理器
-    """
+    Business Development Message Processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理业务发展相关消息
-        
+        Processing business development-related information
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         msg_type = message["type"]
         content = message["content"]
         
@@ -507,36 +507,36 @@ class BusinessDevelopmentHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "new_product"
     
     def _handle_new_product(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理新产品发布消息
-        
+        Process new product releases
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         product_id = content.get("product_id", "")
         product_name = content.get("name", "")
         description = content.get("description", "")
         price = content.get("price", 0)
         launch_date = content.get("launch_date", "")
         
-        # 更新产品目录
+        # Update product catalogue
         if state and "enterprises" in state:
             enterprise_id = message["sender"]
             if enterprise_id in state["enterprises"]:
                 enterprise = state["enterprises"][enterprise_id]
-                # 添加新产品
+                # Add New Product
                 if "products" not in enterprise:
                     enterprise["products"] = {}
                 enterprise["products"][product_id] = {
@@ -557,21 +557,21 @@ class BusinessDevelopmentHandler(MessageHandler):
     
     def _handle_partnership_proposal(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理合作提案消息
-        
+        Processing information on cooperative proposals
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         proposer_id = content.get("proposer_id", "")
         partnership_type = content.get("type", "general")
         terms = content.get("terms", {})
         deadline = content.get("response_deadline", "")
         
-        # 评估合作提案
+        # Assessment of cooperation proposals
         evaluation = {
             "proposer_id": proposer_id,
             "partnership_type": partnership_type,
@@ -591,22 +591,22 @@ class BusinessDevelopmentHandler(MessageHandler):
     
     def _handle_contract_expiring(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理合同到期消息
-        
+        Processing of contract expiration messages
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         contract_id = content.get("contract_id", "")
         partner_id = content.get("partner_id", "")
         expiration_date = content.get("expiration_date", "")
         days_remaining = content.get("days_remaining", 0)
         auto_renew = content.get("auto_renew", False)
         
-        # 准备合同续签或终止流程
+        # Preparation of contract renewal or termination process
         actions = []
         if days_remaining <= 30:
             actions.append("Immediate review required")
@@ -627,22 +627,22 @@ class BusinessDevelopmentHandler(MessageHandler):
     
     def _handle_market_intelligence(self, content: Dict, state: Dict = None) -> Dict:
         """
-        处理市场情报消息
-        
+        Dealing with market intelligence.
+                
         Args:
-            content: 消息内容
-            state: 当前状态
-            
+            Contact: Message Contents
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         market_segment = content.get("market_segment", "")
         trend_type = content.get("trend_type", "")
         trend_description = content.get("description", "")
         source = content.get("source", "")
         confidence = content.get("confidence", 0.5)
         
-        # 更新市场情报数据库
+        # Update market intelligence database
         if state and "market_intelligence" not in state:
             state["market_intelligence"] = []
         
@@ -658,29 +658,29 @@ class BusinessDevelopmentHandler(MessageHandler):
 
 class FinancialReportHandler(MessageHandler):
     """
-    财务报告消息处理器
-    """
+    Financial report message processor
+        """
     def handle(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理财务报告消息
-        
+        Processing financial reporting messages
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         content = message["content"]
         period = content.get("period", "")
         financial_data = content.get("financial_data", {})
         
-        # 更新财务记录
+        # Updated financial records
         if state and "enterprises" in state:
             enterprise_id = message["sender"]
             if enterprise_id in state["enterprises"]:
                 enterprise = state["enterprises"][enterprise_id]
-                # 更新财务数据
+                # Updated financial data
                 if "financials" not in enterprise:
                     enterprise["financials"] = {}
                 enterprise["financials"][period] = financial_data
@@ -696,25 +696,25 @@ class FinancialReportHandler(MessageHandler):
     @property
     def message_type(self) -> str:
         """
-        获取消息类型
-        
+        Can not open message
+                
         Returns:
-            str: 消息类型
-        """
+            str: Message Type
+                """
         return "financial_report"
 
 
-# 消息处理器工厂
+# Message processor factory.
 def create_message_handler(message_type: str) -> Optional[MessageHandler]:
     """
-    创建消息处理器
-    
-    Args:
-        message_type: 消息类型
+    Create Message Processor
         
+    Args:
+        parameter: Message Type
+                
     Returns:
-        MessageHandler: 消息处理器实例
-    """
+        Messagehandler: Example of message processor
+        """
     handlers = {
         "order_placed": OrderHandler,
         "order_confirmed": OrderHandler,
@@ -742,40 +742,40 @@ def create_message_handler(message_type: str) -> Optional[MessageHandler]:
     return None
 
 
-# 消息总线类，用于管理多个处理器
+# Message bus class for managing multiple processes Device
 class MessageBus:
     """
-    消息总线
-    """
+    Message bus
+        """
     def __init__(self):
         self.handlers = {}
     
     def register_handler(self, handler: MessageHandler):
         """
-        注册消息处理器
-        
+        Register Message Processor
+                
         Args:
-            handler: 消息处理器实例
-        """
+            Handler: Message Processor Example
+                """
         if hasattr(handler, 'message_types'):
-            # 如果处理器支持多种消息类型
+            # If Processor Supports Multiple Message Types
             for msg_type in handler.message_types:
                 self.handlers[msg_type] = handler
         else:
-            # 单一消息类型处理器
+            # Single Message Type Processor
             self.handlers[handler.message_type] = handler
     
     def handle_message(self, message: Dict, state: Dict = None) -> Dict:
         """
-        处理消息
-        
+        Can not open message
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            dict: 处理结果
-        """
+            dict: Process results
+                """
         msg_type = message["type"]
         handler = self.handlers.get(msg_type)
         
@@ -790,9 +790,9 @@ class MessageBus:
     
     def get_registered_types(self) -> List[str]:
         """
-        获取已注册的消息类型
-        
+        Get Registered Message Type
+                
         Returns:
-            list: 消息类型列表
-        """
+            list: message type list
+                """
         return list(self.handlers.keys())

@@ -1,7 +1,7 @@
 """
-消息管理器模块
+Message Manager Module
 
-负责处理企业间的消息传递
+Responsible for the transmission of information between enterprise
 """
 
 import uuid
@@ -12,32 +12,32 @@ from typing import Dict, List, Callable, Optional
 
 class MessageManager:
     """
-    消息管理器
-    
-    线程安全实现
-    """
+    Message Manager
+        
+    Line secure.
+        """
     def __init__(self, config: Dict = None):
         """
-        初始化消息管理器
-        
+        Initialise Message Manager
+                
         Args:
-            config: 配置信息
-        """
+            config: Configure information
+                """
         self.config = config or {
-            "message_delay": 0,  # 消息延迟（秒）
-            "max_retries": 3,    # 最大重试次数
-            "ttl": 3600          # 消息生存时间（秒）
+            "message_delay": 0,  # Message delay (sec)
+            "max_retries": 3,    # Maximum number of retries
+            "ttl": 3600          # Message survival time (sec)
         }
         
-        self.message_queue = []  # 消息队列
-        self.message_history = []  # 消息历史
-        self.subscribers = {}  # 订阅者 {message_type: [callbacks]}
-        self.delayed_messages = []  # 延迟消息
-        self.enterprises = {}  # 企业实例映射 {enterprise_id: enterprise_instance}
-        self.message_type_subscriptions = {}  # 消息类型订阅 {message_type: [enterprise_ids]}
+        self.message_queue = []  # Message queue
+        self.message_history = []  # Message History
+        self.subscribers = {}  # Subscriber {message_type: [callbacks]}
+        self.delayed_messages = []  # Delay Message
+        self.enterprises = {}  # Example map enterprise {enterprise_id: enterprise_instance}
+        self.message_type_subscriptions = {}  # Can not open message
         
-        # 添加线程锁，确保线程安全
-        self.lock = threading.RLock()  # 使用可重入锁
+        # Add a thread lock to make it safe.
+        self.lock = threading.RLock()  # Use re-lockable
 
     def __getstate__(self):
         """Keep durable message state while excluding runtime-only callbacks/locks."""
@@ -54,23 +54,23 @@ class MessageManager:
     def send_message(self, sender_id: str, receiver_id: str, message_type: str, content: Dict,
                     priority: str = "normal", metadata: Dict = None):
         """
-        发送消息
-        
+        Send Message
+                
         Args:
-            sender_id: 发送者ID
-            receiver_id: 接收者ID
-            message_type: 消息类型
-            content: 消息内容
-            priority: 优先级 (high, normal, low)
-            metadata: 额外元数据
-            
+            parameter: Sender ID
+            parameter: Receiver ID
+            parameter: Message Type
+            Contact: Message Contents
+            priority: (high, low)
+            Metadata: Extra metadata
+                        
         Returns:
-            str: 消息ID
-        """
+            str: Message ID
+                """
         message_id = str(uuid.uuid4())
         timestamp = time.time()
         
-        # 创建标准化消息格式
+        # Create standardized message format
         message = {
             "id": message_id,
             "sender_id": sender_id,
@@ -87,18 +87,18 @@ class MessageManager:
         }
         
         with self.lock:
-            # 添加发送者名称到消息中
+            # Add sender name to message
             if sender_id in self.enterprises:
                 message["sender_name"] = self.enterprises[sender_id].name
             
-            # 根据优先级插入队列
+            # Insert Queue by Priority
             if self.config["message_delay"] > 0:
-                # 添加到延迟队列
+                # Add to Delay Queue
                 message["delivery_time"] = timestamp + self.config["message_delay"]
                 self.delayed_messages.append(message)
                 self.delayed_messages.sort(key=lambda x: x["delivery_time"])
             else:
-                # 直接添加到消息队列
+                # Can not open message
                 self._insert_into_queue(message)
         
         return message_id
@@ -106,21 +106,21 @@ class MessageManager:
     def broadcast_message(self, sender_id: str, message_type: str, content: Dict,
                          priority: str = "normal", metadata: Dict = None):
         """
-        广播消息
-        
+        Radio
+                
         Args:
-            sender_id: 发送者ID
-            message_type: 消息类型
-            content: 消息内容
-            priority: 优先级
-            metadata: 额外元数据
-            
+            parameter: Sender ID
+            parameter: Message Type
+            Contact: Message Contents
+            priority:
+            Metadata: Extra metadata
+                        
         Returns:
-            list: 消息ID列表
-        """
+            list: Message ID list
+                """
         message_ids = []
         
-        # 获取所有订阅该消息类型的接收者（使用锁保护）
+        # Can not get message: %s %s
         with self.lock:
             receivers = self._get_potential_receivers(message_type)
         
@@ -135,39 +135,39 @@ class MessageManager:
     
     def process_messages(self, state: Dict = None) -> List[Dict]:
         """
-        处理消息队列中的消息
-        
+        Handle messages in line
+                
         Args:
-            state: 当前状态（可选）
-            
+            State: Current Status (optional)
+                        
         Returns:
-            list: 处理结果
-        """
+            list: Processing results
+                """
         results = []
         current_time = time.time()
         messages_to_process = []
-        # 处理到期的延迟消息
+        # Can not open message
         self._process_delayed_messages(current_time)
         
-        # 获取当前消息队列中的消息（避免在处理过程中修改共享队列）
+        # Fetch the current message queue (avoid changing the share queue during processing)
         with self.lock:
             messages_to_process = self.message_queue.copy()
             self.message_queue = []
         
-        # 在锁外处理消息
+        # Handle messages outside lock
         for message in messages_to_process:
-            # 检查消息是否过期
+            # Check if the message is expired
             if current_time > message["ttl"]:
                 message["status"] = "expired"
                 with self.lock:
                     self.message_history.append(message)
                 continue
             
-            # 更新消息状态
+            # Can not open message
             message["status"] = "processing"
             
             try:
-                # 通知订阅者
+                # Notify subscribers
                 result = self._notify_subscribers(message, state)
                 message["status"] = "delivered"
                 results.append({
@@ -176,16 +176,16 @@ class MessageManager:
                     "result": result
                 })
             except Exception as e:
-                # 处理失败，尝试重试
+                # Process failed. Try again.
                 message["retries"] += 1
                 message["error"] = str(e)
                 
                 if message["retries"] <= self.config["max_retries"]:
-                    # 重新加入队列
+                    # Rejoinder
                     message["status"] = "retrying"
                     self._insert_into_queue(message)
                 else:
-                    # 达到最大重试次数
+                    # Maximum number of retries reached
                     message["status"] = "failed"
                     results.append({
                         "message_id": message["id"],
@@ -193,7 +193,7 @@ class MessageManager:
                         "error": str(e)
                     })
             finally:
-                # 将已处理的消息添加到历史记录
+                # Add processed messages to historical records
                 if message["status"] not in ["retrying", "processing"]:
                     with self.lock:
                         self.message_history.append(message)
@@ -202,12 +202,12 @@ class MessageManager:
     
     def subscribe(self, message_type: str, callback: Callable):
         """
-        订阅消息
-        
+        Can not open message
+                
         Args:
-            message_type: 消息类型
-            callback: 回调函数
-        """
+            parameter: Message Type
+            Callback function
+                """
         with self.lock:
             if message_type not in self.subscribers:
                 self.subscribers[message_type] = []
@@ -217,12 +217,12 @@ class MessageManager:
     
     def unsubscribe(self, message_type: str, callback: Callable):
         """
-        取消订阅
-        
+        Unsubscribe
+                
         Args:
-            message_type: 消息类型
-            callback: 回调函数
-        """
+            parameter: Message Type
+            Callback function
+                """
         with self.lock:
             if message_type in self.subscribers:
                 if callback in self.subscribers[message_type]:
@@ -230,14 +230,14 @@ class MessageManager:
     
     def get_message_history(self, filters: Dict = None) -> List[Dict]:
         """
-        获取消息历史
-        
+        Get Message History
+                
         Args:
-            filters: 过滤条件
-            
+            Filters: Filter Conditions
+                        
         Returns:
-            list: 符合条件的消息列表
-        """
+            list: list of eligible messages
+                """
         filtered_messages = self.message_history.copy()
         
         if filters:
@@ -248,25 +248,25 @@ class MessageManager:
     
     def get_message_status(self, message_id: str) -> Optional[Dict]:
         """
-        获取消息状态
-        
+        Can not open message
+                
         Args:
-            message_id: 消息ID
-            
+            parameter: Message ID
+                        
         Returns:
-            dict: 消息信息，如果不存在返回None
-        """
-        # 先在队列中查找
+            dict: Message message if no one returns
+                """
+        # Find in queue first
         for message in self.message_queue:
             if message["id"] == message_id:
                 return message
         
-        # 再在延迟队列中查找
+        # Find in the delayed queue
         for message in self.delayed_messages:
             if message["id"] == message_id:
                 return message
         
-        # 最后在历史记录中查找
+        # Finally find in history
         for message in self.message_history:
             if message["id"] == message_id:
                 return message
@@ -275,22 +275,22 @@ class MessageManager:
     
     def cancel_message(self, message_id: str) -> bool:
         """
-        取消消息
-        
+        Can not open message
+                
         Args:
-            message_id: 消息ID
-            
+            parameter: Message ID
+                        
         Returns:
-            bool: 是否成功取消
-        """
-        # 从队列中移除
+            Bool: Cancel successfully
+                """
+        # Remove From Queue
         for i, message in enumerate(self.message_queue):
             if message["id"] == message_id:
                 message["status"] = "cancelled"
                 self.message_history.append(self.message_queue.pop(i))
                 return True
         
-        # 从延迟队列中移除
+        # Remove from Delay Queue
         for i, message in enumerate(self.delayed_messages):
             if message["id"] == message_id:
                 message["status"] = "cancelled"
@@ -301,16 +301,16 @@ class MessageManager:
     
     def _insert_into_queue(self, message: Dict):
         """
-        根据优先级插入消息队列
-        
+        Insert Message Queue By Priority
+                
         Args:
-            message: 消息对象
-        """
+            message:
+                """
         priority_order = {"high": 0, "normal": 1, "low": 2}
         priority = priority_order.get(message["priority"], 1)
         
         with self.lock:
-            # 找到合适的插入位置
+            # Finds the right place to insert
             inserted = False
             for i, existing_message in enumerate(self.message_queue):
                 existing_priority = priority_order.get(existing_message["priority"], 1)
@@ -324,11 +324,11 @@ class MessageManager:
     
     def _process_delayed_messages(self, current_time: float):
         """
-        处理到期的延迟消息
-        
+        Can not open message
+                
         Args:
-            current_time: 当前时间
-        """
+            parameter: Current time
+                """
         ready_messages = []
         remaining_delayed = []
         
@@ -339,24 +339,24 @@ class MessageManager:
                 else:
                     remaining_delayed.append(message)
             
-            # 更新延迟队列
+            # Update delay queue
             self.delayed_messages = remaining_delayed
         
-        # 将到期的消息加入队列
+        # Queue messages due
         for message in ready_messages:
             self._insert_into_queue(message)
     
     def _notify_subscribers(self, message: Dict, state: Dict = None) -> List[Dict]:
         """
-        通知订阅者
-        
+        Notify subscribers
+                
         Args:
-            message: 消息对象
-            state: 当前状态
-            
+            message:
+            State: Current status
+                        
         Returns:
-            list: 回调结果列表
-        """
+            list: Return result list
+                """
         results = []
         message_type = message.get("message_type", message.get("type"))
         receiver_id = message.get("receiver_id", message.get("receiver"))
@@ -364,14 +364,14 @@ class MessageManager:
         callbacks = []
         
         with self.lock:
-            # 1. 首先尝试直接路由到目标企业的receive_message方法
+            # First attempt at direct route to target enterprise
             if receiver_id and receiver_id in self.enterprises:
                 enterprise = self.enterprises[receiver_id]
             
-            # 获取回调函数列表
+            # Retrieving return function list
             callbacks = self.subscribers.get(message_type, []).copy()
         
-        # 在锁外调用企业的receive_message方法，避免死锁
+        # Call enterprisereceive message method outside the lock to avoid a dead lock
         if enterprise:
             try:
                 result = enterprise.receive_message(message)
@@ -387,7 +387,7 @@ class MessageManager:
                     "error": str(e)
                 })
         
-        # 2. 执行注册的回调函数（保持兼容性）
+        # 2. Execution of a callback function for registration (maintain compatibility)
         for callback in callbacks:
             try:
                 result = callback(message, state)
@@ -405,19 +405,19 @@ class MessageManager:
     
     def _get_potential_receivers(self, message_type: str) -> List[str]:
         """
-        获取潜在的消息接收者
-        
+        Get Potential Receiver
+                
         Args:
-            message_type: 消息类型
-            
+            parameter: Message Type
+                        
         Returns:
-            list: 接收者ID列表
-        """
+            list: Recipient ID list
+                """
         with self.lock:
-            # 根据消息类型获取订阅该消息的企业ID列表
+            # Can not delete folder: %s: No such folder
             subscribers = self.message_type_subscriptions.get(message_type, []).copy()
             
-            # 如果没有特定的订阅者，返回所有已注册的企业ID
+            # Return all registered enterpriseIDs if no specific subscriber
             if not subscribers:
                 return list(self.enterprises.keys())
         
@@ -425,33 +425,33 @@ class MessageManager:
     
     def register_enterprise(self, enterprise_id: str, enterprise_instance):
         """
-        注册企业实例到消息管理器
-        
+        Register enterprise instance to message manager
+                
         Args:
-            enterprise_id: 企业ID
-            enterprise_instance: 企业实例
-        """
+            enterprise_id: enterpriseID
+            enterprise_instance: enterprise Examples
+                """
         with self.lock:
             self.enterprises[enterprise_id] = enterprise_instance
     
     def unregister_enterprise(self, enterprise_id: str):
         """
-        从消息管理器中注销企业实例
-        
+        Can not delete folder: %s: No such folder
+                
         Args:
-            enterprise_id: 企业ID
-        """
+            enterprise_id: enterpriseID
+                """
         if enterprise_id in self.enterprises:
             del self.enterprises[enterprise_id]
     
     def subscribe_enterprise_to_message(self, enterprise_id: str, message_type: str):
         """
-        订阅企业到特定消息类型
-        
+        Subscription to enterprise Specific Message Type
+                
         Args:
-            enterprise_id: 企业ID
-            message_type: 消息类型
-        """
+            enterprise_id: enterpriseID
+            parameter: Message Type
+                """
         with self.lock:
             if message_type not in self.message_type_subscriptions:
                 self.message_type_subscriptions[message_type] = []
@@ -461,26 +461,26 @@ class MessageManager:
     
     def set_config(self, config: Dict):
         """
-        设置配置
-        
+        Settings Configuration
+                
         Args:
-            config: 配置字典
-        """
+            config: Configure Dictionary
+                """
         self.config.update(config)
     
     def clear_history(self):
         """
-        清空消息历史
-        """
+        Clear Message History
+                """
         self.message_history = []
     
     def get_statistics(self) -> Dict:
         """
-        获取消息统计信息
-        
+        Get news statistics
+                
         Returns:
-            dict: 统计信息
-        """
+            dict: Statistical information
+                """
         all_messages = self.message_history + self.message_queue + self.delayed_messages
         
         status_counts = {}
@@ -488,15 +488,15 @@ class MessageManager:
         priority_counts = {}
         
         for message in all_messages:
-            # 统计状态
+            # Statistical Status
             status = message["status"]
             status_counts[status] = status_counts.get(status, 0) + 1
             
-            # 统计类型
+            # Statistical type
             msg_type = message["type"]
             type_counts[msg_type] = type_counts.get(msg_type, 0) + 1
             
-            # 统计优先级
+            # Statistical priorities
             priority = message["priority"]
             priority_counts[priority] = priority_counts.get(priority, 0) + 1
         
@@ -510,7 +510,7 @@ class MessageManager:
             "priority_distribution": priority_counts
         }
 
-# 预定义消息类型
+# Predefined Message Type
 MESSAGE_TYPES = {
     "ORDER_PLACED": "order_placed",
     "ORDER_CONFIRMED": "order_confirmed",

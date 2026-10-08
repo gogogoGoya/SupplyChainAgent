@@ -1,28 +1,28 @@
 """
-事件管理器模块
+Event Manager Module
 
-负责管理仿真系统中的各类事件
+Manage events in the simulation system
 """
 
 class EventManager:
     """
-    事件管理器
-    """
+    Event Manager
+        """
     def __init__(self):
         """
-        初始化事件管理器
-        """
-        self.events = []  # 事件列表
-        self.event_handlers = {}  # 事件处理器映射
+        Initialise Event Manager
+                """
+        self.events = []  # Organisation
+        self.event_handlers = {}  # Organisation
     
     def add_event(self, event):
         """
-        添加事件
-        
+        Add Event
+                
         Args:
-            event: 事件对象,应包含type, timestamp, payload等字段
-        """
-        # 按时间戳排序插入
+            event: object should include the words type, timestamp, payload
+                """
+        # Insert by Timestamp
         inserted = False
         for i, existing_event in enumerate(self.events):
             if event["timestamp"] < existing_event["timestamp"]:
@@ -35,24 +35,24 @@ class EventManager:
     
     def add_events(self, events):
         """
-        批量添加事件
-        
+        Batch Add Event
+                
         Args:
-            events: 事件列表
-        """
+            Organisation
+                """
         for event in events:
             self.add_event(event)
     
     def get_next_events(self, current_time):
         """
-        获取当前时间点及之前的所有未处理事件
-        
+        Fetch all pending events at current time point and before
+                
         Args:
-            current_time: 当前时间点
-            
+            parameter : Current Time
+                        
         Returns:
-            list: 事件列表
-        """
+            list:
+                """
         events_to_process = []
         remaining_events = []
         
@@ -62,35 +62,35 @@ class EventManager:
             else:
                 remaining_events.append(event)
         
-        # 更新事件列表
+        # Update Event List
         self.events = remaining_events
         
         return events_to_process
         
     def process_events(self, events, current_state=None):
         """
-        处理事件列表
-        
+        Handle Event List
+                
         Args:
-            events: 要处理的事件列表
-            current_state: 当前系统状态（可选）
-            
+            Organisation
+            current_state: Current System Status (optional)
+                        
         Returns:
-            list: 处理结果列表
-        """
+            list: Process result list
+                """
         results = []
         
         for event in events:
-            # 查找适合处理此事件的处理器
+            # Find a handler for this event
             for handler in self.event_handlers.get(event["type"], []):
                 try:
-                    # 执行处理器
+                    # Execute Processor
                     if current_state is not None:
                         result = handler(event, current_state)
                     else:
                         result = handler(event)
                     
-                    # 记录处理结果
+                    # Record processing results
                     if result is not None:
                         results.append({
                             'event_id': id(event),
@@ -99,7 +99,7 @@ class EventManager:
                             'result': result
                         })
                 except Exception as e:
-                    # 记录处理异常
+                    # Record processing anomalies
                     results.append({
                         'event_id': id(event),
                         'event_type': event["type"],
@@ -111,12 +111,12 @@ class EventManager:
     
     def register_handler(self, event_type, handler):
         """
-        注册事件处理器
-        
+        Registered Event Processor
+                
         Args:
-            event_type: 事件类型
-            handler: 事件处理函数
-        """
+            parameter: Event type
+            Handler: Event Handling Function
+                """
         if event_type not in self.event_handlers:
             self.event_handlers[event_type] = []
         
@@ -124,32 +124,32 @@ class EventManager:
     
     def unregister_handler(self, event_type, handler):
         """
-        注销事件处理器
-        
+        Write-off incident processor
+                
         Args:
-            event_type: 事件类型
-            handler: 事件处理函数
-        """
+            parameter: Event type
+            Handler: Event Handling Function
+                """
         if event_type in self.event_handlers:
             self.event_handlers[event_type].remove(handler)
     
     def process_events(self, events, state):
         """
-        处理事件
-        
+        Deal with events
+                
         Args:
-            events: 要处理的事件列表
-            state: 当前状态
-            
+            Organisation
+            State: Current status
+                        
         Returns:
-            list: 处理结果列表
-        """
+            list: Process result list
+                """
         results = []
         
         for event in events:
             event_type = event["type"]
             
-            # 查找事件处理器
+            # Find Event Processor
             handlers = self.event_handlers.get(event_type, [])
             
             for handler in handlers:
@@ -160,39 +160,39 @@ class EventManager:
     
     def clear_events(self):
         """
-        清空所有事件
-        """
+        Clear all incidents
+                """
         self.events = []
     
     def get_event_count(self):
         """
-        获取当前事件数量
-        
+        Fetch the number of current events
+                
         Returns:
-            int: 事件数量
-        """
+            Int: Number of events
+                """
         return len(self.events)
     
     def get_pending_events_by_type(self, event_type):
         """
-        获取指定类型的待处理事件
-        
+        Get specified type of pending event
+                
         Args:
-            event_type: 事件类型
-            
+            parameter: Event type
+                        
         Returns:
-            list: 事件列表
-        """
+            list:
+                """
         return [event for event in self.events if event["type"] == event_type]
     
     def cancel_events(self, event_type=None, enterprise_id=None):
         """
-        取消指定类型或企业的事件
-        
+        Cancel events of specified type or enterprise
+                
         Args:
-            event_type: 事件类型（可选）
-            enterprise_id: 企业ID（可选）
-        """
+            event_type: Event type (optional)
+            enterprise_id: enterpriseID (optional)
+                """
         remaining_events = []
         
         for event in self.events:
@@ -211,12 +211,12 @@ class EventManager:
     
     def reset(self):
         """
-        重置事件管理器状态
-        """
+        Reset Event Manager Status
+                """
         self.events = []
         self.event_handlers = {}
 
-# 预定义事件类型
+# Predefined Event Type
 EVENT_TYPES = {
     "PRODUCTION_COMPLETE": "production_complete",
     "ORDER_RECEIVED": "order_received",
@@ -236,34 +236,34 @@ EVENT_TYPES = {
     "MAINTENANCE_END": "maintenance_end"
 }
 
-# 事件工厂函数
+# Event Factory Function
 def create_event(event_type, timestamp, payload=None, enterprise_id=None, data=None):
     """
-    创建事件
-    
-    Args:
-        event_type: 事件类型
-        timestamp: 时间戳
-        payload: 事件数据（可选）
-        enterprise_id: 企业ID（可选）
-        data: 事件数据（兼容新格式）
+    Create Event
         
+    Args:
+        parameter: Event type
+        Timestamp: Timetamp
+        Payload: Event data (optional)
+        enterprise_id: enterpriseID (optional)
+        Data: Event data (new compatible format)
+                
     Returns:
-        dict: 事件对象
-    """
-    # 创建事件对象，支持data和payload两种格式
+        dict: Object
+        """
+    # Create object to support both data and Payload formats
     event = {
         "type": event_type,
         "timestamp": timestamp
     }
     
-    # 如果提供了payload，使用payload
+    # If you provide payload, use payload
     if payload is not None:
         event["payload"] = payload
-    # 如果提供了data，使用data
+    # If data is provided, use data
     elif data is not None:
         event["data"] = data
-    # 否则使用空字典
+    # Otherwise use an empty dictionary
     else:
         event["data"] = {}
     
@@ -272,7 +272,7 @@ def create_event(event_type, timestamp, payload=None, enterprise_id=None, data=N
     
     return event
 
-# 预定义的时间步和阶段事件类型
+# Predefined step and stage event type
 TIME_STEP_EVENT_TYPES = {
     "TIME_STEP_START": "time_step_start",
     "TIME_STEP_END": "time_step_end",

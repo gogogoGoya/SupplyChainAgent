@@ -1,20 +1,20 @@
 {
   "action_name": "reject_proposal_order",
-  "description": "拒绝来自交易所帮助拟定的订单提案, 提案内容与此前发起的销售需求相关",
+  "description": "Reject an exchange-generated order proposal related to a previously advertised sales offer.",
   "conditions": [
-    "有执行过adjust_sales_demand方法向上游交易所建立需求,此时反馈的提案不符合需求",
-    "trade_decision_card.review_queue 中存在真实待决策 proposal，或部门信息中的 proposals_list 含有状态为 pending 的 proposal",
-    "企业库存、交期或承诺能力无法覆盖该 proposal 订单需求"
+    "An offer was posted through adjust_sales_demand, but the returned proposal does not match it.",
+    "trade_decision_card.review_queue contains a real proposal awaiting a decision, or the department's proposals_list contains a pending proposal.",
+    "Inventory, delivery timing, or available commitment capacity cannot cover the proposed order."
   ],
   "required_parameters": [
     "proposal_id"
   ],
   "parameter_constraints": [
-    "proposal_id 必须是已有的提案id，应优先从 trade_decision_card.review_queue 查看到；若决策卡未覆盖，再从部门信息中的 proposals_list 查看",
-    "在读取本动作模板并生成 action.json 时，action_param 的参数部分必须与本文件 required_parameters 中给出的参数保持一致，不能多加和缺漏"
+    "proposal_id must identify an existing proposal. Prefer trade_decision_card.review_queue; consult the department's proposals_list only if the decision card does not include it.",
+    "When creating action.json from this template, action_param must contain exactly the fields listed in required_parameters, with none added or omitted."
   ],
   "constraints": [
-    "不要仅凭 proposal.quantity 超过当前 on_hand 就拒绝；只有在 confirmed/stale backlog 已高、due_risk 很高、pricing_gap 明显不利，或未来交期内仍无法承诺供给时才优先拒绝",
-    "若 trade_decision_card.review_queue 中该 proposal 的 recommended_action 为 reject_proposal_order，或 reason_codes 显示 due_risk、inventory_conflict、pricing_gap 明显不利时，可以优先拒绝"
+    "Do not reject solely because proposal.quantity exceeds current on_hand. Prioritize rejection only when confirmed or stale backlog is high, due_risk is severe, pricing_gap is materially unfavorable, or supply still cannot be committed by the future delivery date.",
+    "Prioritize rejection when trade_decision_card.review_queue recommends reject_proposal_order or reason_codes show materially unfavorable due_risk, inventory_conflict, or pricing_gap."
   ]
 }

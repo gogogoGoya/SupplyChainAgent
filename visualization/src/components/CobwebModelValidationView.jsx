@@ -18,12 +18,12 @@ const CHART_COLORS = {
 const ACTION_REASON_NOISE_TERMS = [
   'recommended_plan_quantity',
   'recommended_daily_capacity',
-  '推荐量',
-  '恢复推荐',
+  'recommended quantity',
+  'recovery recommendation',
   'recovery_guard recommendation',
-  'recovery_guard 推荐',
-  '允许偏差',
-  '偏差不超过',
+  'recovery_guard recommendation',
+  'allowed deviation',
+  'deviation no greater than',
   '±2',
   'affordable_recovery_candidates',
   'should_recover_now',
@@ -152,25 +152,25 @@ const getScenarioType = (runMeta) => {
 const getScenarioExpectation = (scenarioType) => {
   if (scenarioType === 'convergent') {
     return {
-      title: '收敛型：偏离应逐步缩小',
-      detail: '供给曲线斜率小于需求曲线斜率，价格和供给应围绕均衡点逐步收敛。',
+      title: 'Convergent: Deviations Should Contract',
+      detail: 'With a supply slope below the demand slope, price and supply should converge toward equilibrium.',
     };
   }
   if (scenarioType === 'neutral') {
     return {
-      title: '等幅型：教材预期为循环',
-      detail: '供需斜率接近，机械供给函数下会出现等幅震荡；若 Agent 主动稳到均衡，说明企业理性产生阻尼。',
+      title: 'Neutral: Theory Predicts a Persistent Cycle',
+      detail: 'Similar supply and demand slopes produce constant-amplitude oscillation under mechanical supply; agent stabilization indicates endogenous damping.',
     };
   }
   if (scenarioType === 'divergent') {
     return {
-      title: '发散型：偏离应放大或形成强震荡',
-      detail: '供给曲线斜率大于需求曲线斜率，理论上会放大偏离；企业约束可能把它压成有界强震荡。',
+      title: 'Divergent: Deviations Should Expand or Oscillate Strongly',
+      detail: 'A supply slope above the demand slope amplifies deviations, although enterprise constraints may bound the resulting oscillation.',
     };
   }
   return {
-    title: '蛛网场景',
-    detail: '根据价格-滞后供给反馈判断当前运行是否呈现蛛网效应。',
+    title: 'Cobweb Scenario',
+    detail: 'Evaluate whether lagged price–supply feedback produces cobweb dynamics.',
   };
 };
 
@@ -241,7 +241,7 @@ const buildSummary = (rows, runMeta, producerId) => {
     && (!controller.inputFilterRequired || agentInputFilterCount === rows.length);
   const agentAligned = directionRows.length > 0 && directionOkCount === directionRows.length && residualNoiseCount === 0;
 
-  let effectExplanation = `当前运行已加载蛛网数据，但还需要结合价格偏离和${controller.label}行为判断。`;
+  let effectExplanation = `Cobweb data are available; interpretation combines price deviations with ${controller.label} behavior.`;
   if (scenarioType === 'convergent') {
     const converged = (
       secondHalfMeanAbsPrice !== null
@@ -251,15 +251,15 @@ const buildSummary = (rows, runMeta, producerId) => {
       && lastSixMeanAbsPrice <= Math.max(4, firstHalfMeanAbsPrice * 0.45)
     );
     effectExplanation = converged
-      ? '后半段价格偏离显著低于前半段，且末段围绕均衡小幅波动。'
-      : '价格尚未稳定靠近均衡，建议延长轮次或检查生产理由。';
+      ? 'Price deviations are substantially lower in the second half, with small late-stage fluctuations around equilibrium.'
+      : 'Price has not stabilized near equilibrium; inspect a longer horizon and the production rationale.';
   } else if (scenarioType === 'neutral') {
     const stabilized = lastSixMeanAbsPrice !== null && lastSixMeanAbsPrice <= 1;
     effectExplanation = stabilized
       ? (controller.mode === 'scripted'
-        ? '公式轨迹意外稳定到均衡附近，需要检查供给来源和递推参数。'
-        : '教材式等幅冲击被 Agent 快速吸收到均衡点，说明企业理性产生阻尼。')
-      : '仍存在等幅或多状态循环，可继续观察振幅是否稳定。';
+        ? 'The formula-driven trajectory unexpectedly stabilizes near equilibrium; inspect the supply source and recurrence parameters.'
+        : 'The agent rapidly damps the theoretical constant-amplitude shock toward equilibrium.')
+      : 'A constant-amplitude or multi-state cycle remains; inspect whether its amplitude stabilizes.';
   } else if (scenarioType === 'divergent') {
     const highVolatility = (
       priceRangePostDay0 !== null
@@ -269,11 +269,11 @@ const buildSummary = (rows, runMeta, producerId) => {
     );
     effectExplanation = highVolatility
       ? (controller.mode === 'scripted'
-        ? '发散参数与价格/数量边界共同形成了有界强震荡。'
-        : '发散参数制造了显著价格波动，但 Agent 经营约束把轨迹压成有界震荡。')
+        ? 'Divergent parameters and price/quantity bounds jointly produce strong but bounded oscillation.'
+        : 'Divergent parameters create substantial price fluctuations, while agent operating constraints bound the trajectory.')
       : (controller.mode === 'scripted'
-        ? '公式基线的波动不够强，需要检查脚本供给来源、递推参数或边界配置。'
-        : '价格波动不够强，可能被 Agent 平滑或边界配置抑制。');
+        ? 'The formula baseline fluctuates weakly; inspect the supply source, recurrence parameters, and configured bounds.'
+        : 'Price fluctuations are moderated by agent smoothing or configured bounds.');
   }
 
   return {
@@ -414,7 +414,7 @@ function CobwebModelValidationView({
             priceDeviationAbs: price !== null && equilibriumPrice !== null ? Math.abs(price - equilibriumPrice) : null,
             supplyDeviation: marketSupply !== null && equilibriumQuantity !== null ? marketSupply - equilibriumQuantity : null,
             supplyDeviationAbs: marketSupply !== null && equilibriumQuantity !== null ? Math.abs(marketSupply - equilibriumQuantity) : null,
-            actionName: planAction?.action?.action_name || '无生产计划动作',
+            actionName: planAction?.action?.action_name || 'No production-plan action',
             actionReason,
             actionReasonNoiseTerms,
             direction,
@@ -470,7 +470,7 @@ function CobwebModelValidationView({
         if (!cancelled) {
           setViewState({
             loading: false,
-            error: `加载蛛网模型验证数据失败: ${error.message}`,
+            error: `Failed to load cobweb-model validation data: ${error.message}`,
             rows: [],
             runMeta: null,
           });
@@ -509,19 +509,19 @@ function CobwebModelValidationView({
           grid: { left: 52, right: 56, top: 48, bottom: 36 },
           xAxis: { type: 'category', data: days, boundaryGap: false },
           yAxis: [
-            { type: 'value', name: '价格', scale: true },
-            { type: 'value', name: '供给量', scale: true },
+            { type: 'value', name: 'Price', scale: true },
+            { type: 'value', name: 'Supply Quantity', scale: true },
           ],
           series: [
             {
-              name: '市场价格',
+              name: 'Market Price',
               type: 'line',
               smooth: true,
               symbolSize: 7,
               data: rows.map((row) => row.price),
             },
             {
-              name: '计划供给',
+              name: 'Planned Supply',
               type: 'line',
               yAxisIndex: 1,
               smooth: true,
@@ -529,21 +529,21 @@ function CobwebModelValidationView({
               data: rows.map((row) => row.marketSupply),
             },
             {
-              name: `${summary.controllerLabel}生产计划`,
+              name: `${summary.controllerLabel} Production Plan`,
               type: 'bar',
               yAxisIndex: 1,
               barMaxWidth: 18,
               data: rows.map((row) => row.planQuantity),
             },
             {
-              name: '均衡价格',
+              name: 'Equilibrium Price',
               type: 'line',
               symbol: 'none',
               lineStyle: { type: 'dashed', width: 2 },
               data: rows.map((row) => row.equilibriumPrice),
             },
             {
-              name: '均衡数量',
+              name: 'Equilibrium Quantity',
               type: 'line',
               yAxisIndex: 1,
               symbol: 'none',
@@ -561,24 +561,24 @@ function CobwebModelValidationView({
           legend: { top: 0 },
           grid: { left: 48, right: 18, top: 48, bottom: 36 },
           xAxis: { type: 'category', data: days },
-          yAxis: { type: 'value', name: '数量', scale: true },
+          yAxis: { type: 'value', name: 'Quantity', scale: true },
           series: [
             {
-              name: `${summary.controllerLabel}生产计划`,
+              name: `${summary.controllerLabel} Production Plan`,
               type: 'line',
               smooth: true,
               symbolSize: 7,
               data: rows.map((row) => row.planQuantity),
             },
             {
-              name: '市场采用供给',
+              name: 'Market-Used Supply',
               type: 'line',
               smooth: true,
               symbolSize: 7,
               data: rows.map((row) => row.marketSupply),
             },
             {
-              name: '理论参考供给',
+              name: 'Theoretical Reference Supply',
               type: 'line',
               smooth: true,
               symbolSize: 5,
@@ -597,19 +597,19 @@ function CobwebModelValidationView({
           grid: { left: 56, right: 52, top: 48, bottom: 36 },
           xAxis: { type: 'category', data: days },
           yAxis: [
-            { type: 'value', name: '价格偏离', scale: true },
-            { type: 'value', name: '供给偏离', scale: true },
+            { type: 'value', name: 'Price Deviation', scale: true },
+            { type: 'value', name: 'Supply Deviation', scale: true },
           ],
           series: [
             {
-              name: '|价格 - 均衡价|',
+              name: '|Price - Equilibrium Price|',
               type: 'bar',
               barMaxWidth: 22,
               data: rows.map((row) => row.priceDeviationAbs),
               itemStyle: { color: CHART_COLORS.deviation },
             },
             {
-              name: '|供给 - 均衡量|',
+              name: '|Supply - Equilibrium Quantity|',
               type: 'line',
               yAxisIndex: 1,
               smooth: true,
@@ -619,7 +619,7 @@ function CobwebModelValidationView({
               markLine: {
                 symbol: 'none',
                 lineStyle: { type: 'dashed', color: '#91a39a' },
-                data: finitePriceDeviations.length > 0 ? [{ yAxis: 0, name: '均衡' }] : [],
+                data: finitePriceDeviations.length > 0 ? [{ yAxis: 0, name: 'Equilibrium' }] : [],
               },
             },
           ],
@@ -633,15 +633,15 @@ function CobwebModelValidationView({
             trigger: 'item',
             formatter: (params) => {
               const row = rows[params.dataIndex];
-              return `D${row?.day}<br/>供给量: ${formatNumber(row?.marketSupply)}<br/>价格: ${formatNumber(row?.price)}<br/>来源: ${row?.marketSupplySource || '-'}`;
+              return `D${row?.day}<br/>Supply: ${formatNumber(row?.marketSupply)}<br/>Price: ${formatNumber(row?.price)}<br/>Source: ${row?.marketSupplySource || '-'}`;
             },
           },
           grid: { left: 56, right: 24, top: 24, bottom: 44 },
-          xAxis: { type: 'value', name: '市场供给量', scale: true },
-          yAxis: { type: 'value', name: '价格', scale: true },
+          xAxis: { type: 'value', name: 'Market Supply', scale: true },
+          yAxis: { type: 'value', name: 'Price', scale: true },
           series: [
             {
-              name: '蛛网轨迹',
+              name: 'Cobweb Trajectory',
               type: 'line',
               smooth: false,
               symbolSize: 9,
@@ -649,7 +649,7 @@ function CobwebModelValidationView({
               markPoint: {
                 symbolSize: 58,
                 data: summary.equilibriumQuantity !== null && summary.equilibriumPrice !== null
-                  ? [{ name: '均衡点', coord: [summary.equilibriumQuantity, summary.equilibriumPrice] }]
+                  ? [{ name: 'Equilibrium', coord: [summary.equilibriumQuantity, summary.equilibriumPrice] }]
                   : [],
               },
             },
@@ -665,24 +665,24 @@ function CobwebModelValidationView({
           grid: { left: 54, right: 52, top: 48, bottom: 36 },
           xAxis: { type: 'category', data: days },
           yAxis: [
-            { type: 'value', name: '数量', scale: true },
-            { type: 'value', name: '履约率', min: 0, max: 1, axisLabel: { formatter: '{value}' } },
+            { type: 'value', name: 'Quantity', scale: true },
+            { type: 'value', name: 'Fill Rate', min: 0, max: 1, axisLabel: { formatter: '{value}' } },
           ],
           series: [
             {
-              name: '成品库存',
+              name: 'Finished-Goods Inventory',
               type: 'line',
               smooth: true,
               data: rows.map((row) => row.inventoryQuantity),
             },
             {
-              name: '确认积压',
+              name: 'Confirmed Backlog',
               type: 'line',
               smooth: true,
               data: rows.map((row) => row.backlogQuantity),
             },
             {
-              name: '履约率',
+              name: 'Fill Rate',
               type: 'line',
               yAxisIndex: 1,
               smooth: true,
@@ -711,7 +711,7 @@ function CobwebModelValidationView({
   if (viewState.loading) {
     return (
       <div className="cobweb-page">
-        <div className="cobweb-empty-state">正在加载蛛网模型验证数据...</div>
+        <div className="cobweb-empty-state">Loading cobweb-model validation data...</div>
       </div>
     );
   }
@@ -728,7 +728,7 @@ function CobwebModelValidationView({
     return (
       <div className="cobweb-page">
         <div className="cobweb-empty-state">
-          当前运行未检测到蛛网模型数据。请确认场景启用了 market_demand_mode=cobweb。
+          No cobweb-model data were detected. Confirm that the scenario uses market_demand_mode=cobweb.
         </div>
       </div>
     );
@@ -740,58 +740,58 @@ function CobwebModelValidationView({
     ? `${formatNumber(cobwebConfig.supply_slope, 2)} / ${formatNumber(cobwebConfig.demand_slope, 2)}`
     : '-';
   const cobwebTypeLabel = {
-    convergent: '收敛型',
-    neutral: '均衡型',
-    divergent: '发散型',
-    unknown: '待识别',
-  }[summary.scenarioType] || '待识别';
+    convergent: 'Convergent',
+    neutral: 'Neutral',
+    divergent: 'Divergent',
+    unknown: 'Unclassified',
+  }[summary.scenarioType] || 'Unclassified';
   const cobwebTypeNote = summary.scenarioType === 'unknown'
-    ? '当前运行缺少可识别的蛛网场景标识'
-    : `由 d / b = ${slopeRelation} 判定：小于 1 收敛，等于 1 均衡，大于 1 发散`;
+    ? 'The run lacks a recognizable cobweb scenario identifier'
+    : `Classified by d / b = ${slopeRelation}: below 1 convergent, equal to 1 neutral, above 1 divergent`;
   const scenarioEffectTitle = String(summary.scenarioExpectation.title || '').replace(/^.*?[：:]\s*/, '');
   const scenarioEffectText = [scenarioEffectTitle, summary.effectExplanation]
     .filter(Boolean)
     .join('，');
   const cobwebParameterCards = [
     {
-      label: 'a 需求截距',
+      label: 'a Demand Intercept',
       value: formatNumber(cobwebConfig?.demand_intercept, 2),
-      note: '价格为 0 时的理论市场需求上限',
+      note: 'Theoretical market-demand ceiling at zero price',
     },
     {
-      label: 'b 需求斜率',
+      label: 'b Demand Slope',
       value: formatNumber(cobwebConfig?.demand_slope, 2),
-      note: '价格每上升 1 单位，需求减少多少',
+      note: 'Demand reduction per unit increase in price',
     },
     {
-      label: 'c 供给截距',
+      label: 'c Supply Intercept',
       value: formatNumber(cobwebConfig?.supply_intercept, 2),
-      note: '滞后价格为 0 时的理论基础供给',
+      note: 'Theoretical base supply at zero lagged price',
     },
     {
-      label: 'd 供给斜率',
+      label: 'd Supply Slope',
       value: formatNumber(cobwebConfig?.supply_slope, 2),
-      note: '上一期价格每上升 1 单位，理论供给增加多少',
+      note: 'Theoretical supply increase per unit increase in lagged price',
     },
     {
-      label: 'd / b 稳定关系',
+      label: 'd / b Stability Relation',
       value: slopeRelation,
-      note: '小于 1 收敛，等于 1 等幅，大于 1 发散',
+      note: 'Below 1 convergent, equal to 1 constant-amplitude, above 1 divergent',
     },
     {
-      label: 'P0 初始价格',
+      label: 'P0 Initial Price',
       value: formatNumber(cobwebConfig?.initial_price, 2),
-      note: 'day0 冷启动时使用的上一期价格信号',
+      note: 'Lagged price signal used for Day 0 initialization',
     },
     {
-      label: '供给滞后',
-      value: `${formatNumber(cobwebConfig?.endogenous_supply_lag_rounds, 0)} 轮`,
-      note: `市场读取上一轮${summary.controllerLabel}生产计划作为供给`,
+      label: 'Supply Lag',
+      value: `${formatNumber(cobwebConfig?.endogenous_supply_lag_rounds, 0)} turns`,
+      note: `The market uses the prior-turn ${summary.controllerLabel} production plan as supply`,
     },
     {
-      label: '供给来源',
+      label: 'Supply Source',
       value: cobwebConfig?.endogenous_supply_source || '-',
-      note: `当前使用${summary.controllerLabel}创建的生产计划量`,
+      note: `Uses production-plan quantities created by ${summary.controllerLabel}`,
     },
   ];
 
@@ -801,17 +801,14 @@ function CobwebModelValidationView({
         <div className="cobweb-hero-main">
           <span className="cobweb-eyebrow">Cobweb Validation</span>
           <div className="cobweb-hero-title-row">
-            <h2>蛛网模型实验解释与验证</h2>
+            <h2>Cobweb-Model Experiment Analysis</h2>
           </div>
           <p>
-            本项目中的蛛网模型使用 <strong>Qd_t = a - b * P_t</strong> 表示需求曲线，
-            使用 <strong>Q_ref,t = c + d * P_(t-1)</strong> 作为理论供给参考；
-            实验模式为 <strong>{cobwebConfig?.production_response_mode || '-'}</strong>，
-            市场实际采用 <strong>{summary.controllerLabel}生产计划量</strong> 反推本期价格。
+            Demand follows <strong>Qd_t = a - b * P_t</strong>, while <strong>Q_ref,t = c + d * P_(t-1)</strong> provides the theoretical lagged-supply reference. Under <strong>{cobwebConfig?.production_response_mode || '-'}</strong>, the market derives the current price from the <strong>{summary.controllerLabel} production plan</strong>.
           </p>
         </div>
         <aside className={`cobweb-hero-summary cobweb-type-card ${summary.scenarioType}`}>
-          <span>蛛网类型</span>
+          <span>Cobweb Type</span>
           <div className="cobweb-summary-heading">
             <strong>{cobwebTypeLabel}</strong>
             <p>{scenarioEffectText}</p>
@@ -823,7 +820,7 @@ function CobwebModelValidationView({
             aria-expanded={showCobwebDetails}
             onClick={() => setShowCobwebDetails((current) => !current)}
           >
-            {showCobwebDetails ? '收起参数详情' : '展开参数详情'}
+            {showCobwebDetails ? 'Hide Parameter Details' : 'Show Parameter Details'}
           </button>
         </aside>
         {showCobwebDetails && (
@@ -840,101 +837,101 @@ function CobwebModelValidationView({
       </section>
 
       <div className="cobweb-source-strip">
-        <span>运行: {currentRunId || summary.runId}</span>
-        <span>场景: {summary.scenarioName}</span>
-        <span>生产企业: {summary.producerId}</span>
-        <span>数据源: {currentRunSourceLabel || dataRoot}</span>
+        <span>Run: {currentRunId || summary.runId}</span>
+        <span>Scenario: {summary.scenarioName}</span>
+        <span>Producer: {summary.producerId}</span>
+        <span>Data Source: {currentRunSourceLabel || dataRoot}</span>
       </div>
 
       <section className="cobweb-kpi-grid">
         <div className="cobweb-kpi-card">
-          <span>最终价格偏离均衡</span>
+          <span>Final Price Deviation</span>
           <strong>{formatSigned(summary.finalPriceGap, 4)}</strong>
           <small>P* = {formatNumber(summary.equilibriumPrice, 2)}</small>
         </div>
         <div className="cobweb-kpi-card">
-          <span>最终供给偏离均衡</span>
+          <span>Final Supply Deviation</span>
           <strong>{formatSigned(summary.finalQuantityGap, 4)}</strong>
           <small>Q* = {formatNumber(summary.equilibriumQuantity, 2)}</small>
         </div>
         <div className="cobweb-kpi-card">
-          <span>{summary.controllerLabel}供给接入</span>
+          <span>{summary.controllerLabel} Supply Coverage</span>
           <strong>{summary.controllerSupplyCount}/{viewState.rows.length}</strong>
-          <small>fallback {summary.fallbackSupplyCount} 轮</small>
+          <small>fallback in {summary.fallbackSupplyCount} turns</small>
         </div>
         <div className="cobweb-kpi-card">
-          <span>后段平均价格偏离</span>
+          <span>Late-Stage Mean Price Deviation</span>
           <strong>{formatNumber(summary.lastSixMeanAbsPrice, 2)}</strong>
-          <small>前半 {formatNumber(summary.firstHalfMeanAbsPrice, 2)} / 后半 {formatNumber(summary.secondHalfMeanAbsPrice, 2)}</small>
+          <small>First half {formatNumber(summary.firstHalfMeanAbsPrice, 2)} / second half {formatNumber(summary.secondHalfMeanAbsPrice, 2)}</small>
         </div>
         <div className="cobweb-kpi-card">
-          <span>生产方向一致</span>
+          <span>Production-Direction Alignment</span>
           <strong>{summary.directionOkCount}/{summary.directionTotal}</strong>
-          <small>高价扩产，低价缩产</small>
+          <small>Expand at high prices and contract at low prices</small>
         </div>
         <div className="cobweb-kpi-card">
-          <span>最终库存 / 履约</span>
+          <span>Final Inventory / Fill Rate</span>
           <strong>{formatNumber(latestRow.inventoryQuantity, 0)} / {formatPercent(latestRow.fillRate)}</strong>
-          <small>积压 {formatNumber(latestRow.backlogQuantity, 0)}</small>
+          <small>Backlog {formatNumber(latestRow.backlogQuantity, 0)}</small>
         </div>
       </section>
 
       <section className="cobweb-layout">
         <article className="cobweb-chart-card wide">
-          <div className="cobweb-card-title">价格与 {summary.controllerLabel} 供给轨迹</div>
+          <div className="cobweb-card-title">Price and {summary.controllerLabel} Supply Trajectory</div>
           <div className="cobweb-card-note">
-            用均衡线对照市场端是否呈现蛛网模型的核心轨迹。柱形为{summary.controllerLabel}生产计划，供给线为市场实际采用的定价供给。
+            Equilibrium references expose the core cobweb trajectory. Bars show {summary.controllerLabel} production plans, and the supply line shows quantities used in market pricing.
           </div>
           <div className="cobweb-chart large" ref={convergenceRef} />
         </article>
 
         <article className="cobweb-chart-card">
-          <div className="cobweb-card-title">{summary.controllerLabel}计划 vs 市场供给 vs 理论参考</div>
+          <div className="cobweb-card-title">{summary.controllerLabel} Plan vs. Market Supply vs. Theoretical Reference</div>
           <div className="cobweb-card-note">
-            检查实际计划是否进入市场，并与当前控制器的价格响应规则保持一致。
+            Verifies that realized plans enter the market and align with the controller's price-response rule.
           </div>
           <div className="cobweb-chart" ref={productionRef} />
         </article>
 
         <article className="cobweb-chart-card">
-          <div className="cobweb-card-title">均衡偏离幅度</div>
+          <div className="cobweb-card-title">Equilibrium Deviations</div>
           <div className="cobweb-card-note">
-            收敛型应后段显著降低；等幅型应保持近似稳定；发散型应扩大或维持高振幅。
+            Deviations should decline under convergence, remain approximately stable under neutral dynamics, and expand or remain high under divergence.
           </div>
           <div className="cobweb-chart" ref={deviationRef} />
         </article>
 
         <article className="cobweb-chart-card">
-          <div className="cobweb-card-title">价格-供给相图</div>
+          <div className="cobweb-card-title">Price–Supply Phase Plot</div>
           <div className="cobweb-chart" ref={phaseRef} />
         </article>
 
         <article className="cobweb-chart-card">
-          <div className="cobweb-card-title">库存与履约背景</div>
+          <div className="cobweb-card-title">Inventory and Fulfillment Context</div>
           <div className="cobweb-card-note">
-            这组指标不是严格蛛网目标本身，用于确认服务/库存没有反向主导生产决策。
+            These contextual metrics verify that service and inventory do not dominate the intended price–supply response.
           </div>
           <div className="cobweb-chart" ref={operationsRef} />
         </article>
 
         <article className="cobweb-chart-card wide">
-          <div className="cobweb-card-title">逐轮证据审计表</div>
+          <div className="cobweb-card-title">Per-Turn Evidence Audit</div>
           <div className="cobweb-card-note">
-            每轮检查供给来源、控制器计划、理论参考、方向一致性和输入过滤，判断轨迹是否来自已配置的决策链路。
+            Each turn audits the supply source, controller plan, theoretical reference, direction alignment, and input filtering to verify the configured decision pathway.
           </div>
           <div className="cobweb-table-wrapper">
             <table className="cobweb-table">
               <thead>
                 <tr>
-                  <th>轮次</th>
-                  <th>价格</th>
-                  <th>市场供给</th>
-                  <th>{summary.controllerLabel}计划</th>
-                  <th>理论参考</th>
-                  <th>供给来源</th>
-                  <th>方向</th>
-                  <th>输入过滤</th>
-                  <th>生产理由摘要</th>
+                  <th>Turn</th>
+                  <th>Price</th>
+                  <th>Market Supply</th>
+                  <th>{summary.controllerLabel} Plan</th>
+                  <th>Theoretical Reference</th>
+                  <th>Supply Source</th>
+                  <th>Direction</th>
+                  <th>Input Filter</th>
+                  <th>Production-Rationale Summary</th>
                 </tr>
               </thead>
               <tbody>
@@ -956,14 +953,14 @@ function CobwebModelValidationView({
                     <td>
                       <span className={`cobweb-pill ${row.agentInputFilterApplied ? 'success' : 'muted'}`}>
                         {summary.controllerMode === 'scripted'
-                          ? '不适用'
-                          : (row.agentInputFilterApplied ? '已过滤' : '未过滤')}
+                          ? 'Not applicable'
+                          : (row.agentInputFilterApplied ? 'Applied' : 'Not applied')}
                       </span>
                     </td>
                     <td title={row.actionReason}>
                       {truncateText(row.actionReason, 120)}
                       {row.actionReasonNoiseTerms.length > 0 && (
-                        <span className="cobweb-noise-mark">含干扰词</span>
+                        <span className="cobweb-noise-mark">Contains noise term</span>
                       )}
                     </td>
                   </tr>

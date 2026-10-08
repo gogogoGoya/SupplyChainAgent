@@ -223,7 +223,7 @@ const buildLatestSnapshotRows = (latestRows, quantityView) =>
         quantityView
       ),
       expectedDueRound: latestReplenishmentByMaterial?.[materialId]?.expected_due_round ?? '-',
-      createdRequest: latestReplenishmentByMaterial?.[materialId]?.created_request ? '是' : '否'
+      createdRequest: latestReplenishmentByMaterial?.[materialId]?.created_request ? 'Yes' : 'No'
     }));
   });
 
@@ -351,7 +351,7 @@ const OperationalReviewView = ({ availableDays, dataRoot, quantityView, enterpri
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: '数量' },
+      yAxis: { type: 'value', name: 'Quantity' },
       series: flowMeta.companies.flatMap((company) => {
         const companyRows = availableDays.map((day) => rows.find((row) => row.company === company && row.day === day));
         return [
@@ -414,7 +414,7 @@ const OperationalReviewView = ({ availableDays, dataRoot, quantityView, enterpri
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('在途总量', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Total In Transit', quantityView) },
       series: flowMeta.companies.map((company) => ({
         name: `${flowMeta.companyNameMap[company] || company} pending`,
         type: 'bar',
@@ -436,7 +436,7 @@ const OperationalReviewView = ({ availableDays, dataRoot, quantityView, enterpri
       legend: { type: 'scroll', bottom: 0 },
       grid: { left: 44, right: 20, top: 24, bottom: 54 },
       xAxis: { type: 'category', data: availableDays.map((day) => `Turn ${day}`) },
-      yAxis: { type: 'value', name: getQuantityAxisLabel('库存位置汇总', quantityView) },
+      yAxis: { type: 'value', name: getQuantityAxisLabel('Aggregate Inventory Position', quantityView) },
       series: flowMeta.companies.map((company) => ({
         name: `${flowMeta.companyNameMap[company] || company} inventory position`,
         type: 'line',
@@ -494,80 +494,80 @@ const OperationalReviewView = ({ availableDays, dataRoot, quantityView, enterpri
   );
 
   if (loading) {
-    return <div className="loading">加载运营复盘数据...</div>;
+    return <div className="loading">Loading operations review data...</div>;
   }
 
   return (
     <div className="operations-page">
       <div className="operations-kpi-grid">
         <div className="operations-kpi-card warning">
-          <span>期末 backlog</span>
+          <span>Ending Backlog</span>
           <strong>{formatNumber(kpis.totalBacklog)}</strong>
         </div>
         <div className="operations-kpi-card warning">
-          <span>期末 lost sales</span>
+          <span>Ending Lost Sales</span>
           <strong>{formatNumber(kpis.totalLostSales)}</strong>
         </div>
         <div className="operations-kpi-card">
-          <span>期末在途总量</span>
+          <span>Ending In-Transit Quantity</span>
           <strong>{formatNumber(kpis.totalPending)}</strong>
         </div>
         <div className="operations-kpi-card">
-          <span>平均 fill rate</span>
+          <span>Average Fill Rate</span>
           <strong>{formatPercent(kpis.averageFillRate)}</strong>
         </div>
         <div className="operations-kpi-card warning">
-          <span>库存策略告警数</span>
+          <span>Inventory Policy Alerts</span>
           <strong>{formatNumber(kpis.lowStockAlerts)}</strong>
         </div>
       </div>
 
       <div className="operations-layout">
         <div className="operations-chart-card wide">
-          <div className="operations-card-title">backlog 与 lost sales 趋势</div>
+          <div className="operations-card-title">Backlog and Lost-Sales Trends</div>
           <div className="operations-chart large" ref={backlogRef} />
         </div>
 
         <div className="operations-chart-card">
-          <div className="operations-card-title">各企业 fill rate 趋势</div>
+          <div className="operations-card-title">Enterprise Fill-Rate Trends</div>
           <div className="operations-chart" ref={fillRateRef} />
         </div>
 
         <div className="operations-chart-card">
-          <div className="operations-card-title">各企业在途采购总量</div>
+          <div className="operations-card-title">Enterprise In-Transit Procurement</div>
           <div className="operations-chart" ref={pendingRef} />
         </div>
 
         <div className="operations-chart-card wide">
-          <div className="operations-card-title">各企业库存位置汇总趋势</div>
+          <div className="operations-card-title">Enterprise Inventory-Position Trends</div>
           <div className="operations-chart" ref={inventoryPositionRef} />
         </div>
 
         <div className="operations-chart-card wide insight-card">
           <div className="operations-card-title">
-            {quantityView?.enabled ? `最新轮次运营快照（原料折合 ${quantityView.productId}）` : '最新轮次运营快照'}
+            {quantityView?.enabled ? `Latest Operations Snapshot (Raw Materials as ${quantityView.productId} Equivalents)` : 'Latest Operations Snapshot'}
           </div>
           <div className="operations-table-wrapper">
             <table className="operations-table">
               <thead>
                 <tr>
-                  <th>企业</th>
-                  <th>物料</th>
-                  <th>{getQuantityColumnLabel('现货', quantityView)}</th>
-                  <th>{getQuantityColumnLabel('在途', quantityView)}</th>
+                  <th>Enterprise</th>
+                  <th>Material</th>
+                  <th>{getQuantityColumnLabel('On Hand', quantityView)}</th>
+                  <th>{getQuantityColumnLabel('In Transit', quantityView)}</th>
                   <th>{getQuantityColumnLabel('backlog', quantityView)}</th>
-                  <th>{getQuantityColumnLabel('库存位置', quantityView)}</th>
-                  <th>{getQuantityColumnLabel('安全库存', quantityView)}</th>
-                  <th>{getQuantityColumnLabel('再订购点', quantityView)}</th>
-                  <th>{getQuantityColumnLabel('建议补货', quantityView)}</th>
-                  <th>到货轮次</th>
-                  <th>已建请求</th>
+                  <th>{getQuantityColumnLabel('Inventory Position', quantityView)}</th>
+                  <th>{getQuantityColumnLabel('Safety Stock', quantityView)}</th>
+                  <th>{getQuantityColumnLabel('Reorder Point', quantityView)}</th>
+                  <th>{getQuantityColumnLabel('Recommended Replenishment', quantityView)}</th>
+                  <th>Due Turn</th>
+                  <th>Request Created</th>
                 </tr>
               </thead>
               <tbody>
                 {latestSnapshotRows.length === 0 ? (
                   <tr>
-                    <td colSpan="11">暂无最新轮次物料快照</td>
+                    <td colSpan="11">No material snapshot is available for the latest turn</td>
                   </tr>
                 ) : (
                   latestSnapshotRows.map((row, index) => (

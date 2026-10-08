@@ -1,7 +1,7 @@
 """
-采购管理模块
+Procurement management module
 
-负责企业的原材料采购业务，支持传统外部供应商采购和企业间B2B异步协商采购
+Responsible for enterprise raw materials procurement to support traditional external vendor procurement and enterprise B2B staggered procurement
 """
 
 import json
@@ -27,73 +27,73 @@ from network.trade_entities import (
 
 class ProcurementManager(EnhancedBaseModule):
     """
-    采购管理器类
-    处理企业采购相关的所有业务逻辑
-    """
+    Procurement Manager Category
+    Processing all business logic related to enterprise procurement
+        """
 
     def __init__(self, enterprise, module_id=None, config: ProcurementConfig = None):
         """
-        初始化采购管理器
+        Initialization Procurement Manager
 
         Args:
-            enterprise: 所属企业实例
-            module_id: 模块唯一标识（可选）
-            config: 采购配置对象（可选，默认使用 ProcurementConfig()）
-        """
-        # 使用配置或默认配置
+            Enterprise: Examples of enterprise
+            parameter: Only identification of modules (optional)
+            Config: Procurement Configuration Object (optional, default use of ProjectConfig())
+                """
+        # Use configuration or default configuration
         self.config = config or ProcurementConfig()
 
-        # 调用父类初始化方法
+        # Call Parent Initialisation Method
         super().__init__(
             enterprise,
             module_id or f"procurement_{enterprise.id}",
             self.config
         )
 
-        # 供应商管理
-        self.suppliers: Dict[str, Dict] = {}  # 供应商信息 {supplier_id: supplier_data}
-        self.next_supplier_id = 1  # 下一个供应商ID
+        # Vendor management
+        self.suppliers: Dict[str, Dict] = {}  # Vendor information {supplier_id: supplier_data}
+        self.next_supplier_id = 1  # Next supplier ID
         self.supplier_selection_events: List[Dict] = []
 
-        # 采购订单管理
-        self.purchase_orders: List[Dict] = []  # 采购订单列表
-        self.next_order_id = 1  # 下一个订单ID
+        # Procurement order management
+        self.purchase_orders: List[Dict] = []  # List of purchase orders
+        self.next_order_id = 1  # Next order ID
 
-        # B2B协商（可选功能）
-        self.negotiations: Dict[str, Dict] = {}  # 协商记录 {negotiation_id: negotiation_data}
-        self.next_negotiation_id = 1  # 下一个协商ID
+        # B2B consultations (optional functions)
+        self.negotiations: Dict[str, Dict] = {}  # Proceedings of the consultation {negotiation_id: negotiation_data}
+        self.next_negotiation_id = 1  # Next consultation ID
 
-        self.proposals_list: List[OrderProposal] = []  # 当前仍待采购部门响应的提案收件箱
-        self.proposal_history: List[OrderProposal] = []  # 已见提案历史（含已响应/已完结）
+        self.proposals_list: List[OrderProposal] = []  # Inboxes of proposals still pending department
+        self.proposal_history: List[OrderProposal] = []  # See the history of the proposal (including response/completed)
         self.replenishment_history: List[Dict] = []
         self.upstream_order_history: List[Dict] = []
 
-        # 采购指标
+        # Procurement indicators
         self.procurement_metrics = {
-            "total_orders": 0,              # 总订单数
-            "completed_orders": 0,          # 完成订单数
-            "rejected_orders": 0,          # 拒绝订单数
-            "total_cost": 0.0,             # 总采购成本
-            "total_quantity": 0.0,         # 总采购数量
-            "on_time_delivery_count": 0,   # 准时到货次数
-            "procurement_cost_rate": 0.0,  # 采购成本率
-            "on_time_rate": 0.0,           # 准时到货率
-            # "total_negotiations": 0,       # 总协商数（用于计算成功率）
-            # "successful_negotiations": 0,  # 成功协商数（用于计算成功率）
-            # "negotiation_success_rate": 0.0  # 协商成功率
+            "total_orders": 0,              # Total orders
+            "completed_orders": 0,          # Orders completed
+            "rejected_orders": 0,          # Number of orders rejected
+            "total_cost": 0.0,             # Total procurement cost
+            "total_quantity": 0.0,         # Total procurement
+            "on_time_delivery_count": 0,   # Timely arrival
+            "procurement_cost_rate": 0.0,  # Procurement cost rate
+            "on_time_rate": 0.0,           # Timely arrival rate
+            # total_negotiations: 0, # General consultations (for calculation of success rate)
+            # successful_negotiations: 0, # successful consultations (for calculation of success rate)
+            # "negotiation_success_rate: 0.0 # Consultation success rate
         }
 
-        # 采购事件日志
+        # Procurement incident log
         self.procurement_events: List[Dict] = []
 
-        # 模块类型标识
+        # Module Type Identification
         self.module_type = "ProcurementManager"
 
     def _get_current_day(self) -> int:
         return self.enterprise.time_manager.get_day() if hasattr(self.enterprise, "time_manager") else 0
 
     def _safe_number(self, value, default: float = 0.0) -> float:
-        """将可能为空或非法的数值安全转成 float，避免状态聚合阶段因脏值中断。"""
+        """Safe conversion of values that are likely to be empty or illegal to float to avoid disruption of the state aggregation phase by dirty values."""
         try:
             if value is None or value == "":
                 return default
@@ -230,8 +230,8 @@ class ProcurementManager(EnhancedBaseModule):
 
     def _refresh_proposal_views(self) -> None:
         """
-        使用交易所最新 dispatch 结果重建待响应提案 inbox，并同步历史视图。
-        """
+        Rebuilds the response proposal inbox using exchange the latest dispatch result and syncs the historical view.
+                """
         exchange = self._get_exchange()
         if not exchange:
             self._prune_proposal_views()
@@ -311,9 +311,9 @@ class ProcurementManager(EnhancedBaseModule):
 
         pipeline_quantity = 0.0
 
-        # 只有已正式确认的交换链路订单，才视为可靠在途。
-        # pending proposal / active buy request 只是意向，不应等价为即将到货库存，
-        # 否则会在库存见底时错误压低新的补货需求。
+        # Only officially confirmed exchange chain orders are considered reliable in transit.
+        # Sending potential / active buy request should not be equated with upcoming inventory,
+        # Otherwise, new replenishment requirements will be erroneously lowered when stock is bottomed.
         for proposal in getattr(exchange, "proposals", []):
             if (
                 proposal.buyer_company_id != self.enterprise.id
@@ -423,11 +423,11 @@ class ProcurementManager(EnhancedBaseModule):
 
     def _get_recipe_recovery_signal(self, material_id: str) -> Dict[str, Any]:
         """
-        基于 production.recovery_guard 与配方，为原料生成“同步恢复补货”信号。
+        Creates a "synchronous recovery replenishment signal for raw material based on production.recovery_guard and formulations.
 
-        目标不是替代常规补货，而是在制造企业进入恢复生产阶段时，避免只对当前最短缺的一种料敏感，
-        从而让 Malt / Hops / Yeast 围绕同一成品恢复目标同步补货。
-        """
+        The objective is not to replace conventional replenishment, but to avoid being sensitive to only one of the most scarce items of the time when manufacturing enterprise enters the production recovery phase,
+        This allows Malt / Hops / Yeast to synchronize replenishment with the same finished target.
+                """
         production_modules = self.enterprise.business_modules.get("ProductionManager", [])
         if not production_modules:
             return {
@@ -1193,7 +1193,7 @@ class ProcurementManager(EnhancedBaseModule):
         return float(ceil(quantity / min_order_quantity) * min_order_quantity)
 
     def _get_downstream_enterprise_instances(self) -> List[object]:
-        """读取当前企业下游交易所中的企业实例，供最上游保供策略参考真实恢复目标。"""
+        """Read the example of enterprise from enterprise downstream at exchange for upstream protection of real recovery objectives."""
         exchange = getattr(self.enterprise, "downstream_exchange", None)
         message_manager = getattr(self.enterprise, "message_manager", None)
         if not exchange or not message_manager:
@@ -1208,13 +1208,13 @@ class ProcurementManager(EnhancedBaseModule):
 
     def _build_top_tier_package_supply_bundles(self) -> List[Dict]:
         """
-        为最上游 Supplier 生成“成套配方保供”建议。
+        Generate a "package of recipes" proposal for upstream Supplier.
 
-        核心目标：
-        - 不再只逐料排序，而是围绕下游制造商的真实恢复性生产候选项，
-          为同一成品配方生成一组最小可启动的原料包。
-        - 这样在授信紧张时，也更容易优先补齐一整套可开工的配方，而不是只补单一原料。
-        """
+        Core objectives:
+        - Instead of just sorting things on a case-by-case basis, it is a real restorative production candidate for downstream manufacturers,
+          A minimum set of raw material startable packages for the same finished formulation.
+        - This would also make it easier to complete, as a matter of priority, a set of available formulations, rather than a single raw material, in the case of stress.
+                """
         bundles = []
         pull_through_mode = self._get_bullwhip_supplier_upstream_pull_through_mode()
         pull_through_enabled = self._is_runtime_switch_enabled_for_current_enterprise(pull_through_mode)
@@ -1369,7 +1369,7 @@ class ProcurementManager(EnhancedBaseModule):
         return bundles
 
     def _build_top_tier_supply_plan(self) -> Dict:
-        """为最上游 Supplier 生成关键原料保供计划，强调缺料优先级而非无限补给。"""
+        """Generate a key raw material security plan for the upstream Suplier, emphasizing the priority of missing materials rather than unlimited supplies."""
         guard = self._get_top_tier_supply_guard_status()
         if not guard.get("enabled"):
             return {
@@ -1676,16 +1676,16 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("initialize_suppliers")
     def initialize_suppliers(self, suppliers_data: List[Dict], dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        初始化供应商列表
+        List of initialifiers
 
         Args:
-            suppliers_data: 供应商数据列表，每个元素包含supplier_name, supplier_type, materials等信息
-            response: 响应对象，由装饰器自动注入
+            suppliers_data: list of supplier data, each element containing information such as subplier name, supplier_type, materials
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 初始化结果的统一响应对象
-        """
-                # 检查部门人手情况
+            ModuleResponse: Unified response object for initialised results
+                """
+                # Check department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="procurement")
         employee_count = hr_result.data.get("count", 0) 
@@ -1718,13 +1718,13 @@ class ProcurementManager(EnhancedBaseModule):
         errors = []
 
         for supplier_info in suppliers_data:
-            # 验证必要字段
+            # Validate Required Fields
             if not all(key in supplier_info for key in ['supplier_name', 'supplier_type', 'materials']):
                 failed_count += 1
                 errors.append(f"供应商数据不完整: {supplier_info}")
                 continue
 
-            # 注册供应商
+            # Registered vendors
             result = self.register_supplier(
                 supplier_name=supplier_info['supplier_name'],
                 supplier_type=supplier_info['supplier_type'],
@@ -1734,13 +1734,13 @@ class ProcurementManager(EnhancedBaseModule):
                 reliability_score=supplier_info.get('reliability_score', 1.0)
             )
 
-            # 处理不同返回类型的情况
+            # Addressing different types of return
             if hasattr(result, "success"):
                 if result.success:
                     registered_count += 1
                 else:
                     failed_count += 1
-                    # 提取详细的错误信息
+                    # Extract detailed error information
                     error_detail = result.message
                     if hasattr(result, 'errors') and result.errors:
                         if isinstance(result.errors, list) and len(result.errors) > 0:
@@ -1753,7 +1753,7 @@ class ProcurementManager(EnhancedBaseModule):
                     failed_count += 1
                     errors.append(f"注册供应商失败: {supplier_info['supplier_name']}, 错误: {result.get('error', '未知错误')}")
 
-        # 设置响应状态和消息
+        # Set Response Status and Message
         if failed_count == 0:
             response.set_status(ResponseStatus.SUCCESS)
         else:
@@ -1769,19 +1769,18 @@ class ProcurementManager(EnhancedBaseModule):
         return response
     
 
-    # ========== 采购订单管理 ==========
 
 
     def receive_proposals(self):
         """
-        接收交易所分发的潜在订单并创建待接收订单列表
-        """
+        Receive exchange distribution of potential orders and create list of pending orders
+                """
         self._refresh_proposal_views()
 
     def build_orders_from_exchange(self):
         """
-        建立采购订单
-        """
+        Establishment of purchase orders
+                """
         exchange = self._get_exchange()
         if exchange is None:
             return
@@ -1814,7 +1813,7 @@ class ProcurementManager(EnhancedBaseModule):
                 "arrival_time": accepted_order.planned_delivery_round,
                 "exchange_order_id": accepted_order.order_id,
                 "proposal_id": accepted_order.proposal_id,
-                "status": "pending",  # 待到货
+                "status": "pending",  # Wait for the goods.
                 "actual_arrival_time": None,
                 "on_time": None,
                 "assigned_workers": 0
@@ -1851,15 +1850,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("accept_proposal_order")
     def accept_proposal_order(self, proposal_id: str, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        接受采购订单
+        Acceptance of purchase orders
 
         Args:
-            proposal_id: 订单ID
-            response: 模块响应对象
-        """
+            parameter: Order ID
+            respond to objects
+                """
         self._refresh_proposal_views()
 
-        # 1. 查找当前仍待采购侧响应的订单 inbox
+        # 1. Find currently pending purchase side responses inbox
         proposal = self._find_pending_proposal(proposal_id)
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
@@ -1903,7 +1902,7 @@ class ProcurementManager(EnhancedBaseModule):
                 }
             )
         
-        # 3. 更新订单状态
+        # 3. Updating the order status
         self.enterprise.upstream_exchange.handle_company_response(
             proposal_id,
             "accept",
@@ -1923,15 +1922,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("reject_proposal_order")
     def reject_proposal_order(self, proposal_id: str, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        拒绝采购订单
+        Rejected purchase orders
 
         Args:
-            proposal_id: 订单ID
-            response: 模块响应对象
-        """
+            parameter: Order ID
+            respond to objects
+                """
         self._refresh_proposal_views()
 
-        # 1. 查找当前仍待采购侧响应的订单 inbox
+        # 1. Find currently pending purchase side responses inbox
         proposal = self._find_pending_proposal(proposal_id)
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
@@ -1944,7 +1943,7 @@ class ProcurementManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 3. 更新订单状态
+        # 3. Updating the order status
         self.enterprise.upstream_exchange.handle_company_response(
             proposal_id,
             "reject",
@@ -1972,7 +1971,7 @@ class ProcurementManager(EnhancedBaseModule):
                 f"企业 {self.enterprise.id} 不允许采购物料 {material_id}。可采购物料: {getattr(self.enterprise, 'purchasable_materials_idList', [])}"
             )
 
-        # 检查部门人手情况
+        # Check department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="procurement")       
         employee_count = hr_result.data.get("count", 0) 
@@ -2336,19 +2335,19 @@ class ProcurementManager(EnhancedBaseModule):
                              supplier_name, logistics_mode: str = "road", 
                              dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        创建采购订单
+        Create purchase order
 
         Args:
-            material_id: 材料ID
-            quantity: 采购数量
-            supplier_name: 供应商名称
-            logistics_mode: 物流方式（"road", "rail", "air"）
-            response: 响应对象，由装饰器自动注入
+            parameter: MaterialsID
+            Number of purchases
+            parameter: Name of supplier
+            < x17/ > : Logistics Mode ( "Road", "rail", "air")
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 创建结果的统一响应对象
-        """
-        # 检查部门人手情况
+            ModuleResponse: Create a unified response to the result
+                """
+        # Check department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="procurement")       
         employee_count = hr_result.data.get("count", 0) 
@@ -2365,7 +2364,7 @@ class ProcurementManager(EnhancedBaseModule):
                 f"无效的物流方式，请选择 'road', 'rail', 或 'air'"
             )
 
-        # 2. 验证供应商
+        # Validation of supply Business
         supplier = None
         selected_candidate = None
         supplier_id = self._get_supplier_id_by_name(supplier_name)
@@ -2383,7 +2382,7 @@ class ProcurementManager(EnhancedBaseModule):
                     f"供应商 {supplier_name} 不存在，也不在可选供应商目录中"
                 )
             supplier = selected_candidate
-        # 3. 验证供应商是否提供该材料
+        # 3. Certification of the supplier ' s supply of the material
         if material_id not in supplier["materials"]:
             return self.error_response(
                 response,
@@ -2393,7 +2392,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         material_info = supplier["materials"][material_id]
 
-        # 4. 检查最小起订量
+        # 4. Check for minimum start-up
         min_order_qty = material_info.get("min_order_quantity", 0)
         if quantity < min_order_qty:
             return self.error_response(
@@ -2402,11 +2401,11 @@ class ProcurementManager(EnhancedBaseModule):
                 f"未满足最小起订量。需要: {min_order_qty}, 当前: {quantity}"
             )
 
-        # 5. 计算成本
+        # 5. Costing
         unit_price = material_info["unit_price"]
         material_cost = unit_price * quantity
 
-        # 计算物流成本（返回 ModuleResponse）
+        # Calculating Logistics Costs (Return ModeuleResponse)
         logistics_result = self.calculate_logistics_cost(logistics_mode, quantity)
         if not logistics_result.success:
             return self.error_response(
@@ -2415,7 +2414,7 @@ class ProcurementManager(EnhancedBaseModule):
                 f"物流成本计算失败: {logistics_result.message}"
             )
 
-        # 提取物流成本，处理不同返回类型
+        # Recovery of logistics costs and processing of different types of return
         if isinstance(logistics_result.data, dict):
             raw_logistics_cost = logistics_result.data.get("cost", 0)
         elif isinstance(logistics_result.data, (int, float)):
@@ -2430,7 +2429,7 @@ class ProcurementManager(EnhancedBaseModule):
         supplier_type = supplier["supplier_type"]
         top_tier_credit_enabled = self._is_top_tier_credit_enabled_for_supplier(supplier)
 
-        # 6. 检查资金或顶层授信额度
+        # 6. Inspection of funds or top credit lines
         finance_manager = super().get_module_by_type("FinanceManager")
         balance_result = finance_manager.get_balance()
         if isinstance(balance_result, (int, float)):
@@ -2498,17 +2497,17 @@ class ProcurementManager(EnhancedBaseModule):
                 }
             )
 
-        # 区分从外部采购 和 从企业采购两种情况
+        # Distinguishing between external and enterprise procurement
         if supplier_type == "external":
-            # 外部直接采购
-            # 8. 计算交货周期
+            # Direct external procurement
+            # 8. Calculation of delivery cycle
             logistics_config = self.config.LOGISTICS_CONFIGS[logistics_mode]
             supplier_processing_time = supplier.get("processing_time", 0)
             delivery_time = logistics_config["transit_time"] + supplier_processing_time
             order_time = self.enterprise.time_manager.get_day()
             arrival_time = order_time + delivery_time
 
-            # 9. 创建订单记录
+            # 9. Creation of order records
             order_id = f"PROCUREMENT_ORDER_{self.next_order_id}"
             self.next_order_id += 1
             assigned_workers = self.config.MIN_PROCUREMENT_STAFF
@@ -2526,7 +2525,7 @@ class ProcurementManager(EnhancedBaseModule):
                 "order_time": order_time,
                 "delivery_time": delivery_time,
                 "arrival_time": arrival_time,
-                "status": "pending",  # 待到货
+                "status": "pending",  # Wait for the goods.
                 "payment_mode": payment_mode,
                 "payable_due_round": (
                     arrival_time + int((credit_commitment.get("guard") or {}).get("payable_delay_rounds", 0) or 0)
@@ -2599,7 +2598,7 @@ class ProcurementManager(EnhancedBaseModule):
             self.procurement_metrics["total_cost"] += total_cost
             self.procurement_metrics["total_quantity"] += quantity
 
-            # 10. 记录事件
+            # 10. Recording events
             self._log_event({
                 "type": "order_created",
                 "order_id": order_id,
@@ -2612,7 +2611,7 @@ class ProcurementManager(EnhancedBaseModule):
                 "supplier_name": supplier.get("supplier_name"),
                 "supplier_selected_on_order": selected_on_order,
             })
-            # 设置成功响应
+            # Setup Successful Response
             return self.success_response(
                 response,
                 f"采购订单 {order_id} 已创建,根据所选物流,至少需要等待{delivery_time}个工作日才能收到采购货物",
@@ -2630,14 +2629,14 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("check_arrived_orders")
     def check_arrived_orders(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查并处理到货订单（每个时间步开始时调用）
+        Check and process arrival orders (call at the beginning of each step)
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含到货信息列表的统一响应对象
-        """
+            ModuleResponse: Unified response object with arrival information list
+                """
             
         arrived_materials = []
         hr_manager = super().get_module_by_type("HRManager")
@@ -2645,12 +2644,12 @@ class ProcurementManager(EnhancedBaseModule):
             if (order["status"] == "pending" and
                 self.enterprise.time_manager.get_day() >= order["arrival_time"]):
                 
-                # 更新订单状态
+                # Update order status
                 order["status"] = "received"
                 order["actual_arrival_time"] = self.enterprise.time_manager.get_day()
                 order["on_time"] = (order["actual_arrival_time"] <= order["arrival_time"])
 
-                # 扣除资金
+                # Deduction of funds
                 finance_manager = super().get_module_by_type("FinanceManager")
                 use_accounts_payable = order.get("payment_mode") == "accounts_payable"
                 cost_result = finance_manager.add_cost(
@@ -2662,30 +2661,30 @@ class ProcurementManager(EnhancedBaseModule):
                     order["payable_status"] = "open"
                     order["payable_recorded_round"] = self.enterprise.time_manager.get_day()
 
-                # 更新库存
+                # Updating of inventories
                 inventory_manager = super().get_module_by_type("InventoryManager")
                 inventory_manager.add_inventory(order["material_id"], order["quantity"],order["unit_price"],"raw_material")
 
-                # 更新供应商统计
+                # Update of vendor statistics
                 if order["supplier_id"] in self.suppliers:
                     supplier = self.suppliers[order["supplier_id"]]
                     supplier["total_orders"] += 1
                     if order["on_time"]:
                         supplier["on_time_deliveries"] += 1
 
-                # 更新指标
+                # Update indicators
                 self.procurement_metrics["completed_orders"] += 1
                 if order["on_time"]:
                     self.procurement_metrics["on_time_delivery_count"] += 1
 
-                # 更新准时到货率
+                # Update on-time arrival rate
                 if self.procurement_metrics["completed_orders"] > 0:
                     self.procurement_metrics["on_time_rate"] = (
                         self.procurement_metrics["on_time_delivery_count"] /
                         self.procurement_metrics["completed_orders"]
                     )
 
-                # 创建到货信息
+                # Can not open message
                 arrival_info = {
                     "order_id": order["order_id"],
                     "material_id": order["material_id"],
@@ -2695,7 +2694,7 @@ class ProcurementManager(EnhancedBaseModule):
                     "on_time": order["on_time"]
                 }
 
-                # 释放员工
+                # Release the staff.
                 if order.get("assigned_workers", 0) > 0:
                     hr_manager.release_workers(
                         'procurement',
@@ -2704,7 +2703,7 @@ class ProcurementManager(EnhancedBaseModule):
                         "completed"
                     )
 
-                # 记录事件
+                # Record Events
                 self._log_event({
                     "type": "order_arrived",
                     "order_id": order["order_id"],
@@ -2715,7 +2714,7 @@ class ProcurementManager(EnhancedBaseModule):
 
                 arrived_materials.append(arrival_info)
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             f"成功处理 {len(arrived_materials)} 个到货订单",
@@ -2727,7 +2726,7 @@ class ProcurementManager(EnhancedBaseModule):
 
     @with_response("settle_external_payables")
     def settle_external_payables(self, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
-        """结转最上游授信外采在到期后的应付账款，保留真实财务纪律。"""
+        """Carry-over of the most upward award of accounts payable after maturity and maintain real financial discipline."""
         finance_manager = super().get_module_by_type("FinanceManager")
         current_day = self._get_current_day()
         due_orders = []
@@ -2802,17 +2801,17 @@ class ProcurementManager(EnhancedBaseModule):
     def cancel_order(self, order_id: str, reason: str = "", 
                      dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        取消采购订单（仅限待到货订单）
+        Cancellation of purchase orders (on arrival orders only)
 
         Args:
-            order_id: 订单ID
-            reason: 取消原因
-            response: 响应对象，由装饰器自动注入
+            parameter: Order ID
+            Reason for cancellation
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 取消结果的统一响应对象
-        """
-        # 检查部门人手情况
+            ModuleResponse: Unanimous object for cancelled result
+                """
+        # Check department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="procurement")
         employee_count = hr_result.data.get("count", 0) 
@@ -2842,11 +2841,11 @@ class ProcurementManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
-        # 更新订单状态
+        # Update order status
         order["status"] = "cancelled"
         self.procurement_metrics["cancelled_orders"] += 1
 
-        # 退款（简化版：全额退款）
+        # Refund (simplified version: full refund)
         finance_manager = super().get_module_by_type("FinanceManager")
         finance_manager.add_cost(
             order["total_cost"],
@@ -2854,7 +2853,7 @@ class ProcurementManager(EnhancedBaseModule):
             "order_cancellation_refund"
         )
 
-        # 记录事件
+        # Record Events
         self._log_event({
             "type": "order_cancelled",
             "order_id": order_id,
@@ -2870,7 +2869,7 @@ class ProcurementManager(EnhancedBaseModule):
             )
 
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             f"订单 {order_id} 已取消，退款 ¥{order['total_cost']:,.2f}",
@@ -2884,15 +2883,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_order_detail")
     def get_order_detail(self, order_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取订单详情
+        Get order details
 
         Args:
-            order_id: 订单ID
-            response: 响应对象，由装饰器自动注入
+            parameter: Order ID
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含订单详情的统一响应对象
-        """
+            ModuleResponse: Unified responder with order details
+                """
         order = self._find_order(order_id)
 
         if order:
@@ -2914,15 +2913,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_all_orders")
     def get_all_orders(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有订单
+        Get all orders
 
         Args:
-            status_filter: 状态过滤器（可选）
-            response: 响应对象，由装饰器自动注入
+            parameter: Status filter (optional)
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含订单列表的统一响应对象
-        """
+            ModeuleResponse: Unified response object with order list
+                """
         if status_filter:
             orders = [order for order in self.purchase_orders if order["status"] == status_filter]
         else:
@@ -2941,22 +2940,21 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_pending_orders")
     def get_pending_orders(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取待到货订单
+        Retrieving pending orders
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含待到货订单列表的统一响应对象
-        """
-        # 直接调用get_all_orders方法，该方法已更新为返回ModuleResponse
+            ModuleResponse: Unified response object with list of pending orders
+                """
+        # Direct call to get all orders, which has been updated to return ModeuleResponse
         result = self.get_all_orders(status_filter="pending")
 
-        # 由于get_all_orders已经返回ModuleResponse，我们可以直接返回它
-        # 但为了保持方法签名的一致性，我们可以重新包装或直接返回
+        # As Get all orders has returned to ModeuleResponse, we can return directly. It's...
+        # But in order to keep the signature consistent, we can repackage or return directly.
         return result
 
-    # ========== 供应商管理 ==========
 
     @with_response("register_supplier")
     def register_supplier(self, supplier_name: str, supplier_type: str,
@@ -2964,20 +2962,20 @@ class ProcurementManager(EnhancedBaseModule):
                          quality_level: str = "standard", reliability_score: float = 1.0,
                          dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        注册供应商
+        Registered vendors
 
         Args:
-            supplier_name: 供应商名称
-            supplier_type: 供应商类型（"external" 或 "enterprise"）
-            materials: 提供的材料 {material_id: {"unit_price": float, "min_order_quantity": float}}
-            processing_time: 处理时间（时间步）
-            quality_level: 质量等级（"low", "standard", "high"）
-            reliability_score: 可靠性评分（0.0-1.0）
-            response: 响应对象，由装饰器自动注入
+            parameter: Name of supplier
+            supplier_type: Vendor Type ("external" or "interprise")
+            Materiels: Materials provided
+            processing_time: processing time (time steps)
+            < x17/>: Quality level ( "low", "standard", "high")
+            reliability_score: Reliability rating (0.0-1.0)
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 注册结果的统一响应对象
-        """
+            ModuleResponse: Unanimous respondents to registration results
+                """
         if dry_run:
             return self.success_response(
                 response,
@@ -2999,8 +2997,8 @@ class ProcurementManager(EnhancedBaseModule):
             "processing_time": processing_time,
             "quality_level": quality_level,
             "reliability_score": reliability_score,
-            "total_orders": 0,           # 总订单数统计
-            "on_time_deliveries": 0      # 准时交货次数统计
+            "total_orders": 0,           # Statistics on total orders
+            "on_time_deliveries": 0      # Statistics on timely delivery
         }
 
         return self.success_response(
@@ -3015,15 +3013,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_supplier_info")
     def get_supplier_info(self, supplier_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取供应商信息
+        Access to vendor information
 
         Args:
-            supplier_id: 供应商ID
-            response: 响应对象，由装饰器自动注入
+            parameter: Vendor ID
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含供应商信息的统一响应对象
-        """
+            ModeuleResponse: Unified responder with supplier information
+                """
         supplier = self.suppliers.get(supplier_id)
 
         if supplier:
@@ -3045,16 +3043,16 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_all_suppliers")
     def get_all_suppliers(self, supplier_type: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有供应商
+        Access to all suppliers
 
         Args:
-            supplier_type: 供应商类型过滤器（可选）
-            response: 响应对象，由装饰器自动注入
+            supplier_type: Vendor type filter (optional)
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含供应商列表的统一响应对象
-        """
-        # 获取供应商列表
+            ModeuleResponse: Unified responder with supplier list
+                """
+        # Get list of suppliers
         if supplier_type:
             suppliers_list = [s for s in self.suppliers.values() if s["supplier_type"] == supplier_type]
         else:
@@ -3073,15 +3071,15 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("query_suppliers_by_material")
     def query_suppliers_by_material(self, material_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        查询提供特定材料的供应商
+        Query of suppliers providing specific materials
 
         Args:
-            material_id: 材料ID
-            response: 响应对象，由装饰器自动注入
+            parameter: MaterialsID
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含供应商列表的统一响应对象
-        """
+            ModeuleResponse: Unified responder with supplier list
+                """
         suppliers_with_material = []
 
         for supplier in self.suppliers.values():
@@ -3098,7 +3096,7 @@ class ProcurementManager(EnhancedBaseModule):
                     "processing_time": supplier["processing_time"]
                 })
 
-        # 按价格排序
+        # Sort by price
         suppliers_with_material.sort(key=lambda x: x["unit_price"])
 
         return self.success_response(
@@ -3112,22 +3110,21 @@ class ProcurementManager(EnhancedBaseModule):
             }
         )
 
-    # ========== 物流与成本管理 ==========
 
     @with_response("calculate_logistics_cost")
     @validate_positive("quantity")
     def calculate_logistics_cost(self, logistics_mode: str, quantity: float, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算物流成本
+        Calculation of logistics costs
 
         Args:
-            logistics_mode: 物流方式（"road", "rail", "air"）
-            quantity: 数量
-            response: 响应对象，由装饰器自动注入
+            < x17/ > : Logistics Mode ( "Road", "rail", "air")
+            Number
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含物流成本的统一响应对象
-        """
+            ModuleResponse: Harmonized target audience with logistics costs
+                """
         if logistics_mode not in self.config.LOGISTICS_CONFIGS:
             return self.error_response(
                 response,
@@ -3157,19 +3154,19 @@ class ProcurementManager(EnhancedBaseModule):
     def calculate_total_cost(self, material_id: str, quantity: float,
                            supplier_name: str, logistics_mode: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算总采购成本（不实际下单，仅用于成本估算）
+        Calculating total procurement costs (unrealized billing, only for cost estimation)
 
         Args:
-            material_id: 材料ID
-            quantity: 采购数量
-            supplier_name: 供应商名称
-            logistics_mode: 物流方式
-            response: 响应对象，由装饰器自动注入
+            parameter: MaterialsID
+            Number of purchases
+            parameter: Name of supplier
+            parameter: logistics approach
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含成本计算结果的统一响应对象
-        """
-        # 1. 验证供应商
+            ModuleResponse: Unified response object with costing results
+                """
+        # Validation of supply Business
         supplier_id = self._get_supplier_id_by_name(supplier_name)
         if supplier_id is None:
             return self.error_response(
@@ -3180,7 +3177,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         supplier = self.suppliers[supplier_id]
 
-        # 2. 验证材料
+        # 2. Validation materials
         if material_id not in supplier["materials"]:
             return self.error_response(
                 response,
@@ -3188,14 +3185,14 @@ class ProcurementManager(EnhancedBaseModule):
                 f"供应商 {supplier_name} 不提供材料 {material_id}"
             )
 
-        # 3. 计算材料成本
+        # 3. Costing of materials
         unit_price = supplier["materials"][material_id]["unit_price"]
         material_cost = unit_price * quantity
 
-        # 4. 计算物流成本（注意：现在该方法返回ModuleResponse）
+        # 4. Calculation of logistics costs (note: now the method returns to ModeuleResponse)
         logistics_result = self.calculate_logistics_cost(logistics_mode, quantity)
 
-        # 检查物流成本计算是否成功
+        # Check the success of logistics costing
         if not logistics_result.success:
             return self.error_response(
                 response,
@@ -3203,7 +3200,7 @@ class ProcurementManager(EnhancedBaseModule):
                 "物流成本计算失败"
             )
 
-        # 提取物流成本，处理不同返回类型
+        # Recovery of logistics costs and processing of different types of return
         if isinstance(logistics_result.data, dict):
             raw_logistics_cost = logistics_result.data.get("cost", 0)
         elif isinstance(logistics_result.data, (int, float)):
@@ -3213,7 +3210,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         logistics_cost = self._apply_top_tier_logistics_cost_adjustment(raw_logistics_cost, supplier)
 
-        # 5. 计算总成本
+        # 5. Calculation of total costs
         total_cost = material_cost + logistics_cost
 
         return self.success_response(
@@ -3238,16 +3235,16 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_logistics_info")
     def get_logistics_info(self, logistics_mode: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取物流方式信息
+        Access to logistics information
 
         Args:
-            logistics_mode: 物流方式
-            response: 响应对象，由装饰器自动注入
+            parameter: logistics approach
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含物流信息的统一响应对象
-        """
-        # 获取物流配置
+            ModuleResponse: Harmonized Response Object with Logistics Information
+                """
+        # Access logistics configuration
         logistics_config = self.config.LOGISTICS_CONFIGS.get(logistics_mode)
 
         if logistics_config:
@@ -3266,7 +3263,6 @@ class ProcurementManager(EnhancedBaseModule):
                 f"未知的物流方式: {logistics_mode}"
             )
 
-    # ========== B2B协商采购 ==========
 
     @with_response("initiate_negotiation")
     @validate_positive("quantity")
@@ -3276,19 +3272,19 @@ class ProcurementManager(EnhancedBaseModule):
                            quantity: float, target_price: float,
                            max_acceptable_price: float, response: ModuleResponse = None) -> ModuleResponse:
         """
-        发起B2B协商（简化版，实际需要消息系统支持）
+        B2B consultations initiated (simplified version, information system support actually required)
 
         Args:
-            target_enterprise_id: 目标企业ID
-            product_id: 产品ID
-            quantity: 数量
-            target_price: 目标价格
-            max_acceptable_price: 可接受的最高价格
-            response: 响应对象，由装饰器自动注入
+            target_enterprise_id: TargetenterpriseID
+            product_id: Product ID
+            Number
+            parameter: Target price
+            max_acceptable_price: Maximum acceptable price
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 协商发起结果的统一响应对象
-        """
+            ModuleResponse: Unified response to the outcome of the consultation
+                """
         negotiation_id = f"negotiation_{self.next_negotiation_id}"
         self.next_negotiation_id += 1
 
@@ -3308,10 +3304,10 @@ class ProcurementManager(EnhancedBaseModule):
 
         self.negotiations[negotiation_id] = negotiation
 
-        # 更新协商指标
+        # Updating of consultation indicators
         # self.procurement_metrics["total_negotiations"] += 1
 
-        # 记录事件
+        # Record Events
         self._log_event({
             "type": "negotiation_initiated",
             "negotiation_id": negotiation_id,
@@ -3353,18 +3349,18 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("respond_to_offer")
     def respond_to_offer(self, negotiation_id: str, action: str, counter_price: Optional[float] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        响应报价（简化版）
+        Response to quotations (simplified version)
 
         Args:
-            negotiation_id: 协商ID
-            action: 动作（"accept", "reject", "counter"）
-            counter_price: 接受价格,或者要还价的价格
-            response: 响应对象，由装饰器自动注入
+            negotiation_id: Consultation ID
+            Action: Actions
+            parameter : Accept price or return price
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 响应结果的统一响应对象
-        """
-        # 验证协商是否存在
+            ModuleResponse: Unique Response to Results
+                """
+        # Validate whether consultations exist
         if negotiation_id not in self.negotiations:
             return self.error_response(
                 response,
@@ -3374,15 +3370,15 @@ class ProcurementManager(EnhancedBaseModule):
 
         negotiation = self.negotiations[negotiation_id]
 
-        # 根据动作类型执行相应逻辑
+        # Execute the corresponding logic according to the action type
         try:
             if action == "offer_accept":
-                # 接受报价
+                # Acceptance of quotations
                 negotiation["status"] = "accepted"
                 negotiation["final_price"] = counter_price if counter_price is not None else negotiation["target_price"]
                 negotiation["action_type"] = "respond_to_accept"
 
-                # 发送消息给对方
+                # Send messages to each other.
                 result = self.enterprise.send_message(
                     recipient_id=negotiation["speaker"],
                     message_type="Procurement",
@@ -3406,7 +3402,7 @@ class ProcurementManager(EnhancedBaseModule):
                         "报价接受消息发送失败"
                     )
             elif action == "reject":
-                # 拒绝报价
+                # Rejected quotations
                 negotiation["status"] = "rejected"
                 return self.success_response(
                     response,
@@ -3417,7 +3413,7 @@ class ProcurementManager(EnhancedBaseModule):
                     }
                 )
             elif action == "counter":
-                # 还价
+                # Fight.
                 if counter_price is None:
                     return self.error_response(
                         response,
@@ -3437,7 +3433,7 @@ class ProcurementManager(EnhancedBaseModule):
                     }
                 )
             elif action == "respond_to_accept":
-                # 响应对方的接受
+                # Respond to the other side's acceptance.
                 if counter_price and counter_price <= negotiation["max_acceptable_price"]:
                     negotiation["status"] = "accepted"
                     negotiation["final_price"] = counter_price
@@ -3471,35 +3467,34 @@ class ProcurementManager(EnhancedBaseModule):
                         "还价价格超出最大可接受范围"
                     )
             else:
-                # 未知动作类型
+                # Unknown Action Type
                 return self.error_response(
                     response,
                     "INVALID_ACTION",
                     f"未知的动作类型: {action}"
                 )
         except Exception as e:
-            # 处理异常情况
+            # Addressing anomalies
             return self.error_response(
                 response,
                 "UNKNOWN_ERROR",
                 f"处理报价响应时发生异常: {e}"
             )
 
-    # ========== 查询与统计 ==========
 
     @with_response("get_procurement_status")
     def get_procurement_status(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取采购状态总览
+        Get procurement status overview
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含采购状态信息的统一响应对象
-        """
+            ModuleResponse: Unified responder with procurement status information
+                """
         try:
-            # 统计订单状态
+            # Statistical order status
             orders_by_status = {
                 "pending": 0,
                 "received": 0,
@@ -3510,17 +3505,17 @@ class ProcurementManager(EnhancedBaseModule):
                 status = order["status"]
                 orders_by_status[status] = orders_by_status.get(status, 0) + 1
 
-            # 更新采购成本率
+            # Updated procurement cost rates
             if self.procurement_metrics["total_quantity"] > 0:
                 self.procurement_metrics["procurement_cost_rate"] = (
                     self.procurement_metrics["total_cost"] /
                     self.procurement_metrics["total_quantity"]
                 )
 
-            # 构建详细的供应商列表
+            # Build detailed list of suppliers
             suppliers_detail = []
             for supplier_id, supplier in self.suppliers.items():
-                # 计算准时交付率
+                # Calculation of timely delivery rates
                 on_time_rate = 0.0
                 if supplier["total_orders"] > 0:
                     on_time_rate = supplier["on_time_deliveries"] / supplier["total_orders"]
@@ -3538,15 +3533,15 @@ class ProcurementManager(EnhancedBaseModule):
                     "on_time_rate": on_time_rate
                 })
 
-            # 构建材料-供应商矩阵（按材料分组显示所有可用供应商）
+            # Build material-supplier matrix (show all available suppliers by material group)
             materials_suppliers_matrix = {}
             all_materials = set()
 
-            # 收集所有材料
+            # Collect all material
             for supplier in self.suppliers.values():
                 all_materials.update(supplier["materials"].keys())
 
-            # 为每种材料构建供应商列表
+            # Build a list of suppliers for each material
             for material_id in all_materials:
                 material_suppliers = []
                 for supplier_id, supplier in self.suppliers.items():
@@ -3563,7 +3558,7 @@ class ProcurementManager(EnhancedBaseModule):
                             "processing_time": supplier["processing_time"]
                         })
 
-                # 按价格排序（价格低的优先）
+                # Price by price (low priority)
                 material_suppliers.sort(key=lambda x: x["unit_price"])
                 materials_suppliers_matrix[material_id] = material_suppliers
             supplier_candidates = self._supplier_candidate_observation()
@@ -3592,7 +3587,7 @@ class ProcurementManager(EnhancedBaseModule):
                 status = order.get("status", "unknown")
                 grouped[status].append(order)
             status_orders = dict(grouped)
-            # 构建响应数据
+            # Build Response Data
             status_data = {
                 "orders": status_orders,
                 "suppliers": {
@@ -3636,7 +3631,7 @@ class ProcurementManager(EnhancedBaseModule):
                 status_data
             )
         except Exception as e:
-            # 处理异常情况，记录详细错误信息
+            # Deal with anomalies and record details of errors.
             import traceback
             import logging
 
@@ -3644,10 +3639,10 @@ class ProcurementManager(EnhancedBaseModule):
             error_detail = f"获取采购状态失败: {e}"
             stack_trace = traceback.format_exc()
 
-            # 记录到日志
+            # Log to Log
             logger.error(f"{error_detail}\n{stack_trace}")
 
-            # 返回错误响应
+            # Returns error response
             return self.error_response(
                 response,
                 "STATUS_CALCULATION_ERROR",
@@ -3657,16 +3652,16 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_supplier_performance")
     def get_supplier_performance(self, supplier_name: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取供应商绩效
+        Acquisition of supplier performance
 
         Args:
-            supplier_name: 供应商名称
-            response: 响应对象，由装饰器自动注入
+            parameter: Name of supplier
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含供应商绩效信息的统一响应对象
-        """
-        # 获取供应商ID
+            ModuleResponse: Unified target audience with supplier performance information
+                """
+        # Acquisition of supplier ID
         supplier_id = self._get_supplier_id_by_name(supplier_name)
         if supplier_id is None:
             return self.error_response(
@@ -3677,7 +3672,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         supplier = self.suppliers[supplier_id]
 
-        # 统计该供应商的订单
+        # Statistics of the supplier ' s order
         supplier_orders = [o for o in self.purchase_orders if o["supplier_id"] == supplier_id]
         completed_orders = [o for o in supplier_orders if o["status"] == "received"]
         on_time_orders = [o for o in completed_orders if o.get("on_time", False)]
@@ -3685,11 +3680,11 @@ class ProcurementManager(EnhancedBaseModule):
         total_cost = sum(o["total_cost"] for o in completed_orders)
         total_quantity = sum(o["quantity"] for o in completed_orders)
 
-        # 计算绩效指标
+        # Calculation of indicators of achievement
         on_time_rate = len(on_time_orders) / len(completed_orders) if completed_orders else 0
         avg_cost_per_unit = total_cost / total_quantity if total_quantity > 0 else 0
 
-        # 构建绩效数据
+        # Build performance data
         performance_data = {
             "supplier_id": supplier_id,
             "supplier_name": supplier["supplier_name"],
@@ -3711,27 +3706,27 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取当前模块状态
+        Get Current Module Status
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含模块状态的统一响应对象
-        """
+            ModuleResponse: Unified response object with modular status
+                """
         import logging
         logger = logging.getLogger(__name__)
 
         try:
-            # 获取采购状态总览（该方法应该已经返回ModuleResponse）
+            # Get procurement status overview (this method should have returned to ModeuleResponse)
             procurement_status_result = self.get_procurement_status()
 
-            # 检查 get_procurement_status 是否成功
+            # Check parameter success
             if not procurement_status_result.success:
                 logger.error(f"get_procurement_status 失败: {procurement_status_result.message}")
                 logger.error(f"errors: {procurement_status_result.errors}")
 
-                # 即使失败，也返回基本信息
+                # If you fail, return basic information.
                 state_data = {
                     # "module_id": self.module_id,
                     "module_type": self.module_type,
@@ -3740,7 +3735,7 @@ class ProcurementManager(EnhancedBaseModule):
                 }
                 return self.success_response(response, "获取采购模块状态（部分失败）", state_data)
 
-            # 确保正确提取 data
+            # Ensure correct extraction of data
             if hasattr(procurement_status_result, 'data'):
                 procurement_status = procurement_status_result.data if isinstance(procurement_status_result.data, dict) else {}
             elif isinstance(procurement_status_result, dict):
@@ -3751,7 +3746,7 @@ class ProcurementManager(EnhancedBaseModule):
 
             self._refresh_proposal_views()
 
-            # 构建状态数据
+            # Build Status Data
             state_data = {
                 "module_id": self.module_id,
                 "module_type": self.module_type,
@@ -3769,14 +3764,14 @@ class ProcurementManager(EnhancedBaseModule):
                 state_data
             )
         except Exception as e:
-            # 处理异常情况，并记录详细错误信息
+            # Deal with anomalies and record detailed errors
             import traceback
             error_detail = f"获取模块状态失败: {e}"
             stack_trace = traceback.format_exc()
 
             logger.error(f"{error_detail}\n{stack_trace}")
 
-            # 返回包含基本信息的错误响应
+            # Returns error containing basic information Response
             state_data = {
                 "module_id": self.module_id,
                 "module_type": self.module_type,
@@ -3792,23 +3787,23 @@ class ProcurementManager(EnhancedBaseModule):
     
     def _update_procurement_metrics(self):
         """
-        更新采购指标
-        """
-        # 重新计算采购成本率
+        Updated procurement indicators
+                """
+        # Recosting of procurement costs
         if self.procurement_metrics["total_quantity"] > 0:
             self.procurement_metrics["procurement_cost_rate"] = (
                 self.procurement_metrics["total_cost"] /
                 self.procurement_metrics["total_quantity"]
             )
         
-        # 重新计算准时到货率
+        # Recalculate the arrival rate on time
         if self.procurement_metrics["completed_orders"] > 0:
             self.procurement_metrics["on_time_rate"] = (
                 self.procurement_metrics["on_time_delivery_count"] /
                 self.procurement_metrics["completed_orders"]
             )
         
-        # 重新计算协商成功率
+        # Recalculating the success rate of consultations
         # if self.procurement_metrics["total_negotiations"] > 0:
         #     self.procurement_metrics["negotiation_success_rate"] = (
         #         self.procurement_metrics["successful_negotiations"] /
@@ -3818,16 +3813,16 @@ class ProcurementManager(EnhancedBaseModule):
     @with_response("message_handle")
     def message_handle(self, message: Dict, response: ModuleResponse = None) -> ModuleResponse:
         """
-        处理来自其他模块或外部系统的消息
+        Process messages from other modules or external systems
 
         Args:
-            message: 包含消息内容的字典，至少包含"type"和"content"键
-            response: 响应对象，由装饰器自动注入
+            message: Dictionary with message content, at least " type" and "content" keys
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 处理结果的统一响应对象
-        """
-        # 处理采购相关消息
+            ModuleResponse: Unique Response to Process Results
+                """
+        # Processing procurement-related information
         content = message.get("content")
         action_type = content.get("action_type")
         if action_type == "negotiation_initiated":
@@ -3844,39 +3839,38 @@ class ProcurementManager(EnhancedBaseModule):
         )
     
 
-    # ========== 内部辅助方法 ==========
     def _get_supplier_id_by_name(self, supplier_name: str) -> Optional[str]:
-        """根据供应商名称获取供应商ID"""
+        """Acquisition of supplier ID by name of supplier"""
         for supplier_id, supplier in self.suppliers.items():
             if supplier["supplier_name"] == supplier_name:
                 return supplier_id
         return None
 
     def _find_order(self, order_id: str) -> Optional[Dict]:
-        """查找订单"""
+        """Find Orders"""
         for order in self.purchase_orders:
             if order["order_id"] == order_id:
                 return order
         return None
 
     def _log_event(self, event: Dict):
-        """记录采购事件"""
+        """Record procurement incidents"""
         event["time_step"] = self.enterprise.time_manager.get_day()
         self.procurement_events.append(event)
         
     @with_response("generate_purchase_analysis")
     def generate_purchase_analysis(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成采购订单分析JSON
+        Generate purchase order analysis JSON
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含采购订单分析JSON的统一响应对象
-        """
+            ModuleResponse: A unified response to include an analysis of the purchase order
+                """
         try:
-            # 订单状态分析
+            # Order status analysis
             orders_by_status = {}
             for order in self.purchase_orders:
                 status = order.get("status", "unknown")
@@ -3884,7 +3878,7 @@ class ProcurementManager(EnhancedBaseModule):
                     orders_by_status[status] = []
                 orders_by_status[status].append(order)
 
-            # 供应商绩效分析
+            # Vendor performance analysis
             supplier_performance = {}
             for supplier_id, supplier in self.suppliers.items():
                 supplier_orders = [o for o in self.purchase_orders if o.get("supplier_id") == supplier_id]
@@ -3908,7 +3902,7 @@ class ProcurementManager(EnhancedBaseModule):
                     "avg_cost_per_unit": avg_cost_per_unit
                 }
 
-            # 成本分析
+            # Cost analysis
             total_cost_by_material = {}
             total_cost_by_logistics = {}
             for order in self.purchase_orders:
@@ -3924,7 +3918,7 @@ class ProcurementManager(EnhancedBaseModule):
                         total_cost_by_logistics[logistics_mode] = 0
                     total_cost_by_logistics[logistics_mode] += order.get("logistics_cost", 0)
 
-            # 时间趋势分析
+            # Analysis of time trends
             orders_by_time = {}
             for order in self.purchase_orders:
                 order_time = order.get("order_time")
@@ -3933,13 +3927,13 @@ class ProcurementManager(EnhancedBaseModule):
                         orders_by_time[order_time] = []
                     orders_by_time[order_time].append(order)
 
-            # 获取当前时间
+            # Get Current Time
             try:
                 timestamp = self.enterprise.time_manager.get_day() if hasattr(self.enterprise, 'time_manager') else 0
             except Exception:
                 timestamp = 0
 
-            # 构建分析JSON
+            # Build AnalysisJSON
             analysis_json = {
                 "analysis_type": "采购订单分析",
                 "timestamp": timestamp,

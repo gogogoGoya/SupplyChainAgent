@@ -1,6 +1,6 @@
 {
   "action_name": "create_production_plan",
-  "description": "建立生产计划",
+  "description": "Create a production plan.",
   "canonical_inputs": {
     "primary": [
       "production.self_state.recovery_guard",
@@ -18,18 +18,18 @@
     ]
   },
   "conditions": [
-    "analysis 中要求提升产量",
-    "analysis 中要求完成订单",
-    "analysis 中要求提前备货",
-    "analysis 中要求提高产能利用率"
+    "analysis calls for higher production volume.",
+    "analysis calls for order fulfillment.",
+    "analysis calls for advance stock preparation.",
+    "analysis calls for better capacity utilization."
   ],
   "prerequisites": [
-    "至少存在一条激活的生产线",
-    "产品存在对应生产配方",
-    "可用产能与原材料库存充足",
-    "production.json.self_state.cash_guard 与 blackboard.departments.finance.cash_summary 未显示当前计划会触发硬性现金阻断"
+    "At least one production line is active.",
+    "A production recipe exists for the product.",
+    "Available capacity and material inventory are sufficient.",
+    "production.json.self_state.cash_guard and blackboard.departments.finance.cash_summary do not show a hard cash block for this plan."
     ,
-    "production.json.self_state.margin_guard 应优先作为风险提示读取；若目标产品仅允许 service_recovery 或 continuity_recovery，应采用保守小批量"
+    "Read production.json.self_state.margin_guard as a priority risk signal; use a conservative small batch if only service_recovery or continuity_recovery is allowed for the product."
   ],
   "required_parameters": [
     "product_id",
@@ -37,22 +37,22 @@
     "daily_capacity"
   ],
   "parameter_constraints": [
-    "daily_capacity 必须小于等于 quantity"
+    "daily_capacity must not exceed quantity."
   ],
   "parameter_guidelines": [
-    "对于参数 quantity 的设置,可以根据库存原料、接受订单、当前产能等因素来设置",
-    "若 production.json.self_state.recovery_guard.candidates 中存在 should_recover_now=true 的产品，优先参考其中的 recommended_plan_quantity",
-    "若 production.json.self_state.recovery_guard.candidates 中给出了 recommended_daily_capacity，优先将其作为 daily_capacity 或其保守下调值",
-    "若 recovery_guard 已给出的 recommended_plan_quantity 仍明显高于当前 active plan 的剩余量，且 available_capacity 仍充足，可继续建立第二个小恢复计划，不要把单个 active plan 视作恢复已完成",
-    "若 production.json.self_state.cash_guard.affordable_recovery_candidates 中存在同产品记录，应优先使 quantity / daily_capacity 不超过该可承受方案",
-    "若 production.json.self_state.margin_guard.candidates 中存在同产品记录，应优先遵循其 projected_gross_margin_rate 与 allow_service_recovery / allow_continuity_recovery 的限制"
+    "Set quantity using available materials, accepted orders, and current capacity.",
+    "If production.json.self_state.recovery_guard.candidates includes a product with should_recover_now = true, prioritize its recommended_plan_quantity.",
+    "If recovery_guard.candidates provides recommended_daily_capacity, use it or a conservatively reduced value for daily_capacity.",
+    "If recommended_plan_quantity remains substantially above the current active plan's remaining quantity and available_capacity remains sufficient, a second small recovery plan may be created; one active plan does not necessarily complete recovery.",
+    "If production.json.self_state.cash_guard.affordable_recovery_candidates has an entry for this product, keep quantity and daily_capacity within the affordable plan where possible.",
+    "If production.json.self_state.margin_guard.candidates has an entry for this product, respect projected_gross_margin_rate and the allow_service_recovery / allow_continuity_recovery limits."
   ],
   "constraints": [
-    "必须先读取 production.json.self_state.cash_guard 与 blackboard.departments.finance.cash_summary",
-    "若 cash_guard.guard_level = hard_blocked，不得创建明显超预算的生产计划",
-    "若 cash_summary.cash_level = warning，应优先采用 recovery_guard 推荐值的保守下调版本",
-    "必须先读取 production.json.self_state.margin_guard；只有当该产品没有价格信号、被标记为 hard_blocked，且 allow_service_recovery / allow_continuity_recovery 均不允许时，才不得创建计划",
-    "若 margin_guard 仅允许 service recovery 或 continuity_recovery，不得放大到超出恢复性小批量范围",
-    "应优先跟随 recovery_guard，而不是把 backlog_by_product、候选项 backlog、其它 backlog 字段重复当成多份独立需求"
+    "Read production.json.self_state.cash_guard and blackboard.departments.finance.cash_summary first.",
+    "When cash_guard.guard_level = hard_blocked, do not create a plan that clearly exceeds the budget.",
+    "When cash_summary.cash_level = warning, prefer a conservatively reduced recovery_guard recommendation.",
+    "Read production.json.self_state.margin_guard first. Reject a plan for this product only when it has no price signal, is hard_blocked, and neither allow_service_recovery nor allow_continuity_recovery permits it.",
+    "If margin_guard allows only service_recovery or continuity_recovery, keep the plan within a small recovery batch.",
+    "Follow recovery_guard instead of double-counting backlog_by_product, candidate backlog, and other backlog fields as independent demand."
   ]
 }

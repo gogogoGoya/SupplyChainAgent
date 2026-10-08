@@ -79,14 +79,14 @@ const RunSummary = ({
     const xAxisData = exchangeRows.map((row) => `Turn ${row.day}`);
     const series = exchangeIds.flatMap((exchangeId) => [
       {
-        name: `${exchangeId} 订单`,
+        name: `${exchangeId} Orders`,
         type: 'line',
         smooth: true,
         symbolSize: 5,
         data: exchangeRows.map((row) => row.exchanges[exchangeId]?.orders || 0)
       },
       {
-        name: `${exchangeId} 提案`,
+        name: `${exchangeId} Proposals`,
         type: 'line',
         smooth: true,
         symbolSize: 5,
@@ -98,7 +98,7 @@ const RunSummary = ({
     if (includeUpstreamExternalSupplierMode) {
       series.push(
         {
-          name: `Upstream Market → ${topEnterpriseName} 订单`,
+          name: `Upstream Market → ${topEnterpriseName} Orders`,
           type: 'line',
           smooth: true,
           symbolSize: 5,
@@ -110,7 +110,7 @@ const RunSummary = ({
     if (includeDownstreamExternalMarketMode) {
       series.push(
         {
-          name: `${bottomEnterpriseName} → External Market 订单`,
+          name: `${bottomEnterpriseName} → External Market Orders`,
           type: 'line',
           smooth: true,
           symbolSize: 5,
@@ -216,7 +216,7 @@ const RunSummary = ({
   };
 
   if (loading) {
-    return <div className="loading">加载运行概览...</div>;
+    return <div className="loading">Loading run overview...</div>;
   }
 
   return (
@@ -226,10 +226,10 @@ const RunSummary = ({
         {companyRows.map((row) => (
           <div className="company-kpi-row" key={row.company}>
             <strong>{row.companyName || row.company}</strong>
-            <span>现金 {formatMoney(row.cash)}</span>
-            <span>收入 {formatMoney(row.revenue)}</span>
-            <span>订单 {formatNumber(row.orders)} / 完成 {formatNumber(row.completedOrders)}</span>
-            <span>库存 {formatNumber(row.inventoryUsed)} / {formatNumber(row.inventoryCapacity)}</span>
+            <span>Cash {formatMoney(row.cash)}</span>
+            <span>Revenue {formatMoney(row.revenue)}</span>
+            <span>Orders {formatNumber(row.orders)} / Completed {formatNumber(row.completedOrders)}</span>
+            <span>Inventory {formatNumber(row.inventoryUsed)} / {formatNumber(row.inventoryCapacity)}</span>
           </div>
         ))}
       </div>

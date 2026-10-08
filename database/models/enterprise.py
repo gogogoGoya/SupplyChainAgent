@@ -1,5 +1,5 @@
 """
-企业相关数据模型
+enterprise Related Data Model
 """
 from sqlalchemy import Column, String, Float, Integer, Boolean, DateTime, ForeignKey, JSON, Text, func
 from sqlalchemy.orm import relationship
@@ -9,11 +9,11 @@ from database.models.base import BaseModel
 
 class Enterprise(BaseModel):
     """
-    企业模型
-    """
+    enterprise Model
+        """
     __tablename__ = "enterprises"
     
-    # 基本信息
+    # Basic information
     enterprise_id = Column(String(50), unique=True, nullable=False, index=True, comment="企业ID")
     name = Column(String(255), nullable=False, comment="企业名称")
     type = Column(String(50), nullable=False, comment="企业类型: manufacturer, retailer, supplier")
@@ -21,7 +21,7 @@ class Enterprise(BaseModel):
     industry = Column(String(100), comment="所属行业")
     founded_year = Column(Integer, comment="成立年份")
     
-    # 财务信息
+    # Financial information
     capital = Column(Float, default=0.0, comment="初始资金")
     current_balance = Column(Float, default=0.0, comment="当前余额")
     revenue = Column(Float, default=0.0, comment="总收入")
@@ -29,12 +29,12 @@ class Enterprise(BaseModel):
     profit = Column(Float, default=0.0, comment="利润")
     credit_score = Column(Float, default=0.0, comment="信用评分")
     
-    # 资源和能力
+    # Resources and capacities
     capacity = Column(Integer, default=0, comment="产能")
     warehouse_space = Column(Integer, default=0, comment="仓库空间")
     delivery_capacity = Column(Integer, default=0, comment="配送能力")
     
-    # 业务信息
+    # Operational information
     products = relationship("Product", back_populates="enterprise", cascade="all, delete-orphan")
     suppliers = relationship("Supplier", back_populates="enterprise", cascade="all, delete-orphan")
     customers = relationship("Customer", back_populates="enterprise", cascade="all, delete-orphan")
@@ -42,10 +42,10 @@ class Enterprise(BaseModel):
     sales_orders = relationship("SalesOrder", back_populates="enterprise", cascade="all, delete-orphan")
     production_plans = relationship("ProductionPlan", back_populates="enterprise", cascade="all, delete-orphan")
     
-    # 配置信息
+    # Configure Information
     config = Column(JSON, default={}, comment="企业配置信息")
     
-    # 状态信息
+    # Status Information
     is_active = Column(Boolean, default=True, comment="是否激活")
     
     def __repr__(self):
@@ -54,8 +54,8 @@ class Enterprise(BaseModel):
 
 class Supplier(BaseModel):
     """
-    供应商模型
-    """
+    Vendor model
+        """
     __tablename__ = "suppliers"
     
     name = Column(String(255), nullable=False, comment="供应商名称")
@@ -64,7 +64,7 @@ class Supplier(BaseModel):
     lead_time = Column(Integer, default=0, comment="交货周期")
     minimum_order_quantity = Column(Integer, default=0, comment="最小订单量")
     
-    # 关联
+    # Association
     enterprise_id = Column(Integer, ForeignKey("enterprises.id"), comment="所属企业ID")
     enterprise = relationship("Enterprise", back_populates="suppliers")
     
@@ -74,8 +74,8 @@ class Supplier(BaseModel):
 
 class Customer(BaseModel):
     """
-    客户模型
-    """
+    Client model
+        """
     __tablename__ = "customers"
     
     name = Column(String(255), nullable=False, comment="客户名称")
@@ -83,7 +83,7 @@ class Customer(BaseModel):
     credit_limit = Column(Float, default=0.0, comment="信用额度")
     order_frequency = Column(Float, default=0.0, comment="订单频率")
     
-    # 关联
+    # Association
     enterprise_id = Column(Integer, ForeignKey("enterprises.id"), comment="所属企业ID")
     enterprise = relationship("Enterprise", back_populates="customers")
     
@@ -93,8 +93,8 @@ class Customer(BaseModel):
 
 class ProductionPlan(BaseModel):
     """
-    生产计划模型
-    """
+    Production plan model
+        """
     __tablename__ = "production_plans"
     
     name = Column(String(255), nullable=False, comment="计划名称")
@@ -105,7 +105,7 @@ class ProductionPlan(BaseModel):
     progress = Column(Float, default=0.0, comment="完成进度")
     status = Column(String(50), default="pending", comment="状态")
     
-    # 关联
+    # Association
     enterprise_id = Column(Integer, ForeignKey("enterprises.id"), comment="所属企业ID")
     enterprise = relationship("Enterprise", back_populates="production_plans")
     product = relationship("Product")
@@ -116,8 +116,8 @@ class ProductionPlan(BaseModel):
 
 class PurchaseOrder(BaseModel):
     """
-    采购订单模型
-    """
+    Purchase order model
+        """
     __tablename__ = "purchase_orders"
     
     po_number = Column(String(100), unique=True, nullable=False, index=True, comment="采购订单号")
@@ -127,7 +127,7 @@ class PurchaseOrder(BaseModel):
     expected_delivery_date = Column(DateTime, comment="预计交货日期")
     actual_delivery_date = Column(DateTime, comment="实际交货日期")
     
-    # 关联
+    # Association
     enterprise_id = Column(Integer, ForeignKey("enterprises.id"), comment="所属企业ID")
     enterprise = relationship("Enterprise", back_populates="purchase_orders")
     supplier = relationship("Supplier")
@@ -139,8 +139,8 @@ class PurchaseOrder(BaseModel):
 
 class SalesOrder(BaseModel):
     """
-    销售订单模型
-    """
+    Sales order model
+        """
     __tablename__ = "sales_orders"
     
     order_number = Column(String(100), unique=True, nullable=False, index=True, comment="销售订单号")
@@ -150,7 +150,7 @@ class SalesOrder(BaseModel):
     expected_delivery_date = Column(DateTime, comment="预计交货日期")
     actual_delivery_date = Column(DateTime, comment="实际交货日期")
     
-    # 关联
+    # Association
     enterprise_id = Column(Integer, ForeignKey("enterprises.id"), comment="所属企业ID")
     enterprise = relationship("Enterprise", back_populates="sales_orders")
     customer = relationship("Customer")
@@ -162,8 +162,8 @@ class SalesOrder(BaseModel):
 
 class PurchaseOrderLineItem(BaseModel):
     """
-    采购订单项模型
-    """
+    Procurement order model
+        """
     __tablename__ = "purchase_order_line_items"
     
     purchase_order_id = Column(Integer, ForeignKey("purchase_orders.id"), comment="采购订单ID")
@@ -172,7 +172,7 @@ class PurchaseOrderLineItem(BaseModel):
     unit_price = Column(Float, nullable=False, comment="单价")
     total_price = Column(Float, nullable=False, comment="总价")
     
-    # 关联
+    # Association
     purchase_order = relationship("PurchaseOrder", back_populates="line_items")
     product = relationship("Product")
     
@@ -182,8 +182,8 @@ class PurchaseOrderLineItem(BaseModel):
 
 class SalesOrderLineItem(BaseModel):
     """
-    销售订单项模型
-    """
+    Sales order model
+        """
     __tablename__ = "sales_order_line_items"
     
     sales_order_id = Column(Integer, ForeignKey("sales_orders.id"), comment="销售订单ID")
@@ -192,7 +192,7 @@ class SalesOrderLineItem(BaseModel):
     unit_price = Column(Float, nullable=False, comment="单价")
     total_price = Column(Float, nullable=False, comment="总价")
     
-    # 关联
+    # Association
     sales_order = relationship("SalesOrder", back_populates="line_items")
     product = relationship("Product")
     

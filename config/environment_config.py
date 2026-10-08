@@ -1,16 +1,16 @@
 """
-运行环境配置中心。
+Operation of the Environmental Configuration Centre.
 
-这个文件只放“跨模块共享、偏运行时”的配置，主要包括：
-- 仿真时间推进规则
-- 本地 HTTP / Agent 网关接入地址
-- Agent SDK 默认连接参数
+This file will only be configured for " cross-module sharing, running-time " and will consist mainly of:
+- Simulation of time advance rules.
+- Local < x17/ / Agent gateway access address
+-AgentSDK Default connection parameters
 
-不放在这里的数据：
-- 四家企业、Beer Game 需求、初始化动作、每日固定动作
-  这些统一放在 `simulation_preset_config.py`
-- 各业务模块自己的阈值和时间消耗
-  这些统一放在 `module_config.py`
+Not here:
+- Four enterprise, Beer Game requirements, initialization actions, daily fixes
+  These are placed in `simulation_preset_config.py`
+- Operational modules own thresholds and time consumption
+  These are placed in `module_config.py`
 """
 
 import json
@@ -96,43 +96,40 @@ _load_runtime_env_file()
 
 class EnvironmentConfig:
     """
-    跨模块运行环境配置。
+    A cross-module operating environment configuration.
 
-    使用范围：
-    - `core/async_time_manager.py`：读取时间推进常量
-    - `agent/*`：读取服务地址、模型网关地址与默认模型连接参数
-    - `simulate/*`：通过环境服务 URL 对接本地仿真服务
+    Scope of use:
+    - parameter : Read the time boost constant
+    - `agent/*`: Read service addresses, model gateway addresses and default model interface parameters
+    - `simulate/*`: docking local simulation services through environmental services URL
 
-    设计边界：
-    - 这里只保留“运行环境级”的共享配置
-    - `workspace` / `workspace_multi` 这类目录名按当前约定保留在各自模块中，
-      不额外抽到这里统一管理
-    """
+    Design boundary:
+    - Only the "run environment level" shared configuration is maintained here
+    - parameter / `workspace_multi` such directory names are kept in their respective modules as currently agreed,
+      We don't need any extra to do it here.
+        """
 
-    # ==================== 仿真时间配置 ====================
-    # 仿真起始时刻。当前以“第 0 天 09:00”作为开局时间。
+    # Simulation of the beginning. At present, "0th day 09:00 " is the opening time.
     START_TICK = 9 * 60 * 60
-    # 一天对应的 tick 数。当前按真实 24 小时换算。
+    # The number of picks per day. Current 24-hour conversion.
     TICKS_PER_DAY = 24 * 60 * 60
-    # 工作日开始时刻。`AsyncTimeManager` 会据此跳转到下一个工作日开始。
+    # Work begins. `AsyncTimeManager` will then jump to the next working day.
     ON_WORK_PER_DAY = 9 * 60 * 60
-    # 工作日结束时刻。用于判定是否已下班。
+    # End of working day. Used to determine whether or not it was off duty.
     OFF_WORK_PER_DAY = 17 * 60 * 60
 
-    # 向后兼容旧命名，避免影响已存在调用。
+    # Backwards compatible with the old name so as not to affect the already existing call.
     OnWork_PER_DAY = ON_WORK_PER_DAY
     OffWork_PER_DAY = OFF_WORK_PER_DAY
 
-    # ==================== 本地服务接入配置 ====================
-    # 仿真 HTTP 服务地址。`StaticUtils` / `MultiTenantUtils` 通过它请求 `/state`、`/execute` 等接口。
+    # Simulation HTTP service address. parameter / parameter Through it request interfaces parameter, parameter .
     SIMULATION_API_BASE_URL = _env_value("SIMULATION_API_BASE_URL")
-    # Agent / 模型网关地址。多企业与单企业 Agent 都通过它连接 Claude Agent SDK 网关。
+    # Agent/ Model Gateway address. multi-enterprise and single-enterpriseAgent are connected to the Claude Agent SDK gateway.
     LOCAL_AGENT_GATEWAY_BASE_URL = _first_env_value("ANTHROPIC_BASE_URL", "AGENT_GATEWAY_BASE_URL")
-    # 代理绕过配置，由 `scripts/.env` 或宿主环境显式提供。
+    # The proxy bypasses the configuration, provided by `scripts/.env` or the host environment.
     LOCAL_NO_PROXY = _first_env_value("NO_PROXY", "no_proxy")
 
-    # ==================== Agent 默认连接参数 ====================
-    # 模型名与认证信息只从统一环境入口读取，不保留旧版本硬编码 fallback。
+    # Model names and authentication information are read only from the Unified Environmental Access and the old version of the hard-coding fallsback is not retained.
     DEFAULT_AGENT_MODEL = _env_value("ANTHROPIC_MODEL")
     DEFAULT_CEO_MODEL = _env_value("ANTHROPIC_CEO_MODEL") or DEFAULT_AGENT_MODEL
     DEFAULT_AGENT_MODEL_LIST = _parse_model_list_env(_env_value("ANTHROPIC_MODEL_LIST"))

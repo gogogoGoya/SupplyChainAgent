@@ -1,3 +1,3 @@
 """
-企业网络管理模块
+enterprise Network Management Module
 """

@@ -70,16 +70,15 @@ export const sumConvertedFieldByList = (items, quantityField, itemField, quantit
 
 export const getQuantityAxisLabel = (baseLabel, quantityView) =>
   quantityView?.enabled
-    ? `${baseLabel}（Supplier → Manufacturer 原料按 ${quantityView.productId} 折算）`
+    ? `${baseLabel} (Supplier → Manufacturer raw materials converted to ${quantityView.productId})`
     : baseLabel;
 
 export const getQuantityColumnLabel = (baseLabel, quantityView) =>
   quantityView?.enabled
-    ? `${baseLabel}（折合 ${quantityView.productId}）`
+    ? `${baseLabel} (${quantityView.productId} equivalent)`
     : baseLabel;
 
 export const getDisplayItemLabel = (itemId, quantityView) =>
   isConvertibleRawMaterial(itemId, quantityView)
-    ? `${itemId}（折合 ${quantityView.productId}）`
+    ? `${itemId} (${quantityView.productId} equivalent)`
     : itemId;
-

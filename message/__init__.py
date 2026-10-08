@@ -1,7 +1,7 @@
 """
-消息系统模块
+Message System Module
 
-负责企业间的通信和信息传递
+Responsible for communication and information transmission between enterprise
 """
 
 from .message_manager import MessageManager, MESSAGE_TYPES

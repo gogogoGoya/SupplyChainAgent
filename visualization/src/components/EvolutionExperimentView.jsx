@@ -10,11 +10,11 @@ const ENTERPRISE_COLORS = {
 };
 
 const PHASES = [
-  { name: '稳定基线', start: 0, end: 39, strategy: '建立协同交易基线' },
-  { name: '原料涨价', start: 40, end: 79, strategy: '补充缓冲并保护毛利' },
-  { name: '制造成本冲击', start: 80, end: 119, strategy: '约束排产与订单边界' },
-  { name: '贸易物流收紧', start: 120, end: 159, strategy: '收紧外采并保障履约' },
-  { name: '需求软化与成本回落', start: 160, end: 199, strategy: '主动降速与控制敞口' },
+  { name: 'Stable Baseline', start: 0, end: 39, strategy: 'Establish a coordinated trading baseline' },
+  { name: 'Material Price Increase', start: 40, end: 79, strategy: 'Build buffers and protect margins' },
+  { name: 'Conversion-Cost Shock', start: 80, end: 119, strategy: 'Constrain production and order exposure' },
+  { name: 'Trade and Logistics Tightening', start: 120, end: 159, strategy: 'Reduce external procurement and protect fulfillment' },
+  { name: 'Demand Softening and Cost Relief', start: 160, end: 199, strategy: 'Slow operations and control exposure' },
 ];
 
 const RESPONSE_ACTIONS = {
@@ -41,7 +41,7 @@ const formatNumber = (value, digits = 0) => new Intl.NumberFormat('zh-CN', {
 const formatCurrencyCompact = (value) => {
   const numeric = toNumber(value);
   if (Math.abs(numeric) >= 1000000) return `¥${formatNumber(numeric / 1000000, 2)}M`;
-  if (Math.abs(numeric) >= 10000) return `¥${formatNumber(numeric / 10000, 1)}万`;
+  if (Math.abs(numeric) >= 1000) return `¥${formatNumber(numeric / 1000, 1)}K`;
   return `¥${formatNumber(numeric)}`;
 };
 
@@ -145,11 +145,11 @@ const getAuditStats = (row) => {
 
 const formatFactorSummary = (event) => {
   const factorLabels = {
-    external_material_price: '原料',
-    production_conversion_cost: '制造',
-    external_logistics_cost: '物流',
-    external_demand_quantity: '需求',
-    external_customer_price: '终端价',
+    external_material_price: 'Materials',
+    production_conversion_cost: 'Conversion',
+    external_logistics_cost: 'Logistics',
+    external_demand_quantity: 'Demand',
+    external_customer_price: 'Customer Price',
   };
   return Object.entries(event.factor_updates || {})
     .map(([key, value]) => `${factorLabels[key] || key} ${formatNumber(value, 2)}x`)
@@ -219,13 +219,13 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
     factorChart.setOption({
       ...baseOption,
       legend: { top: 4 },
-      yAxis: { type: 'value', name: '相对基线', axisLabel: { formatter: '{value}x' } },
+      yAxis: { type: 'value', name: 'Relative to Baseline', axisLabel: { formatter: '{value}x' } },
       series: [
-        ['原料价格', 'external_material_price'],
-        ['制造成本', 'production_conversion_cost'],
-        ['贸易物流', 'external_logistics_cost'],
-        ['终端需求', 'external_demand_quantity'],
-        ['终端价格', 'external_customer_price'],
+        ['Material Price', 'external_material_price'],
+        ['Conversion Cost', 'production_conversion_cost'],
+        ['Trade Logistics', 'external_logistics_cost'],
+        ['Customer Demand', 'external_demand_quantity'],
+        ['Customer Price', 'external_customer_price'],
       ].map(([name, key], index) => ({
         name,
         type: 'line',
@@ -239,7 +239,7 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
     revenueChart.setOption({
       ...baseOption,
       legend: { top: 4 },
-      yAxis: { type: 'value', name: '累计营收', axisLabel: { formatter: (value) => `${value / 10000}万` } },
+      yAxis: { type: 'value', name: 'Cumulative Revenue', axisLabel: { formatter: (value) => `${value / 1000}K` } },
       series: visibleEnterpriseIds.map((enterpriseId, index) => ({
         name: enterpriseId,
         type: 'line',
@@ -257,19 +257,19 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
       ...baseOption,
       legend: { top: 4 },
       yAxis: [
-        { type: 'value', name: '累计订单' },
-        { type: 'value', name: '累计成交额', axisLabel: { formatter: (value) => `${value / 10000}万` } },
+        { type: 'value', name: 'Cumulative Orders' },
+        { type: 'value', name: 'Cumulative Value', axisLabel: { formatter: (value) => `${value / 1000}K` } },
       ],
       series: [
         {
-          name: '链内订单',
+          name: 'B2B Orders',
           type: 'line',
           showSymbol: false,
           data: rows.map((row) => getTradeSnapshot(row).orderCount),
           markLine: commonMarkLine,
         },
         {
-          name: '链内成交额',
+          name: 'B2B Transaction Value',
           type: 'line',
           yAxisIndex: 1,
           areaStyle: { opacity: 0.08 },
@@ -285,7 +285,7 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
       legend: { top: 4 },
       yAxis: {
         type: 'value',
-        name: '累计履约率',
+        name: 'Cumulative Fulfillment Rate',
         min: 0,
         max: 1,
         axisLabel: { formatter: (value) => `${Math.round(value * 100)}%` },
@@ -319,14 +319,14 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
       legend: { top: 4 },
       yAxis: {
         type: 'value',
-        name: 'Agent 直出率',
+        name: 'Agent Direct-Completion Rate',
         min: 75,
         max: 100,
         axisLabel: { formatter: '{value}%' },
       },
       series: [
         {
-          name: '当前轮直出率',
+          name: 'Per-Turn Direct Completion',
           type: 'line',
           step: 'end',
           showSymbol: false,
@@ -334,7 +334,7 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
           markLine: commonMarkLine,
         },
         {
-          name: '累计直出率',
+          name: 'Cumulative Direct Completion',
           type: 'line',
           showSymbol: false,
           lineStyle: { width: 3 },
@@ -347,11 +347,11 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
     responseChart.setOption({
       ...baseOption,
       legend: { top: 4 },
-      yAxis: { type: 'value', name: '近5轮动作数', minInterval: 1 },
+      yAxis: { type: 'value', name: 'Actions in Prior 5 Turns', minInterval: 1 },
       series: [
-        ['采购与补货', RESPONSE_ACTIONS.procurement, '#31708e'],
-        ['生产调整', RESPONSE_ACTIONS.production, '#b04a3a'],
-        ['订单与市场取舍', RESPONSE_ACTIONS.market, '#a87517'],
+        ['Procurement and Replenishment', RESPONSE_ACTIONS.procurement, '#31708e'],
+        ['Production Adjustments', RESPONSE_ACTIONS.production, '#b04a3a'],
+        ['Order and Market Decisions', RESPONSE_ACTIONS.market, '#a87517'],
       ].map(([name, actionNames, color], index) => ({
         name,
         type: 'line',
@@ -423,18 +423,18 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
   }).filter((phase) => phase.actions || phase.newOrders || phase.index === 0);
 
   if (loading) {
-    return <div className="loading">正在加载持续演变长跑数据...</div>;
+    return <div className="loading">Loading long-horizon evolution data...</div>;
   }
 
   return (
     <div className="evolution-view">
       <section className="evolution-summary-band">
-        <div><span>完整运行</span><strong>{latestMetrics.completed_steps || rows.length} / {latestMetrics.planned_total_steps || 200}</strong></div>
-        <div><span>部门 Agent 直出</span><strong>{formatNumber(directRate, 1)}%</strong></div>
-        <div><span>全体超时轮次</span><strong>{allTimeoutTurns}</strong></div>
-        <div><span>经营动作</span><strong>{formatNumber(totalActions)}</strong></div>
-        <div><span>链内成交</span><strong>{formatNumber(latestTrade.orderCount)} 笔</strong></div>
-        <div><span>链内成交额</span><strong>{formatCurrencyCompact(latestTrade.orderValue)}</strong></div>
+        <div><span>Completed Run</span><strong>{latestMetrics.completed_steps || rows.length} / {latestMetrics.planned_total_steps || 200}</strong></div>
+        <div><span>Department Agent Direct Completion</span><strong>{formatNumber(directRate, 1)}%</strong></div>
+        <div><span>All-Agent Timeout Turns</span><strong>{allTimeoutTurns}</strong></div>
+        <div><span>Operating Actions</span><strong>{formatNumber(totalActions)}</strong></div>
+        <div><span>B2B Transactions</span><strong>{formatNumber(latestTrade.orderCount)}</strong></div>
+        <div><span>B2B Transaction Value</span><strong>{formatCurrencyCompact(latestTrade.orderValue)}</strong></div>
       </section>
 
       <section className="evolution-event-strip">
@@ -443,23 +443,23 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
             <span>Turn {event.xAxis}</span>
             <strong>{event.name}</strong>
             <small>{formatFactorSummary(event)}</small>
-            <small>后 10 轮 {formatNumber(event.responseActions)} 次经营响应</small>
+            <small>{formatNumber(event.responseActions)} operating responses in the next 10 turns</small>
           </div>
-        )) : <p>Turn 40 起将显示已触发的外部环境变化。</p>}
+        )) : <p>Triggered external changes appear here from Turn 40 onward.</p>}
       </section>
 
       <section className="evolution-phase-table-wrap">
-        <h3>阶段自适应画像</h3>
+        <h3>Phase-Level Adaptation Profile</h3>
         <div className="evolution-phase-table-scroll">
           <table className="evolution-phase-table">
             <thead>
               <tr>
-                <th>阶段</th>
-                <th>策略取向</th>
-                <th>经营动作</th>
-                <th>新增链内订单</th>
-                <th>新增成交额</th>
-                <th>B2B 平均履约率</th>
+                <th>Phase</th>
+                <th>Strategic Orientation</th>
+                <th>Operating Actions</th>
+                <th>New B2B Orders</th>
+                <th>New Transaction Value</th>
+                <th>Mean B2B Fulfillment Rate</th>
               </tr>
             </thead>
             <tbody>
@@ -479,12 +479,12 @@ const EvolutionExperimentView = ({ availableDays = [], dataRoot, enterpriseSpecs
       </section>
 
       <section className="evolution-chart-grid">
-        <article><h3>外部环境演变</h3><div ref={factorRef} className="evolution-chart" /></article>
-        <article><h3>企业累计营收成长</h3><div ref={revenueRef} className="evolution-chart" /></article>
-        <article><h3>供应链成交规模</h3><div ref={tradeRef} className="evolution-chart" /></article>
-        <article><h3>B2B 链路履约韧性</h3><div ref={serviceRef} className="evolution-chart" /></article>
-        <article><h3>Agent 长跑直出稳定性</h3><div ref={qualityRef} className="evolution-chart" /></article>
-        <article><h3>扰动后经营动作组合</h3><div ref={responseRef} className="evolution-chart" /></article>
+        <article><h3>External Environment Evolution</h3><div ref={factorRef} className="evolution-chart" /></article>
+        <article><h3>Cumulative Enterprise Revenue</h3><div ref={revenueRef} className="evolution-chart" /></article>
+        <article><h3>Supply-Chain Transaction Scale</h3><div ref={tradeRef} className="evolution-chart" /></article>
+        <article><h3>B2B Fulfillment Resilience</h3><div ref={serviceRef} className="evolution-chart" /></article>
+        <article><h3>Long-Horizon Agent Stability</h3><div ref={qualityRef} className="evolution-chart" /></article>
+        <article><h3>Post-Shock Operating Responses</h3><div ref={responseRef} className="evolution-chart" /></article>
       </section>
     </div>
   );

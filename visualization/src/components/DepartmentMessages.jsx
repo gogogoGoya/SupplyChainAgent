@@ -4,13 +4,13 @@ import { buildDataUrl, safeFetchJson } from '../utils/dataSource';
 const DEPARTMENTS = ['analyst', 'finance', 'sales', 'procurement', 'inventory', 'production', 'hr'];
 
 const DEPARTMENT_LABELS = {
-  analyst: '分析师',
-  finance: '财务部门',
-  sales: '销售部门',
-  procurement: '采购部门',
-  inventory: '库存部门',
-  production: '生产部门',
-  hr: '人力部门',
+  analyst: 'Analyst',
+  finance: 'Finance',
+  sales: 'Sales',
+  procurement: 'Procurement',
+  inventory: 'Inventory',
+  production: 'Production',
+  hr: 'Human Resources',
 };
 
 const formatMessageContent = (content) => {
@@ -59,15 +59,15 @@ const DepartmentMessages = ({ company, day, dataRoot }) => {
 
       setMessages(messagesData);
     } catch (error) {
-      console.error('加载部门消息失败:', error);
-      setError('加载部门消息失败: ' + error.message);
+      console.error('Failed to load department messages:', error);
+      setError('Failed to load department messages: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
@@ -77,7 +77,7 @@ const DepartmentMessages = ({ company, day, dataRoot }) => {
   const tabs = DEPARTMENTS.filter((dept) => messages[dept]);
 
   if (tabs.length === 0) {
-    return <div className="loading">暂无部门消息</div>;
+    return <div className="loading">No department messages available</div>;
   }
 
   return (

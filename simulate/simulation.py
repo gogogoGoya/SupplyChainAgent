@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-供应链模拟入口
+Supply chain simulation portal
 
-这个模块提供了供应链模拟系统的入口点，仅负责读取配置并调用控制器
-执行实际的模拟逻辑。
+This module provides access points to the supply chain simulation system and is responsible only for reading configurations and calling controllers
+Implements actual simulation logic.
 """
 
 import os
 import sys
 from typing import Dict, Any
 
-# 添加项目根目录到Python路径
+# Add Item Root Directory to Python Path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from core.controller import Controller
@@ -19,82 +19,82 @@ from config.simulation_preset_config import get_active_enterprise_configs
 from utils.config_utils import ConfigUtils
 from config.simulation_preset_config import get_default_simulation_config
 
-# 使用ConfigUtils类的load_config方法
+# Use load config method for ConfigUtils
 load_config = ConfigUtils.load_config
 
 
 class SupplyChainSimulation:
     """
-    供应链模拟入口类
-    
-    仅负责读取配置并将控制权转交给Controller执行实际的模拟逻辑。
-    不再负责组件的创建和初始化，这些职责已完全移至Controller。
-    """
+    Supply chain simulation entry class
+        
+    Only to read the configuration and transfer control to Controller to implement the actual simulation logic.
+    No longer responsible for the creation and initialization of the components, these functions have been completely moved to Contractor.
+        """
     
     def __init__(self, config_path: str = None,enterprise_config=None):
         """
-        初始化模拟系统
-        
+        Initialization Simulation System
+                
         Args:
-            config_path: 配置文件路径
-        """
-        # 仅读取配置
+            parameter: Profile path
+                """
+        # Read Configuration Only
         self.config = load_config(config_path) if config_path else self._get_config_from_modules()
         
-        # 创建控制器，将配置传递给控制器
+        # Create controller, pass configuration to controller
         self.controller = Controller(self.config,enterprise_config)
         
         self.is_running = False
     
     def _get_config_from_modules(self) -> Dict:
         """
-        从config目录下的配置模块获取配置
-        
+        Get configuration from the configuration module under the config directory
+                
         Returns:
-            dict: 配置字典，包含模拟所需的所有参数
-        """
+            dict: Configure Dictionary with all the parameters required for simulation
+                """
         return get_default_simulation_config()
     
     def preset_network_structure(self, structure: str = None):
         """
-        预设网络结构配置
-        
+        Preset network configuration
+                
         Args:
-            structure: 网络结构类型 (linear, star, mesh等)，如果不指定则使用配置中的值
-        """
-        # 只更新配置，不直接调用控制器方法
+            stringure: network structure type (linear, star, mesh, etc.), if not specified, use the configuration value
+                """
+        # Only update configuration, do not directly call controller method
         if structure:
             self.config["network_config"]["structure"] = structure
-            print(f"已更新网络结构配置: {structure}")
+            print(f"Updated network structure: {structure}")
         else:
-            print(f"当前网络结构配置: {self.config['network_config'].get('structure', '未设置')}")
+            print(f"Current network structure: {self.config['network_config'].get('structure', 'not set')}")
         
-        # 注意：网络结构的实际初始化将由控制器在run_simulation时处理
+        # Note: The actual initialization of the network structure will be handled by the controller when running simulation
     
     async def run_simulation(self, workflow):
         """
-        运行模拟
-        
-            
+        Run Simulation
+                
+                        
         Returns:
-            dict: 模拟结果
-        """
+            dict: Simulation results
+                """
         
-        # 设置运行状态
+        # Set the status of operation
         self.is_running = True
         
-        # 将控制权完全交给控制器，由控制器执行整个模拟过程
-        # 控制器会从配置中读取所有需要的参数
+        # Give control to the controller and perform the entire simulation.
+        # The controller will read all required parameters from the configuration
         results = await self.controller.run_simulation(workflow=workflow)
         
-        # print("模拟完成",results)
+        # print ("Simulation Done", results)
         return results
 
 
 def main():
     """
-    主函数入口
-    """
+    Main Function Entry
+        """
     simulation = SupplyChainSimulation(enterprise_config=get_active_enterprise_configs())
     print(f"Simulation initialized with {len(simulation.controller.enterprises)} enterprises.")
 

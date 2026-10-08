@@ -1,7 +1,7 @@
 """
-生产管理模块
+Production management module
 
-负责企业的生产规划、产能管理和生产执行，包括生产线建设、生产计划制定与执行、成本核算等功能
+Responsible for production planning enterprise, capacity management and production implementation, including production line construction, production plan development and implementation, cost accounting, etc.
 """
 import math
 from typing import Dict, List, Optional
@@ -14,24 +14,24 @@ from collections import defaultdict
 
 class ProductionManager(EnhancedBaseModule):
     """
-    生产管理器类
-    处理企业生产相关的所有业务逻辑
-    """
+    Production Manager Category
+    Processing all business logic related to enterprise production
+        """
 
     def __init__(self, enterprise, max_lines: int = None, module_id=None, config: ProductionConfig = None):
         """
-        初始化生产管理器
+        Initializing Production Manager
 
         Args:
-            enterprise: 所属企业实例
-            max_lines: 最大生产线数量（可选，默认从 config 读取）
-            module_id: 模块唯一标识（可选）
-            config: 生产配置对象（可选，默认使用 ProductionConfig()）
-        """
-        # 使用配置或默认配置
+            Enterprise: Examples of enterprise
+            parameter: Maximum number of production lines (optional, read by default from config)
+            parameter: Only identification of modules (optional)
+            config: Production Configuration Object (optional, default use ProductionConfig())
+                """
+        # Use configuration or default configuration
         self.config = config or ProductionConfig()
 
-        # 调用父类初始化方法
+        # Call Parent Initialisation Method
         super().__init__(
             enterprise,
             module_id or f"production_{getattr(enterprise, 'id', 'default')}",
@@ -40,39 +40,39 @@ class ProductionManager(EnhancedBaseModule):
         self.module_type = "ProductionManager"
         self.max_lines = max_lines or self.config.MAX_PRODUCTION_LINES
 
-        # 从配置中提取常用属性
+        # Extract common properties from configuration
         self.LINE_CONFIGS = self.config.LINE_CONFIGS
 
-        # 生产线类型配置（支持data_initializer.py中的设置）
-        self.production_line_types = {}  # 用于存储生产线类型配置
+        # Production line type configuration (support settings in data initializer.py)
+        self.production_line_types = {}  # For storage of production line type configuration
 
-        # 生产线管理
-        self.production_lines: Dict[str, Dict] = {}  # 生产线记录 {line_id: line_data}
-        self.next_line_id = 1  # 下一个生产线ID
+        # Production line management
+        self.production_lines: Dict[str, Dict] = {}  # Production line records {line_id: line_data}
+        self.next_line_id = 1  # Next production line ID
 
-        # 生产计划管理
-        self.production_plans: List[Dict] = []  # 生产计划列表
-        self.next_plan_id = 1  # 下一个计划ID
+        # Production programme management
+        self.production_plans: List[Dict] = []  # List of Production Plans
+        self.next_plan_id = 1  # Next plan ID
 
-        # 产品配方（BOM - Bill of Materials）
+        # Product formulation (BOM - Bill of Materials)
         self.product_recipes: Dict[str, Dict] = {}  # {product_id: recipe_data}
 
-        # 生产指标
+        # Production indicators
         self.production_metrics = {
-            "total_production": 0,           # 总产量
-            "total_plans": 0,                # 总计划数
-            "total_planned": 0,              # 总计划产量
-            "completed_plans": 0,            # 完成的计划数
-            "failed_plans": 0,               # 失败的计划数
-            "capacity_utilization": 0.0,     # 产能利用率
-            "production_efficiency": 0.0,    # 生产效率
-            "total_cost": 0.0                # 总生产成本
+            "total_production": 0,           # Total Production
+            "total_plans": 0,                # Total planned
+            "total_planned": 0,              # Total planned production
+            "completed_plans": 0,            # Planned completed
+            "failed_plans": 0,               # Number of failed plans
+            "capacity_utilization": 0.0,     # capacity Utilization factor
+            "production_efficiency": 0.0,    # Production efficiency
+            "total_cost": 0.0                # Total cost of production
         }
 
-        # 生产事件日志
+        # Production Event Log
         self.production_events: List[Dict] = []
 
-    # ========== 生产线管理 ==========
+    # == sync, corrected by elderman ==
 
     @skip_dry_run_validation
     @with_response("initialize_production_line")
@@ -84,11 +84,11 @@ class ProductionManager(EnhancedBaseModule):
         response: ModuleResponse = None
     ) -> ModuleResponse:
         """
-        初始化场景预置产线。
+        Initialization presets.
 
-        该动作仅用于模拟初始化阶段，表示企业在 day0 前已经拥有可投入使用的产线；
-        不触发建设成本、建设工人占用或等待完工流程。
-        """
+        This action is used only for the simulation of the initialization phase, which means that enterprise already has a working line before day 0;
+        It does not trigger construction costs, construction workers occupy or wait for completion.
+                """
         if line_type not in self.LINE_CONFIGS:
             return self.error_response(response, "INVALID_LINE_TYPE", f"无效的生产线类型，请选择 'small', 'medium', 或 'large'")
 
@@ -145,27 +145,27 @@ class ProductionManager(EnhancedBaseModule):
                               single_enterprise_capacity_recovery: bool = False,
                               response: ModuleResponse = None) -> ModuleResponse:
         """
-        建设生产线
+        Construction of production lines
 
         Args:
-            line_type: 生产线类型 ("small", "medium", "large")
-            response: 响应对象（由装饰器自动注入）
+            < x17/>: Type of production line ("small", "mediam", "large")
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 建设结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModuleResponse: A unified response to construction results
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         if line_type not in self.LINE_CONFIGS:
             return self.error_response(response, "INVALID_LINE_TYPE", f"无效的生产线类型，请选择 'small', 'medium', 或 'large'")
         config = self.LINE_CONFIGS[line_type]
-        workers_assigned = 0  # 记录已分配的工人数
+        workers_assigned = 0  # Number of workers recorded
         hr_result = hr_manager.get_available_workers(department='production')
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < config["workers_needed"]:
             return self.error_response(response, "INSUFFICIENT_PRODUCTION_WORKERS", f"生产工人不足。需要: {config['workers_needed']}, 可用: {employee_count}")
 
-        # 3. 检查空间约束（最多10条生产线）
+        # 3. Inspection of space constraints (up to 10 production lines)
         total_lines = len(self.production_lines)
         if total_lines >= self.max_lines:
             return self.error_response(response, "MAX_LINES_REACHED", f"已达到生产线数量上限（{self.max_lines}条）")
@@ -173,9 +173,9 @@ class ProductionManager(EnhancedBaseModule):
         
         finance_manager = super().get_module_by_type("FinanceManager")
 
-        # 3. 检查资金约束
+        # 3. Examination of financial constraints
         balance_result = finance_manager.get_balance()
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         if isinstance(balance_result, (int, float)):
             balance_value = balance_result
         elif hasattr(balance_result, 'data'):
@@ -193,7 +193,7 @@ class ProductionManager(EnhancedBaseModule):
             line for line in self.production_lines.values()
             if line.get("status") in {"idle", "working", "maintaining"}
         ]
-        # 仅当尚无任何已完工可用产线时，仍视作冷启动，避免“只有在建线”时被误判为扩产。
+        # It is considered to be a cold start only when there is no available line that has been completed, so as to avoid being miscalculated as an expansion “only if the line is built”.
         is_cold_start_build = len(usable_lines) == 0
         if (
             (not is_cold_start_build)
@@ -228,17 +228,17 @@ class ProductionManager(EnhancedBaseModule):
             )
         
 
-        # 4. 生成生产线ID（在分配工人前生成，确保ID一致）
+        # 4. Generation of production line ID (generated before assigning workers, ensuring consistency)
         line_id = f"line_{self.next_line_id}"
         self.next_line_id += 1
 
-        # 5. 检查人力约束并提前分配工人
-        workers_assigned = 0  # 记录已分配的工人数
-            # 提前分配工人（符合"所需工人提前招聘"的需求）
-            # 使用真实line_id分配，确保与生产线记录一致
+        # 5. Inspection of manpower constraints and early distribution of workers
+        workers_assigned = 0  # Number of workers recorded
+            # Early distribution of workers (satisfactory to the need for "early recruitment of required workers")
+            # Use real line id distribution to ensure consistency with production line records
         assign_result = hr_manager.assign_workers(
             'production',
-            line_id,  # 使用真实line_id而非临时ID
+            line_id,  # Use real line id instead of temporary ID
             config["workers_needed"]
         )
         assign_success = assign_result.success if hasattr(assign_result, "success") else bool(assign_result.get("success"))
@@ -247,7 +247,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(response, "ASSIGN_WORKERS_ERROR", assign_error)
         workers_assigned = config["workers_needed"]
 
-        # 6. 扣除建设成本
+        # 6. Less construction costs
         cost_result = finance_manager.add_cost(
             config["build_cost"],
             "produce_cost",
@@ -261,7 +261,7 @@ class ProductionManager(EnhancedBaseModule):
                 getattr(cost_result, "message", "生产线建设成本记录失败")
             )
 
-        # 7. 创建生产线记录
+        # 7. Creation of production line records
         completion_time = self.enterprise.time_manager.get_day() + config["build_time"]
 
         self.production_lines[line_id] = {
@@ -271,15 +271,15 @@ class ProductionManager(EnhancedBaseModule):
             "remaining_capacity": config["capacity"],
             "operating_cost": config["operating_cost"],
             "workers_needed": config["workers_needed"],
-            "assigned_workers": workers_assigned,  # 建设时已分配的工人数
-            "status": "under_construction",  # 建设中
+            "assigned_workers": workers_assigned,  # Number of workers allocated at time of construction
+            "status": "under_construction",  # Under construction
             "build_start_time": self.enterprise.time_manager.get_day(),
             "completion_time": completion_time,
-            "assigned_plan_id": None,  # 当前分配的计划ID
-            "total_produced": 0  # 累计产量
+            "assigned_plan_id": None,  # Current distribution plan ID
+            "total_produced": 0  # Cumulative Production
         }
 
-        # 7. 记录建设事件
+        # 7. Recording of construction events
         self._log_event({
             "type": "line_construction_started",
             "line_id": line_id,
@@ -287,7 +287,7 @@ class ProductionManager(EnhancedBaseModule):
             "completion_time": completion_time
         })
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(response, f"生产线 {line_id} 开始建设，将于第 {completion_time} 个工作日完工", {
             "line_id": line_id,
             "line_type": line_type,
@@ -298,25 +298,25 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("check_construction_completion")
     def check_construction_completion(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查并激活已完工的生产线（每个时间步开始时调用）
+        Check and activate completed production lines (call at the beginning of each time step)
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含完工生产线信息的统一响应对象
-        """
+            ModuleResponse: Unified target with information on completed production lines
+                """
         completed_lines = []
         hr_manager = super().get_module_by_type("HRManager")
         for line_id, line_data in self.production_lines.items():
             if (line_data["status"] == "under_construction" and
                 self.enterprise.time_manager.get_day() >= line_data["completion_time"]):
 
-                # 激活生产线
+                # Activate production line.
                 line_data["status"] = "idle"
                 completed_lines.append(line_id)
 
-                # 释放工人
+                # Release the workers.
                 hr_manager.release_workers(
                     'production',
                     line_id,
@@ -324,7 +324,7 @@ class ProductionManager(EnhancedBaseModule):
                     "completed"
                 )
 
-                # 记录完工事件
+                # Record completion events
                 self._log_event({
                     "type": "line_construction_completed",
                     "line_id": line_id,
@@ -332,7 +332,7 @@ class ProductionManager(EnhancedBaseModule):
                     "workers_assigned": line_data["assigned_workers"]
                 })
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(response, f"成功检查并激活 {len(completed_lines)} 条已完工生产线", {
             "completed_lines": completed_lines,
             "total_completed": len(completed_lines),
@@ -342,34 +342,33 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_production_line_status")
     def get_production_line_status(self, line_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取生产线状态
+        Access to production line status
 
         Args:
-            line_id: 生产线ID
-            response: 响应对象（由装饰器自动注入）
+            line_id: Production line ID
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含生产线状态信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with production line status information
+                """
         line_data = self.production_lines.get(line_id)
         if line_data:
             return self.success_response(response, f"成功获取生产线 {line_id} 的状态", line_data)
         else:
             return self.error_response(response, "LINE_NOT_FOUND", f"生产线 {line_id} 不存在")
 
-    # ========== 产能管理 ==========
 
     @with_response("get_total_capacity")
     def get_total_capacity(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取总产能（所有已完工的生产线）
+        Acquisition of total capacity (all completed production lines)
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含总产能信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with total capacity information
+                """
         total = 0
         for line_data in self.production_lines.values():
             if line_data["status"] in ["idle", "working"]:
@@ -382,14 +381,14 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_available_capacity")
     def get_available_capacity(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取可用产能（空闲生产线的产能）
+        Available at capacity (capacity for idle production lines)
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含可用产能信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with capacity information
+                """
         available = 0
         for line_data in self.production_lines.values():
             if line_data["status"] in ["idle", "working"]:
@@ -402,14 +401,14 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_occupied_capacity")
     def get_occupied_capacity(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取已占用产能（工作中生产线的产能）
+        Access to capacity occupied (capacity for working production lines)
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含已占用产能信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with capacity occupied information
+                """
         occupied = 0
         for line_data in self.production_lines.values():
             if line_data["status"] in ["idle", "working"]:
@@ -422,15 +421,15 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("calculate_capacity_utilization")
     def calculate_capacity_utilization(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算产能利用率
+        Calculate capacity utilization factor
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含产能利用率信息的统一响应对象
-        """
-        # 获取总产能和已占用产能（从ModuleResponse中提取）
+            ModuleResponse: Unified target with capacity utilization information
+                """
+        # Get total capacity and occupied capacity (from ModuleResponse)
         total_capacity_response = self.get_total_capacity()
         total_capacity = total_capacity_response.data["total_capacity"] if total_capacity_response.success else 0
 
@@ -441,14 +440,13 @@ class ProductionManager(EnhancedBaseModule):
             occupied_capacity = occupied_capacity_response.data["occupied_capacity"] if occupied_capacity_response.success else 0
             utilization = occupied_capacity / total_capacity
 
-        # 更新指标
+        # Update indicators
         self.production_metrics["capacity_utilization"] = utilization
 
         return self.success_response(response, "成功计算产能利用率", {
             "capacity_utilization": utilization
         })
 
-    # ========== 产品配方管理 ==========
 
     @with_response("set_product_recipe")
     @validate_positive("production_time")
@@ -456,27 +454,27 @@ class ProductionManager(EnhancedBaseModule):
                           production_time: int, labor_cost_per_unit: float = 0,
                           equipment_cost_per_unit: float = 0, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        设置产品配方（BOM）
+        Set the product formulation (BOM)
 
         Args:
-            product_id: 产品ID
-            raw_materials: 原材料需求 {material_id: quantity_per_unit}
-            production_time: 生产周期（时间步）
-            labor_cost_per_unit: 单位人工成本
-            equipment_cost_per_unit: 单位设备成本
-            response: 响应对象（由装饰器自动注入）
+            product_id: Product ID
+            raw_materials: Raw material demand {material_id: quantity_per_unit}
+            production_time: Production cycle (time steps)
+            labor_cost_per_unit: Unit labour cost
+            equipment_cost_per_unit: Unit cost of equipment
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含设置结果的统一响应对象
-        """
-        # 验证参数
+            ModuleResponse: Unified response object with settings
+                """
+        # Authentication Parameters
         if not product_id:
             return self.error_response(response, "INVALID_PRODUCT_ID", "产品ID不能为空")
         
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 设置产品配方
+        # Set the product formulation
         self.product_recipes[product_id] = {
             "product_id": product_id,
             "raw_materials": raw_materials,
@@ -493,22 +491,21 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_product_recipe")
     def get_product_recipe(self, product_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取产品配方
+        Acquisition of product formulations
 
         Args:
-            product_id: 产品ID
-            response: 响应对象（由装饰器自动注入）
+            product_id: Product ID
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含产品配方信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with product formulation information
+                """
         recipe = self.product_recipes.get(product_id)
         if recipe:
             return self.success_response(response, f"成功获取产品 {product_id} 的配方", recipe)
         else:
             return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在")
 
-    # ========== 生产计划管理 ==========
 
     @with_response("create_production_plan")
     @validate_positive("quantity")
@@ -517,18 +514,18 @@ class ProductionManager(EnhancedBaseModule):
                                _cobweb_scripted_formula_override: bool = False,
                                response: ModuleResponse = None) -> ModuleResponse:
         """
-        创建生产计划，并直接启动生产，取消execute二次确认
+        Creation of production plans and direct start-up of production, cancellation of secondary confirmation of execute
 
         Args:
-            product_id: 产品ID
-            quantity: 生产数量
-            daily_capacity: 每日产能（每天生产多少份），默认为总产能
-            response: 响应对象（由装饰器自动注入）
+            product_id: Product ID
+            Quantity: Production
+            daily_capacity: capacity per day (number of copies produced per day) by default capacity
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含创建结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModeuleResponse: Unified response object with created result
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(DepartmentType.PRODUCTION)
         employee_count = hr_result.data.get("count", 0) 
@@ -537,22 +534,22 @@ class ProductionManager(EnhancedBaseModule):
         if employee_count < needed_workers:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法创建生产计划。至少需要: {needed_workers}")
 
-        # 2. 验证产品配方存在
+        # 2. Validation of product formulations
         recipe_response = self.get_product_recipe(product_id)
         if not recipe_response.success:
             return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在，请先设置配方")
 
         recipe = recipe_response.data
 
-        # 3. 计算所需原材料（总量）
+        # 3. Calculation of raw materials required (total)
         materials_needed = {}
         for material_id, qty_per_unit in recipe["raw_materials"].items():
             materials_needed[material_id] = qty_per_unit * quantity
 
-        # 4. 验证原材料约束（检查总量是否足够）
+        # 4. Validation of raw material binding (check for adequacy of total)
         inventory_manager = super().get_module_by_type("InventoryManager")
         for material_id, needed_qty in materials_needed.items():
-            # 处理不同返回类型的情况
+            # Addressing different types of return
             level_result = inventory_manager.get_inventory_level(material_id)
             if isinstance(level_result, (int, float)):
                 available_qty = level_result
@@ -565,7 +562,7 @@ class ProductionManager(EnhancedBaseModule):
             if available_qty < needed_qty:
                 return self.error_response(response, "INSUFFICIENT_MATERIALS", f"原材料 {material_id} 库存不足。需要: {needed_qty}, 当前: {available_qty}")
 
-        # 5. 处理每日产能参数
+        # Processing capacity parameters per day
         if daily_capacity is None:
             capacity_response = self.get_available_capacity()
             available_capacity = capacity_response.data["available_capacity"]
@@ -586,16 +583,16 @@ class ProductionManager(EnhancedBaseModule):
 
         material_costs = self._estimate_total_material_cost(recipe, quantity)
 
-        # 6. 计算生产天数（向上取整）
+        # 6. Calculation of the number of days of production (upgraded)
         
         production_days = math.ceil(quantity / daily_capacity)
 
-        # 7. 计算每天需要消耗的原材料
+        # 7. Calculation of daily consumption of raw materials
         daily_materials = {}
         for material_id, total_qty in materials_needed.items():
             daily_materials[material_id] = total_qty / production_days
 
-        # 8. 计算成本（基于总量）
+        # 8. Cost calculation (based on total)
         recipe_response = self.get_product_recipe(product_id)
         recipe = recipe_response.data
         labor_cost = recipe["labor_cost_per_unit"] * quantity
@@ -624,8 +621,8 @@ class ProductionManager(EnhancedBaseModule):
             candidate=recovery_candidate,
         )
 
-        # 9. 记录成本（通过财务模块）
-        # 10. 创建生产计划
+        # 9. Recording costs (through the finance module)
+        # 10. Creation of production programmes
         plan_id = f"PLAN_{self.next_plan_id}"
         self.next_plan_id += 1
 
@@ -715,17 +712,17 @@ class ProductionManager(EnhancedBaseModule):
                 getattr(cost_result, "message", "生产成本记录失败")
             )
 
-        # 11. 更新生产线状态
+        # 11. Update production line status
         for line in assigned_lines:
             line_id = line["line_id"]
             self.production_lines[line_id]["status"] = "working"
             self.production_lines[line_id]["assigned_plan_id"] = plan_id
             self.production_lines[line_id]["remaining_capacity"] -= line["cost_capacity"]
 
-        # 12. 更新指标
+        # 12. Updating indicators
         self.production_metrics["total_cost"] += total_cost
 
-        # 13. 记录事件
+        # 13. Recording events
         self._log_event({
             "type": "production_started",
             "plan_id": plan_id,
@@ -781,17 +778,17 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("check_completed_plans")
     def check_completed_plans(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查并处理进行中的生产计划（每个时间步开始时调用）
-        - 每日消耗原材料并产出产品
-        - 追踪生产进度
-        - 完成到期计划并入库
+        Inspection and processing of ongoing production plans (at the beginning of each step)
+        - Daily consumption of raw materials and production of products
+        - Tracking production
+        - Completion due plan incorporated into the library
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含处理结果信息的统一响应对象
-        """
+            ModuleResponse: Unified response object with information on processing results
+                """
         completed_products = []
         completed_plans = []
         daily_production = []
@@ -879,7 +876,7 @@ class ProductionManager(EnhancedBaseModule):
                         )
                     self.production_metrics["total_planned"] = total_planned_quantity
 
-                    # 释放工人
+                    # Release the workers.
                     hr_manager.release_workers(
                         'production',
                         plan["plan_id"],
@@ -995,17 +992,17 @@ class ProductionManager(EnhancedBaseModule):
     def cancel_production_plan(self, plan_id: str, reason: str = "", 
                                dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        取消生产计划（支持部分完成的计划取消并退回剩余原材料）
+        Elimination of production plans (cancellation of the partially completed plan and return of the remaining raw materials)
 
         Args:
-            plan_id: 生产计划ID
-            reason: 取消原因
-            response: 响应对象（由装饰器自动注入）
+            plan_id: Production plan ID
+            Reason for cancellation
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含取消结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModeuleResponse: Unified response object with cancellation result
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(DepartmentType.PRODUCTION)
         employee_count = hr_result.data.get("count", 0) 
@@ -1016,19 +1013,19 @@ class ProductionManager(EnhancedBaseModule):
                 f"人手不足，无法取消生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
-        # 2. 验证计划存在性
+        # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
             return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
 
-        # 3. 验证计划状态
+        # 3. Status of the certification plan
         if plan["status"] not in ["pending", "in_progress", "interrupted"]:
             return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法取消")
 
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
-        # 4. 如果计划正在进行或被中断，释放生产线并退回剩余原材料
+        # Release the production line and return the remaining raw materials if the plan is ongoing or interrupted
         released_lines = []
         quantity_produced = 0
         days_completed = 0
@@ -1049,12 +1046,12 @@ class ProductionManager(EnhancedBaseModule):
             days_completed = progress.get("days_completed", 0)
 
 
-        # 5. 更新计划状态和指标
+        # 5. Update on the status of plans and indicators
         plan["status"] = "failed"
         plan["cancelled_time"] = self.enterprise.time_manager.get_day()
         self.production_metrics["failed_plans"] += 1
 
-        # 6. 记录事件
+        # 6. Recording events
         self._log_event({
             "type": "production_cancelled",
             "plan_id": plan_id,
@@ -1070,7 +1067,7 @@ class ProductionManager(EnhancedBaseModule):
             "cancelled"
         )
 
-        # 构建返回数据
+        # Build Return Data
         response_data = {
             "plan_id": plan_id,
             "reason": reason,
@@ -1086,16 +1083,16 @@ class ProductionManager(EnhancedBaseModule):
     def interrupt_production_plan(self, plan_id: str, 
                                   dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        中断生产计划（保留进度，可以后续恢复）
+        Discontinuation of production programme (retention of progress, possible subsequent resumption)
 
         Args:
-            plan_id: 生产计划ID
-            response: 响应对象（由装饰器自动注入）
+            plan_id: Production plan ID
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含中断结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModeuleResponse: Unified response object with interruption result
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(DepartmentType.PRODUCTION)
         employee_count = hr_result.data.get("count", 0) 
@@ -1106,25 +1103,25 @@ class ProductionManager(EnhancedBaseModule):
                 f"人手不足，无法中断生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
-        # 2. 验证计划存在性
+        # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
             return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
 
-        # 3. 验证计划状态
+        # 3. Status of the certification plan
         if plan["status"] != "in_progress":
             return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法中断")
 
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
-        # 4. 记录中断前的进度
+        # 4. Recording progress prior to interruption
         progress = plan.get("progress", {})
         days_completed = progress.get("days_completed", 0)
         quantity_produced = progress.get("quantity_produced", 0)
         remaining_quantity = plan["quantity"] - quantity_produced
 
-        # 5. 释放生产线
+        # Release of production lines
         released_lines = []
         for line in plan["assigned_lines"]:
             line_id = line["line_id"]
@@ -1136,11 +1133,11 @@ class ProductionManager(EnhancedBaseModule):
                     self.production_lines[line_id]["remaining_capacity"] = self.production_lines[line_id]["capacity"]
                 released_lines.append(line_id)
 
-        # 6. 更新计划状态为 interrupted
+        # Update plan status as interrupted
         plan["status"] = "interrupted"
         plan["interrupted_time"] = self.enterprise.time_manager.get_day()
 
-        # 7. 记录事件
+        # Recording events
         self._log_event({
             "type": "production_interrupted",
             "plan_id": plan_id,
@@ -1161,16 +1158,16 @@ class ProductionManager(EnhancedBaseModule):
     def resume_production_plan(self, plan_id: str, 
                                dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        恢复被中断的生产计划（从断点继续执行）
+        Rehabilitation of interrupted production programmes (continuation from breakpoint)
 
         Args:
-            plan_id: 生产计划ID
-            response: 响应对象（由装饰器自动注入）
+            plan_id: Production plan ID
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含恢复结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModeuleResponse: Unified response object with recovery result
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(DepartmentType.PRODUCTION)
         employee_count = hr_result.data.get("count", 0) 
@@ -1181,16 +1178,16 @@ class ProductionManager(EnhancedBaseModule):
                 f"人手不足，无法恢复生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
-        # 2. 验证计划存在性
+        # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
             return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
 
-        # 3. 验证计划状态
+        # 3. Status of the certification plan
         if plan["status"] != "interrupted":
             return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法恢复")
 
-        # 4. 检查进度
+        # 4. Inspection of progress
         progress = plan.get("progress", {})
         days_completed = progress.get("days_completed", 0)
         quantity_produced = progress.get("quantity_produced", 0)
@@ -1199,7 +1196,7 @@ class ProductionManager(EnhancedBaseModule):
         if remaining_quantity <= 0:
             return self.error_response(response, "PLAN_ALREADY_COMPLETED", "计划已完成，无需恢复")
 
-        # 5. 验证剩余原材料
+        # 5. Validation of surplus raw materials
         inventory_manager = super().get_module_by_type("InventoryManager")
         daily_materials = plan.get("daily_materials", {})
         remaining_days = plan.get("production_days", 1) - days_completed
@@ -1219,7 +1216,7 @@ class ProductionManager(EnhancedBaseModule):
                 return self.error_response(response, "INSUFFICIENT_MATERIALS",
                     f"原材料 {material_id} 库存不足，无法恢复生产。需要: {total_remaining_needed}, 当前: {available_qty}")
 
-        # 6. 分配生产线
+        # 6. Distribution of production lines
         daily_capacity = plan.get("daily_capacity", 100)
         assigned_lines = self._assign_production_lines(daily_capacity)
         if not assigned_lines:
@@ -1228,20 +1225,20 @@ class ProductionManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
-        # 7. 更新计划状态为 in_progress
+        # Update plan status in_progress
         plan["status"] = "in_progress"
         plan["assigned_lines"] = assigned_lines
         plan["completion_time"] = self.enterprise.time_manager.get_day() + remaining_days
         plan["progress"]["is_completed_today"] = False
 
-        # 8. 更新生产线状态
+        # 8. Update production line status
         for line in assigned_lines:
             line_id = line["line_id"]
             self.production_lines[line_id]["status"] = "working"
             self.production_lines[line_id]["assigned_plan_id"] = plan_id
             self.production_lines[line_id]["remaining_capacity"] -= line["cost_capacity"]
 
-        # 9. 记录事件
+        # Recording events
         self._log_event({
             "type": "production_resumed",
             "plan_id": plan_id,
@@ -1262,30 +1259,29 @@ class ProductionManager(EnhancedBaseModule):
             "assigned_lines": assigned_lines
         })
 
-    # ========== 成本核算 ==========
 
     @with_response("calculate_production_cost")
     @validate_positive("quantity")
     def calculate_production_cost(self, product_id: str, quantity: float, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算生产成本（估算）
+        Calculation of production costs (estimate)
 
         Args:
-            product_id: 产品ID
-            quantity: 生产数量
-            response: 响应对象（由装饰器自动注入）
+            product_id: Product ID
+            Quantity: Production
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含成本计算结果的统一响应对象
-        """
-        # 1. 验证产品配方
+            ModuleResponse: Unified response object with costing results
+                """
+        # 1. Authentication product formulations
         recipe_response = self.get_product_recipe(product_id)
         if not recipe_response.success:
             return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在")
 
         recipe = recipe_response.data
 
-        # 2. 计算原材料成本
+        # 2. Calculation of the cost of raw materials
         material_costs = 0
         material_details = {}
         inventory_manager = super().get_module_by_type("InventoryManager")
@@ -1294,13 +1290,13 @@ class ProductionManager(EnhancedBaseModule):
             total_qty = qty_per_unit * quantity
             detail_result = inventory_manager.get_inventory_detail(material_id)
 
-            # 处理不同返回类型的情况
+            # Addressing different types of return
             material_detail = detail_result if isinstance(detail_result, dict) else detail_result.data
 
             if material_detail:
                 unit_price = material_detail["unit_price"]
             else:
-                unit_price = 0  # 如果没有库存记录，默认为0
+                unit_price = 0  # Default 0 if inventory records are not available
 
             cost = total_qty * unit_price
             material_costs += cost
@@ -1310,18 +1306,18 @@ class ProductionManager(EnhancedBaseModule):
                 "cost": cost
             }
 
-        # 3. 计算人工成本
+        # 3. Calculation of labour costs
         labor_cost = recipe["labor_cost_per_unit"] * quantity
 
-        # 4. 计算设备成本（改进：根据实际需要的生产线数量计算）
-        # 先计算配方中的单位设备成本
+        # 4. Calculating equipment costs (improvements: based on the number of production lines actually required)
+        # First calculate unit cost of equipment in the formulation
         equipment_cost_from_recipe = recipe["equipment_cost_per_unit"] * quantity
 
-        # 再模拟分配生产线，计算实际需要的运营成本
+        # Simulate distribution of production lines to calculate actual operational costs required
         idle_lines = [
             (line_id, line_data)
             for line_id, line_data in self.production_lines.items()
-            if line_data["status"] in ["idle","working"]  # 修复：只考虑空闲生产线
+            if line_data["status"] in ["idle","working"]  # Rehabilitation: consideration of idle production lines only
         ]
         idle_lines.sort(key=lambda x: x[1]["remaining_capacity"], reverse=True)
 
@@ -1337,19 +1333,19 @@ class ProductionManager(EnhancedBaseModule):
             if remaining_quantity <= 0:
                 break
 
-        # 如果没有可用生产线，使用平均成本估算
+        # If no production line is available, estimate using average cost
         if lines_needed == 0 and self.production_lines:
             completed_lines = [l for l in self.production_lines.values()
                              if l["status"] != "under_construction"]
             if completed_lines:
                 avg_operating_cost = sum(line["operating_cost"] for line in completed_lines) / len(completed_lines)
-                # 估算需要的生产线数量
-                estimated_lines = max(1, int((quantity / 50) + 0.5))  # 假设平均产能50
+                # Estimated number of production lines required
+                estimated_lines = max(1, int((quantity / 50) + 0.5))  # Assumed average capacity50
                 operating_cost = avg_operating_cost * estimated_lines
 
         equipment_cost = equipment_cost_from_recipe + operating_cost
 
-        # 5. 计算总成本
+        # 5. Calculation of total costs
         total_cost = material_costs + labor_cost + equipment_cost
         unit_cost = total_cost / quantity if quantity > 0 else 0
 
@@ -1365,20 +1361,19 @@ class ProductionManager(EnhancedBaseModule):
             "lines_needed": lines_needed
         })
 
-    # ========== 查询方法 ==========
 
     @with_response("get_production_status")
     def get_production_status(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取生产状态总览
+        Get a production overview
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含生产状态信息的统一响应对象
-        """
-        # 统计生产线状态
+            ModuleResponse: Unified response object with production status information
+                """
+        # Statistical production line status
         lines_by_status = {
             "under_construction": 0,
             "idle": 0,
@@ -1390,7 +1385,7 @@ class ProductionManager(EnhancedBaseModule):
             status = line_data["status"]
             lines_by_status[status] = lines_by_status.get(status, 0) + 1
 
-        # 统计计划状态
+        # Status of statistical plans
         plans_by_status = {
             "pending": 0,
             "in_progress": 0,
@@ -1402,7 +1397,7 @@ class ProductionManager(EnhancedBaseModule):
             status = plan["status"]
             plans_by_status[status] = plans_by_status.get(status, 0) + 1
 
-        # 获取产能数据（从ModuleResponse中提取）
+        # Get capacity data (from ModuleResponse)
         utilization_response = self.calculate_capacity_utilization()
         capacity_utilization = utilization_response.data["capacity_utilization"]
 
@@ -1415,7 +1410,7 @@ class ProductionManager(EnhancedBaseModule):
         occupied_capacity_response = self.get_occupied_capacity()
         occupied_capacity = occupied_capacity_response.data["occupied_capacity"]
 
-        # 构建产品配方信息列表
+        # List of building product formulations
         product_recipes_list = []
         for product_id, recipe in self.product_recipes.items():
             product_recipes_list.append({
@@ -1429,7 +1424,7 @@ class ProductionManager(EnhancedBaseModule):
         production_plans = []
         for plan in self.production_plans:
             production_plans.append(plan)
-        # 设置响应数据
+        # Set Response Data
         status_data = {
             "production_lines": {
                 "total": len(self.production_lines),
@@ -1449,15 +1444,15 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_production_plan_detail")
     def get_production_plan_detail(self, plan_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取生产计划详情
+        Access to production plan details
 
         Args:
-            plan_id: 生产计划ID
-            response: 响应对象（由装饰器自动注入）
+            plan_id: Production plan ID
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含计划详情的统一响应对象
-        """
+            ModuleResponse: Unified responder with plan details
+                """
         plan = self._find_plan(plan_id)
         if plan:
             return self.success_response(response, f"成功获取生产计划 {plan_id} 的详情", plan)
@@ -1467,14 +1462,14 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_all_production_lines")
     def get_all_production_lines(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有生产线列表
+        Get a list of all production lines
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含生产线列表的统一响应对象
-        """
+            ModuleResponse: Unified Response Object with Production Line List
+                """
         production_lines = list(self.production_lines.values())
 
         return self.success_response(response, f"成功获取 {len(production_lines)} 条生产线信息", {
@@ -1485,15 +1480,15 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_all_production_plans")
     def get_all_production_plans(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有生产计划
+        Access to all production programmes
 
         Args:
-            status_filter: 状态过滤器（可选）
-            response: 响应对象（由装饰器自动注入）
+            parameter: Status filter (optional)
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含计划列表的统一响应对象
-        """
+            ModeuleResponse: Unified response object with schedule list
+                """
         if status_filter:
             plans = [plan for plan in self.production_plans if plan["status"] == status_filter]
             message = f"成功获取状态为 {status_filter} 的生产计划 {len(plans)} 个"
@@ -1510,21 +1505,21 @@ class ProductionManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取当前模块状态
+        Get Current Module Status
 
         Args:
-            response: 响应对象（由装饰器自动注入）
+            Response: Respond objects (automated by decorator)
 
         Returns:
-            ModuleResponse: 包含当前模块状态的统一响应对象
-        """
+            ModuleResponse: Unified response object with current modular status
+                """
         try:
-            # 获取生产状态总览
+            # Get a production overview
             production_status = self.get_production_status()
 
-            # 获取生产线详细信息
+            # Access to production line details
             production_lines_details = list(self.production_lines.values())
-            # 过滤生产线详细信息，只保留指定属性
+            # Filter production line details, save only specified attributes
             filtered_production_lines = []
             for line in production_lines_details:
                 filtered_line = {
@@ -1551,7 +1546,7 @@ class ProductionManager(EnhancedBaseModule):
                 "occupied_capacity": production_status.data["production_lines"]["occupied_capacity"],
                 "production_lines": {
                     **production_status.data["production_lines"],
-                    "details": production_lines_details  # 添加详细生产线信息
+                    "details": production_lines_details  # Add detailed production line information
                 },
                 "production_plans": status_plans,
                 "product_recipes": production_status.data["product_recipes"],
@@ -1566,10 +1561,9 @@ class ProductionManager(EnhancedBaseModule):
         except Exception as e:
             return self.error_response(response, "STATE_ERROR", f"获取生产模块状态失败: {e}")
 
-        # ========== 内部辅助方法 ==========
-
+    
     def _find_plan(self, plan_id: str) -> Optional[Dict]:
-        """查找生产计划"""
+        """Find production plans"""
         for plan in self.production_plans:
             if plan["plan_id"] == plan_id:
                 return plan
@@ -1623,7 +1617,7 @@ class ProductionManager(EnhancedBaseModule):
         }
 
     def _estimate_expected_sale_floor(self, product_id: str) -> Dict:
-        """估算当前产品的 B2B 售价底线，供生产毛利护栏使用。"""
+        """Estimating the current product B2B sales floor for use in the production of Māori columns."""
         sales_manager = super().get_module_by_type("SalesManager")
         inventory_manager = super().get_module_by_type("InventoryManager")
         if sales_manager and hasattr(sales_manager, "_resolve_b2b_min_price"):
@@ -1657,7 +1651,7 @@ class ProductionManager(EnhancedBaseModule):
         }
 
     def _estimate_total_material_cost(self, recipe: Dict, quantity: float) -> float:
-        """按当前原料库存单价估算一笔生产计划的总原料成本。"""
+        """The total cost of a production plan is estimated at raw material at the current unit cost of raw material stock."""
         inventory_manager = super().get_module_by_type("InventoryManager")
         total_material_cost = 0.0
         for material_id, required_per_unit in (recipe.get("raw_materials") or {}).items():
@@ -1679,7 +1673,7 @@ class ProductionManager(EnhancedBaseModule):
         assigned_lines: Optional[List[Dict]] = None,
         candidate: Optional[Dict] = None,
     ) -> Dict:
-        """评估一笔恢复性生产/扩产决策的预期毛利健康度。"""
+        """Assessment of expected Māori health for a restorative production/extension decision."""
         recipe = self.product_recipes.get(product_id) or {}
         if not recipe or quantity <= 0:
             return {
@@ -1846,7 +1840,7 @@ class ProductionManager(EnhancedBaseModule):
         }
 
     def _get_margin_guard_status(self) -> Dict:
-        """给恢复性生产和扩产提供预期毛利护栏。"""
+        """Provide expected Māori fences for restorative production and expansion."""
         recovery_guard = self._get_recovery_guard_status()
         candidate_evaluations = []
         expansion_candidates = []
@@ -1895,9 +1889,9 @@ class ProductionManager(EnhancedBaseModule):
 
     def _get_recovery_guard_status(self) -> Dict:
         """
-        为制造节点生成恢复性供给护栏。
-        目标是在缺货、积压、低库存但仍具备原料与产能时，给出一份小步恢复生产建议。
-        """
+        Generates restorative supply bars for the manufacture of nodes.
+        The goal is to give a small-step recovery proposal when there is a shortage, backlog, low stock but still raw material and capacity.
+                """
         inventory_manager = super().get_module_by_type("InventoryManager")
         sales_manager = super().get_module_by_type("SalesManager")
 
@@ -2153,15 +2147,15 @@ class ProductionManager(EnhancedBaseModule):
 
     def _assign_production_lines(self, quantity: float) -> List[str]:
         """
-        分配生产线（优先使用产能大的生产线）
+        Distribution of production lines (priority to capacity large production lines)
 
         Args:
-            quantity: 生产数量
+            Quantity: Production
 
         Returns:
-            list: 分配的生产线ID列表
-        """
-        # 获取所有空闲生产线，按产能降序排序
+            list: List of distributed production lines ID
+                """
+        # Access all idle production lines in descending order capacity
         idle_lines = [
             (line_id, line_data)
             for line_id, line_data in self.production_lines.items()
@@ -2188,30 +2182,30 @@ class ProductionManager(EnhancedBaseModule):
             if remaining_quantity <= 0:
                 break
 
-        # 如果产能不足，返回空列表
+        # If capacity is insufficient, return empty list
         if remaining_quantity > 0:
             return []
 
         return assigned
 
     def _log_event(self, event: Dict):
-        """记录生产事件"""
+        """Record production events"""
         event["time_step"] = self.enterprise.time_manager.get_day()
         self.production_events.append(event)
 
     @with_response("generate_production_analysis")
     def generate_production_analysis(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成生产情况分析JSON
+        Generate production analysis JSON
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含生产情况分析JSON的统一响应对象
-        """
+            ModuleResponse: Unified target of response with production analysis
+                """
         try:
-            # 生产线状态分析
+            # Production line state analysis
             lines_by_status = {}
             for line_id, line_data in self.production_lines.items():
                 status = line_data.get("status", "unknown")
@@ -2219,7 +2213,7 @@ class ProductionManager(EnhancedBaseModule):
                     lines_by_status[status] = []
                 lines_by_status[status].append(line_data)
 
-            # 生产计划执行分析
+            # Analysis of the implementation of production plans
             plans_by_status = {}
             for plan in self.production_plans:
                 status = plan.get("status", "unknown")
@@ -2227,7 +2221,7 @@ class ProductionManager(EnhancedBaseModule):
                     plans_by_status[status] = []
                 plans_by_status[status].append(plan)
 
-            # 产能利用率分析
+            # Analysis of utilization capacity
             total_capacity = 0
             occupied_capacity = 0
             for line_data in self.production_lines.values():
@@ -2237,7 +2231,7 @@ class ProductionManager(EnhancedBaseModule):
                     occupied_capacity +=  line_data.get("capacity", 0) - line_data.get("remaining_capacity", 0)
             capacity_utilization = occupied_capacity / total_capacity if total_capacity > 0 else 0
 
-            # 生产成本分析
+            # Analysis of production costs
             product_cost_analysis = {}
             for plan in self.production_plans:
                 product_id = plan.get("product_id")
@@ -2253,17 +2247,17 @@ class ProductionManager(EnhancedBaseModule):
                     product_cost_analysis[product_id]["total_quantity"] += plan.get("quantity", 0)
                     product_cost_analysis[product_id]["total_cost"] += plan.get("total_cost", 0)
 
-            # 计算平均单位成本
+            # Calculation of average unit cost
             for product_id, data in product_cost_analysis.items():
                 if data["total_quantity"] > 0:
                     data["avg_unit_cost"] = data["total_cost"] / data["total_quantity"]
 
-            # 生产效率分析
+            # Production efficiency analysis
             total_produced = self.production_metrics.get("total_production", 0)
             total_planned = sum(plan.get("quantity", 0) for plan in self.production_plans)
             production_efficiency = total_produced / total_planned if total_planned > 0 else 0
             self.production_metrics["total_planned"] = total_planned
-            # 时间趋势分析
+            # Analysis of time trends
             plans_by_time = {}
             for plan in self.production_plans:
                 created_time = plan.get("created_time")
@@ -2272,13 +2266,13 @@ class ProductionManager(EnhancedBaseModule):
                         plans_by_time[created_time] = []
                     plans_by_time[created_time].append(plan)
 
-            # 获取当前时间
+            # Get Current Time
             try:
                 timestamp = self.enterprise.time_manager.get_day() if hasattr(self.enterprise, 'time_manager') else 0
             except Exception:
                 timestamp = 0
 
-            # 构建分析JSON
+            # Build AnalysisJSON
             analysis_json = {
                 "analysis_type": "生产情况分析",
                 "timestamp": timestamp,

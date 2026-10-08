@@ -1,7 +1,7 @@
 """
-销售管理模块
+Sales management module
 
-负责企业的产品销售业务，支持市场销售(B2C)和企业间销售(B2B)两种模式
+Responsible for the sale of enterprise products in support of both modes of market sale (B2C) and sale between enterprise (B2B)
 """
 
 from typing import Any, Dict, List, Optional
@@ -21,24 +21,24 @@ from network.trade_entities import (
 
 class SalesManager(EnhancedBaseModule):
     """
-    销售管理器类
-    处理企业销售相关的所有业务逻辑
-    """
+    Sales Manager Class
+    Processing all business logic related to enterprise sales
+        """
 
     def __init__(self, enterprise, total_possible_markets: int = None, module_id=None, config: SalesConfig = None):
         """
-        初始化销售管理器
+        Initialise Sales Manager
 
         Args:
-            enterprise: 所属企业实例
-            total_possible_markets: 市场总数（可选，默认从 config 读取）
-            module_id: 模块唯一标识（可选）
-            config: 销售配置对象（可选，默认使用 SalesConfig()）
-        """
-        # 使用配置或默认配置
+            Enterprise: Examples of enterprise
+            parameter: Total market (optional, read by default from config)
+            parameter: Only identification of modules (optional)
+            Config: Sales Configuration Object (optional, default SalesConfig())
+                """
+        # Use configuration or default configuration
         self.config = config or SalesConfig()
 
-        # 调用父类初始化方法
+        # Call Parent Initialisation Method
         super().__init__(
             enterprise,
             module_id or f"sales_{enterprise.id}",
@@ -47,34 +47,34 @@ class SalesManager(EnhancedBaseModule):
         self.module_type = "SalesManager"
         self.total_possible_markets = total_possible_markets or self.config.TOTAL_POSSIBLE_MARKETS
 
-        # 市场管理
-        self.markets: Dict[str, Dict] = {}  # 市场信息 {market_id: market_data}
-        self.next_market_id = 1  # 下一个市场ID
+        # Market management
+        self.markets: Dict[str, Dict] = {}  # Market information {market_id: market_data}
+        self.next_market_id = 1  # Next Market ID
 
-        # 订单管理
-        self.sales_orders: List[Dict] = []  # 销售订单列表
-        self.next_order_id = 1  # 下一个订单ID
+        # Order management
+        self.sales_orders: List[Dict] = []  # List of sales orders
+        self.next_order_id = 1  # Next order ID
 
-        # B2B报价（可选功能）
-        self.quotations: Dict[str, Dict] = {}  # 报价记录 {quotation_id: quotation_data}
-        self.next_quotation_id = 1  # 下一个报价ID
+        # B2B quotation (optional function)
+        self.quotations: Dict[str, Dict] = {}  # Record of quotations {quotation_id: quotation_data}
+        self.next_quotation_id = 1  # Next quote ID
 
-        self.proposals_list: List[OrderProposal] = []  # 当前仍待销售部门响应的提案收件箱
-        self.proposal_history: List[OrderProposal] = []  # 已见提案历史（含已响应/已完结）
+        self.proposals_list: List[OrderProposal] = []  # Proposals still pending sale at department
+        self.proposal_history: List[OrderProposal] = []  # See the history of the proposal (including response/completed)
 
-        # 销售指标
+        # Sales indicators
         self.sales_metrics = {
-            "total_orders": 0,              # 总订单数
-            "accepted_orders": 0,           # 已接受订单数
-            "completed_orders": 0,          # 完成订单数
-            "rejected_orders": 0,           # 拒绝订单数
-            "expired_orders": 0,            # 报价有效期内未处理的订单数
-            "breached_orders": 0,           # 违约订单数
-            "total_revenue": 0.0,           # 总收入
-            "total_quantity_sold": 0.0,     # 总销售数量
-            "order_fulfillment_rate": 0.0,  # 订单履约率
-            "market_coverage_rate": 0.0,    # 市场覆盖率
-            "on_time_delivery_rate": 0.0,   # 按时交付率
+            "total_orders": 0,              # Total orders
+            "accepted_orders": 0,           # Number of orders accepted
+            "completed_orders": 0,          # Orders completed
+            "rejected_orders": 0,           # Number of orders rejected
+            "expired_orders": 0,            # Number of orders not processed during the validity of the offer
+            "breached_orders": 0,           # Number of default orders
+            "total_revenue": 0.0,           # Total income
+            "total_quantity_sold": 0.0,     # Total sales
+            "order_fulfillment_rate": 0.0,  # Order parameter Rate
+            "market_coverage_rate": 0.0,    # Market coverage
+            "on_time_delivery_rate": 0.0,   # Timely delivery rate
             "total_downstream_demand": 0.0,
             "fulfilled_downstream_demand": 0.0,
             "backlog_quantity": 0.0,
@@ -85,28 +85,26 @@ class SalesManager(EnhancedBaseModule):
             "overdue_confirmed_order_quantity": 0.0,
         }
 
-        # 销售事件日志
+        # Sales Events Log
         self.sales_events: List[Dict] = []
         self.received_demand_history: List[Dict] = []
         self.fulfilled_demand_history: List[Dict] = []
         self.backlog_history: List[Dict] = []
         self.lost_sales_history: List[Dict] = []
         
-        # 价格策略配置
+        # Price Policy Configuration
         self.price_strategy = {}
-
-    # ========== 市场管理 ==========
 
     def _get_current_day(self) -> int:
         return self.enterprise.time_manager.get_day() if hasattr(self.enterprise, "time_manager") else 0
 
     def _estimate_landed_unit_cost(self, product_id: str) -> float:
         """
-        估算当前销售品项的落地单位成本。
+        Estimate the landed unit cost of the current sales product.
 
-        对外采原料，优先使用采购侧真实 `total_cost / quantity`；
-        对成品或无采购历史项，则退回库存单价。
-        """
+        External raw material, with priority given to the procurement side real `total_cost / quantity`;
+        The unit price of the inventory is returned for finished products or for items that have no procurement history.
+                """
         procurement_manager = super().get_module_by_type("ProcurementManager")
         landed_cost = 0.0
         if procurement_manager and hasattr(procurement_manager, "purchase_orders"):
@@ -280,8 +278,8 @@ class SalesManager(EnhancedBaseModule):
 
     def _refresh_proposal_views(self) -> None:
         """
-        使用交易所最新 dispatch 结果重建待响应提案 inbox，并同步历史视图。
-        """
+        Rebuilds the response proposal inbox using exchange the latest dispatch result and syncs the historical view.
+                """
         exchange = self._get_exchange()
         if not exchange:
             self._prune_proposal_views()
@@ -513,11 +511,11 @@ class SalesManager(EnhancedBaseModule):
                 f"企业 {self.enterprise.id} 不允许销售产品 {product_id}。可售产品: {getattr(self.enterprise, 'salable_products_idList', [])}"
             )
 
-        # 1. 检查部门人手情况
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
-        # TODO 后续再考虑企业间交易时的销售人数影响
+        # TODO Subsequent consideration of the impact of sales on transactions enterprise
         assigned_workers = 1
         if employee_count < assigned_workers:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足。目标投入: {assigned_workers}，当前可用: {employee_count}")
@@ -538,7 +536,7 @@ class SalesManager(EnhancedBaseModule):
             quantity = quantity,
             created_round = current_time,
             min_price = pricing["min_price"],
-            #lead_time = 1,  TODO 交付周期后续再考虑
+            # lead_time =1, TODO Follow-up to the delivery cycle
         )
         payload = asdict(data)
         payload["pricing_strategy"] = pricing
@@ -547,18 +545,18 @@ class SalesManager(EnhancedBaseModule):
     @with_response("develop_market")
     def develop_market(self, market_type: str,  assigned_workers: int, market_name: str = None, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        开发市场
+        Market development
 
         Args:
-            market_type: 市场类型（"regional" 或 "international"）
-            assigned_workers: 在这个市场投入的销售员人数
-            market_name: 市场名称（可选）
-            response: 模块响应对象
+            market_type: Market type ( "regional" or "international")
+            parameter: Number of salespersons who input in this market
+            market_name: Market name (optional)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含开发结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModuleResponse: Unified response object with development results
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
@@ -573,16 +571,16 @@ class SalesManager(EnhancedBaseModule):
         if employee_count < assigned_workers:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足。目标投入: {assigned_workers}，当前可用: {employee_count}")
 
-        # 2. 验证市场类型
+        # 2. Types of certification market
         if market_type not in self.config.MARKET_DEVELOPMENT_CONFIGS:
             return self.error_response(response, "INVALID_MARKET_TYPE", f"无效的市场类型，请选择 'regional' 或 'international'")
 
         config = self.config.MARKET_DEVELOPMENT_CONFIGS[market_type]
         finance_manager = super().get_module_by_type("FinanceManager")
 
-        # 3. 检查资金
+        # 3. Inspection of funds
         balance_result = finance_manager.get_balance()
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         if isinstance(balance_result, (int, float)):
             balance = balance_result
         elif hasattr(balance_result, 'data'):
@@ -596,7 +594,7 @@ class SalesManager(EnhancedBaseModule):
 
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
-        # 4. 创建市场标识并提前分配销售人员
+        # 4. Creation of market logos and early distribution of sales personnel
         market_id = f"market_{self.next_market_id}"
         self.next_market_id += 1
         completion_time = self.enterprise.time_manager.get_day() + config["development_time"]
@@ -616,7 +614,7 @@ class SalesManager(EnhancedBaseModule):
                 getattr(assign_result, "message", "市场开发人手分配失败")
             )
 
-        # 5. 扣除开发费用
+        # 5. Less development costs
         result = finance_manager.add_cost(
             config["cost"],
             "market_cost",
@@ -643,7 +641,7 @@ class SalesManager(EnhancedBaseModule):
             "assigned_workers": assigned_workers
         }
 
-        # 6. 记录事件
+        # 6. Recording events
         self._log_event({
             "type": "market_development_started",
             "market_id": market_id,
@@ -651,7 +649,7 @@ class SalesManager(EnhancedBaseModule):
             "completion_time": completion_time
         })
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             f"市场 {market_name} 开始开发，将于第 {completion_time} 个工作日 完成",
@@ -666,27 +664,27 @@ class SalesManager(EnhancedBaseModule):
     @with_response("adjust_market_workers")
     def adjust_market_workers(self, market_id: str, adjust_type: str, adjust_nums: int,dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        调整指定市场中的人员分配（增加或减少）
+        Adjustment of the distribution of persons in designated markets (increase or decrease)
 
         Args:
-            market_id: 市场ID
-            adjust_type: 调整类型（"increase" 或 "decrease"）
-            adjust_nums: 调整数量数
+            parameter: Market ID
+            adjust_type: Adjustment type("increase" or "decrease")
+            parameter: Adjustment of quantity
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含完成开发的市场信息的统一响应对象
-        """
-        # 1. 验证市场是否存在
+            ModuleResponse: Unified responder with completed market information
+                """
+        # Validation of the existence of a market
         if market_id not in self.markets:
             return self.error_response(response, "MARKET_NOT_FOUND", f"市场 {market_id} 不存在")
         
-        # 2. 验证调整类型
+        # 2. Types of verification adjustments
         if adjust_type not in ["increase", "decrease"]:
             return self.error_response(response, "INVALID_ADJUST_TYPE", f"无效的调整类型，请选择 'increase' 或 'decrease'")
-        # 3. 验证调整数量
+        # 3. Volume of validation adjustments
         if adjust_nums < 1:
             return self.error_response(response, "INVALID_ADJUST_NUMS", f"调整数量必须大于等于 1")
         market = self.markets[market_id]
@@ -704,7 +702,7 @@ class SalesManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 4. 调整人员分配
+        # 4. Adjustment of staffing
         if adjust_type == "decrease":
             market_workers -= adjust_nums
             release_result = hr_manager.release_workers(
@@ -740,21 +738,21 @@ class SalesManager(EnhancedBaseModule):
     @with_response("check_market_development_completion")
     def check_market_development_completion(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查并激活已完成开发的市场（每个时间步开始时调用）
+        Check and activate the developed market (call at start of each time step)
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含完成开发的市场信息的统一响应对象
-        """
+            ModuleResponse: Unified responder with completed market information
+                """
 
         completed_markets = []
         for market_id, market_data in self.markets.items():
             if (market_data["status"] == "developing" and
                 self.enterprise.time_manager.get_day() >= market_data["completion_time"]):
 
-                # 激活市场
+                # Activate Market
                 market_data["status"] = "active"
                 completed_markets.append(market_id)
                 
@@ -762,7 +760,7 @@ class SalesManager(EnhancedBaseModule):
                 inventory_overview = inventory_manager.get_inventory_overview()
                 products = inventory_overview.data.get("products", [])
                 self.enterprise.market_manager.register_market(market_id, self.enterprise, market_data["assigned_workers"], market_data["market_type"], products) 
-                # 记录完成事件
+                # Record completed events
                 self._log_event({
                     "type": "market_development_completed",
                     "market_id": market_id,
@@ -780,15 +778,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_market_info")
     def get_market_info(self, market_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取市场信息
+        Access to market information
 
         Args:
-            market_id: 市场ID
-            response: 模块响应对象
+            parameter: Market ID
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含市场信息的统一响应对象
-        """
+            ModuleResponse: Unified responder with market information
+                """
         market_data = self.markets.get(market_id)
         if market_data:
             return self.success_response(response, f"成功获取市场 {market_id} 的信息", market_data)
@@ -798,15 +796,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_all_markets")
     def get_all_markets(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有市场
+        Access to all markets
 
         Args:
-            status_filter: 状态过滤器（可选）
-            response: 模块响应对象
+            parameter: Status filter (optional)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含市场列表的统一响应对象
-        """
+            ModeuleResponse: Harmonized Response Object with Market List
+                """
         if status_filter:
             markets = [m for m in self.markets.values() if m["status"] == status_filter]
             message = f"成功获取状态为 {status_filter} 的市场 {len(markets)} 个"
@@ -827,28 +825,27 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_active_markets")
     def get_active_markets(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有已激活的市场
+        Get All Active Markets
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含已激活市场列表的统一响应对象
-        """
+            ModuleResponse: Contains a unified response to the active market list
+                """
         return self.get_all_markets(status_filter="active", response=response)
 
-    # ========== 订单管理 ==========
 
     def receive_proposals(self):
         """
-        接收交易所分发的潜在订单并创建待接收订单列表
-        """
+        Receive exchange distribution of potential orders and create list of pending orders
+                """
         self._refresh_proposal_views()
 
     def build_orders_from_exchange(self):
         """
-        建立采购订单
-        """
+        Establishment of purchase orders
+                """
         exchange = self._get_exchange()
         if exchange is None:
             return
@@ -877,15 +874,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("accept_proposal_order")
     def accept_proposal_order(self, proposal_id: str, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        接受采购订单
+        Acceptance of purchase orders
 
         Args:
-            proposal_id: 订单ID
-            response: 模块响应对象
-        """
+            parameter: Order ID
+            respond to objects
+                """
         self._refresh_proposal_views()
 
-        # 1. 查找当前仍待销售侧响应的订单 inbox
+        # 1. Search for orders currently pending sales side responses inbox
         proposal = self._find_pending_proposal(proposal_id)
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
@@ -898,7 +895,7 @@ class SalesManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 3. 更新订单状态
+        # 3. Updating the order status
         self.enterprise.downstream_exchange.handle_company_response(
             proposal_id,
             "accept",
@@ -916,15 +913,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("reject_proposal_order")
     def reject_proposal_order(self, proposal_id: str, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        拒绝采购订单
+        Rejected purchase orders
 
         Args:
-            proposal_id: 订单ID
-            response: 模块响应对象
-        """
+            parameter: Order ID
+            respond to objects
+                """
         self._refresh_proposal_views()
 
-        # 1. 查找当前仍待销售侧响应的订单 inbox
+        # 1. Search for orders currently pending sales side responses inbox
         proposal = self._find_pending_proposal(proposal_id)
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
@@ -937,7 +934,7 @@ class SalesManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 3. 更新订单状态
+        # 3. Updating the order status
         self.enterprise.downstream_exchange.handle_company_response(
             proposal_id,
             "reject",
@@ -983,28 +980,28 @@ class SalesManager(EnhancedBaseModule):
                     dry_run: bool = False,
                     response: ModuleResponse = None) -> ModuleResponse:
         """
-        创建销售订单（通常由外部系统调用，如市场或B2B协商系统）
+        Creation of sales orders (usually called by external systems, such as the market or B2B consultation system)
 
         Args:
-            product_id: 产品ID
-            quantity: 数量
-            unit_price: 单价
-            source_id: 来源ID（市场ID或买方企业ID）
-            delivery_deadline: 交货截止时间步
-            source_type: 来源类型（"market" 或 "b2b_sales"）
-            external_demand_id: 外部需求唯一ID，用于防止同一轮消费者需求被重复创建
+            product_id: Product ID
+            Number
+            parameter: unit price
+            source_id: Source ID (market ID or buyer enterpriseID)
+            delivery_deadline: Timeline for delivery
+            source_type: Source type ("market" or "b2b_sales")
+            external_demand_id: Only ID for external demand to prevent the same consumer demand from being created again
 
         Returns:
-            ModuleResponse: 包含创建结果的统一响应对象
-        """
+            ModeuleResponse: Unified response object with created result
+                """
         
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         # if employee_count < 5:
         #     response.set_status(ResponseStatus.FAILED)
-        #     response.add_error("INSUFFICIENT_STAFF", "人手不足，无法创建销售订单。至少需要: 5")
-        #     response.set_message("无法创建销售订单")
+        # response.add_error("x18/>), "we have enough people to create sales orders. At least: 5")
+        # response.set_message ( "Can not create sales order")
         #     return response
 
         if dry_run:
@@ -1077,11 +1074,11 @@ class SalesManager(EnhancedBaseModule):
         )
         self._refresh_service_level_metrics()
 
-        # 更新市场统计（如果是市场订单）
+        # Update market statistics (if market orders exist)
         if source_type in ("market", "external_market") and source_id in self.markets:
             self.markets[source_id]["total_orders_received"] += 1
 
-        # 记录事件
+        # Record Events
         self._log_event({
             "type": "order_created",
             "order_id": order_id,
@@ -1103,29 +1100,29 @@ class SalesManager(EnhancedBaseModule):
     def accept_order(self, order_id: str, 
                      dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        接受销售订单
+        Acceptance of sales orders
 
         Args:
-            order_id: 订单ID
-            response: 模块响应对象
+            parameter: Order ID
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含接受结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModeuleResponse: A unified response with accepted results
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_PLACE_ORDER_STAFF:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法接受订单。至少需要: {self.config.MIN_PLACE_ORDER_STAFF}")
 
-        # 2. 查找订单
+        # 2. Finding orders
         order = self._find_order(order_id)
         if not order:
             return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {order_id} 不存在")
         
 
-        # 3. 检查订单状态
+        # 3. Check the order status
         if order["status"] != "available":
             return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {order['status']}，无法接受")
         offer_expiry_day = order.get("offer_expiry_day")
@@ -1138,12 +1135,12 @@ class SalesManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 4. 验证库存（可选 - 根据业务策略决定）
-        # 策略A：接受时不验证库存，只在交付时验证（推荐，符合按订单生产模式）
-        # 策略B：接受时验证并预留库存（适合按库存销售模式）
-        # 这里采用策略A，在交付时才验证库存，允许企业接单后安排生产
+        # 4. Validation of inventory (optional - based on operational strategy)
+        # Policy A: Not to validate inventory upon acceptance and only upon delivery (recommended, in line with order-based production model)
+        # Policy B: Validation and reservation of inventory upon acceptance (suitable for sale by stock)
+        # Use Strategy A to validate stocks on delivery and allow production to be arranged after enterprise
 
-        # 5. 更新订单状态
+        # 5. Updating the order status
         order["status"] = "accepted"
         order["accepted_time"] = current_day
 
@@ -1155,7 +1152,7 @@ class SalesManager(EnhancedBaseModule):
         )
         self._refresh_service_level_metrics()
 
-        # 6. 记录事件
+        # 6. Recording events
         self._log_event({
             "type": "order_accepted",
             "order_id": order_id,
@@ -1167,7 +1164,7 @@ class SalesManager(EnhancedBaseModule):
         if order.get("delivery_deadline") is not None and current_day >= int(order["delivery_deadline"]):
             immediate_delivery_result = self._deliver_order(order)
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             f"订单 {order_id} 已接受",
@@ -1183,24 +1180,24 @@ class SalesManager(EnhancedBaseModule):
     def reject_order(self, order_id: str, 
                      reason: str = "", dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        拒绝销售订单
+        Reject sales orders
 
         Args:
-            order_id: 订单ID
-            reason: 拒绝原因
-            response: 模块响应对象
+            parameter: Order ID
+            Reason for refusal
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含拒绝结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModuleResponse: Unified responder with rejected result
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_PLACE_ORDER_STAFF:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法拒绝订单。至少需要: {self.config.MIN_PLACE_ORDER_STAFF}")
 
-        # 2. 查找订单
+        # 2. Finding orders
         order = self._find_order(order_id)
         if not order:
             return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {order_id} 不存在")
@@ -1212,7 +1209,7 @@ class SalesManager(EnhancedBaseModule):
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
 
-        # 3. 标记为已拒绝状态（保留历史记录）
+        # 3. Mark as rejected (historical record kept)
         order["status"] = "rejected"
         self.sales_metrics["rejected_orders"] += 1
         is_external_market_order = order.get("source_type") in ("market", "external_market")
@@ -1227,14 +1224,14 @@ class SalesManager(EnhancedBaseModule):
         )
         self._refresh_service_level_metrics()
 
-        # 4. 记录事件
+        # 4. Recording events
         self._log_event({
             "type": "order_rejected",
             "order_id": order_id,
             "reason": reason
         })
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             f"订单 {order_id} 已拒绝",
@@ -1247,15 +1244,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_order_detail")
     def get_order_detail(self, order_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取订单详情
+        Get order details
 
         Args:
-            order_id: 订单ID
-            response: 模块响应对象
+            parameter: Order ID
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含订单详情的统一响应对象
-        """
+            ModuleResponse: Unified responder with order details
+                """
         order = self._find_order(order_id)
         if order:
             return self.success_response(response, f"成功获取订单 {order_id} 的详情", order)
@@ -1265,15 +1262,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_all_sales_orders")
     def get_all_orders(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有订单
+        Get all orders
 
         Args:
-            status_filter: 状态过滤器（可选）
-            response: 模块响应对象
+            parameter: Status filter (optional)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含订单列表的统一响应对象
-        """
+            ModeuleResponse: Unified response object with order list
+                """
         if status_filter:
             orders = [order for order in self.sales_orders if order["status"] == status_filter]
             message = f"成功获取状态为 {status_filter} 的订单 {len(orders)} 个"
@@ -1294,43 +1291,43 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_pending_orders")
     def get_available_orders(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取可接受的订单
+        Getting an acceptable order
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含可接受订单列表的统一响应对象
-        """
+            ModuleResponse: Unified response object with acceptable order list
+                """
         return self.get_all_orders(status_filter="available", response=response)
 
     @with_response("get_accepted_orders")
     def get_accepted_orders(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取已接受的订单
+        Obtain accepted orders
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含已接受订单列表的统一响应对象
-        """
+            ModeuleResponse: Unified response object with accepted order list
+                """
         return self.get_all_orders(status_filter="accepted", response=response)
 
-    # ========== 订单交付 ==========
+    # == sync, corrected by elderman ==
 
     @skip_dry_run_validation
     @with_response("check_deliverable_orders")
     def check_deliverable_orders(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        检查并交付到期的订单（每个时间步开始时调用）
+        Check and deliver mature orders (call at start of each time step)
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含交付结果列表的统一响应对象
-        """
+            ModeuleResponse: Unified response object with delivery list
+                """
         
         delivery_results = []
         current_day = self.enterprise.time_manager.get_day()
@@ -1362,7 +1359,7 @@ class SalesManager(EnhancedBaseModule):
                 order.get("delivery_deadline") is not None and
                 current_day >= int(order["delivery_deadline"])):
 
-                # 尝试交付
+                # Try delivery
                 result = self._deliver_order(order)
                 delivery_results.append(result)
 
@@ -1376,35 +1373,34 @@ class SalesManager(EnhancedBaseModule):
             }
         )
 
-    # ========== B2B销售（简化版） ==========
 
     @with_response("send_quotation")
     @validate_positive("quantity")
     def generate_quotation(self, buyer_enterprise_id: str, product_id: str,
                           quantity: float, target_profit_rate: float = 0.2, response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成B2B报价（简化版，实际需要消息系统支持）
+        Generate B2B quotes (simplified, actually required message system support)
 
         Args:
-            buyer_enterprise_id: 买方企业ID
-            product_id: 产品ID
-            quantity: 数量
-            target_profit_rate: 目标利润率（默认20%）
-            response: 模块响应对象
+            buyer_enterprise_id: BuyerenterpriseID
+            product_id: Product ID
+            Number
+            target_profit_rate: Target profit margin (default 20%)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含报价结果的统一响应对象
-        """
-        # 1. 检查部门人手情况
+            ModuleResponse: Unified responder with quotation results
+                """
+        # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_SEND_QUOTATION_STAFF:
             return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法生成报价。至少需要: {self.config.MIN_SEND_QUOTATION_STAFF}")
 
-        # 2. 检查库存
+        # 2. Inventory inspections
         inventory_manager = super().get_module_by_type("InventoryManager")
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         level_result = inventory_manager.get_inventory_level(product_id)
         if isinstance(level_result, (int, float)):
             available_inventory = level_result
@@ -1417,20 +1413,20 @@ class SalesManager(EnhancedBaseModule):
         if available_inventory < quantity:
             return self.error_response(response, "INSUFFICIENT_INVENTORY", f"库存不足，无法报价。需要: {quantity}, 当前: {available_inventory}")
 
-        # 3. 获取产品成本
+        # 3. Cost of access to products
         detail_result = inventory_manager.get_inventory_detail(product_id)
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         product_detail = detail_result if isinstance(detail_result, dict) else detail_result.data
         if not product_detail:
             return self.error_response(response, "PRODUCT_NOT_FOUND", f"产品 {product_id} 不存在")
 
         unit_cost = product_detail["unit_price"]
 
-        # 4. 计算报价（成本加成定价）
+        # 4. Calculation of quotations (cost plus pricing)
         unit_price = unit_cost * (1 + target_profit_rate)
         total_amount = unit_price * quantity
 
-        # 5. 创建报价记录
+        # 5. Creation of quotation records
         quotation_id = f"quotation_{self.next_quotation_id}"
         self.next_quotation_id += 1
 
@@ -1449,7 +1445,7 @@ class SalesManager(EnhancedBaseModule):
 
         self.quotations[quotation_id] = quotation
 
-        # 6. 记录事件
+        # 6. Recording events
         self._log_event({
             "type": "quotation_generated",
             "quotation_id": quotation_id,
@@ -1458,7 +1454,7 @@ class SalesManager(EnhancedBaseModule):
             "unit_price": unit_price
         })
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             "报价已生成（简化版，实际需要消息系统支持）",
@@ -1475,17 +1471,17 @@ class SalesManager(EnhancedBaseModule):
     def evaluate_counteroffer(self, quotation_id: str, counter_price: float,
                              min_acceptable_price: float = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        评估还价（简化版）
+        Evaluation of bargaining (simplified version)
 
         Args:
-            quotation_id: 报价ID
-            counter_price: 还价金额
-            min_acceptable_price: 最低可接受价格（可选）
-            response: 模块响应对象
+            parameter: Quote ID
+            parameter : Repayments
+            min_acceptable_price: Minimum acceptable price (optional)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含评估结果的统一响应对象
-        """
+            ModuleResponse: A unified response that includes the results of the assessment
+                """
         if quotation_id not in self.quotations:
             return self.error_response(response, "QUOTATION_NOT_FOUND", f"报价 {quotation_id} 不存在")
 
@@ -1501,11 +1497,11 @@ class SalesManager(EnhancedBaseModule):
 
         quotation = self.quotations[quotation_id]
 
-        # 如果没有指定最低价格，使用成本价
+        # Use cost if no minimum price is specified
         if min_acceptable_price is None:
             min_acceptable_price = quotation["unit_cost"]
 
-        # 评估还价
+        # Assessment of bargaining
         if counter_price >= min_acceptable_price:
             decision = "accept"
             message = f"可以接受还价 ¥{counter_price:.2f}"
@@ -1513,7 +1509,7 @@ class SalesManager(EnhancedBaseModule):
             decision = "reject"
             message = f"还价 ¥{counter_price:.2f} 低于底价 ¥{min_acceptable_price:.2f}，拒绝"
 
-        # 设置成功响应
+        # Setup Successful Response
         return self.success_response(
             response,
             message,
@@ -1529,15 +1525,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_market_performance")
     def get_market_performance(self, market_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取市场绩效
+        Access to market performance
 
         Args:
-            market_id: 市场ID
-            response: 模块响应对象
+            parameter: Market ID
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含市场绩效信息的统一响应对象
-        """
+            ModuleResponse: Harmonized respondents with market performance information
+                """
         
         if market_id not in self.markets:
             return self.error_response(
@@ -1549,7 +1545,7 @@ class SalesManager(EnhancedBaseModule):
 
         market = self.markets[market_id]
 
-        # 统计该市场的订单
+        # Orders to measure the market
         market_orders = [o for o in self.sales_orders if o["source_id"] == market_id]
         completed_orders = [o for o in market_orders if o["status"] == "completed"]
         on_time_orders = [o for o in completed_orders if o.get("on_time", False)]
@@ -1575,17 +1571,17 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None):
         """
-        获取当前模块状态
+        Get Current Module Status
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含模块状态的统一响应对象
-        """
+            ModuleResponse: Unified response object with modular status
+                """
         self._refresh_proposal_views()
         self._refresh_service_level_metrics()
-        # 获取当前销售状态
+        # Get current sales status
         sales_status = self._get_sales_status()
         grouped = defaultdict(list)
         for order in self.sales_orders:
@@ -1604,7 +1600,7 @@ class SalesManager(EnhancedBaseModule):
             "markets": list(self.markets.values()),
             "demand_backlog": self._get_demand_backlog_status(),
             "backlog_breakdown": self._get_backlog_breakdown_status(),
-            # "customers": [],  # B2B客户列表（如需要可从其他地方获取）
+            # "Customers":[], #B2B client list (available elsewhere if needed)
             "total_sales": sales_status.get("sales_metrics", {}).get("total_revenue", 0.0),
             "sales_metrics": sales_status.get("sales_metrics", {}),
             "orders_summary": sales_status.get("orders", {}),
@@ -1614,20 +1610,19 @@ class SalesManager(EnhancedBaseModule):
         }
         return self.success_response(response, "成功获取模块状态", state)
 
-    # ========== 报价查询方法 ==========
 
     @with_response("get_quotation_info")
     def get_quotation_info(self, quotation_id: str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取报价信息
+        Get quote information
 
         Args:
-            quotation_id: 报价ID
-            response: 模块响应对象
+            parameter: Quote ID
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含报价信息的统一响应对象
-        """
+            ModuleResponse: Unified responder with quotation information
+                """
         quotation_data = self.quotations.get(quotation_id)
         if quotation_data:
             return self.success_response(response, f"成功获取报价 {quotation_id} 的信息", quotation_data)
@@ -1637,15 +1632,15 @@ class SalesManager(EnhancedBaseModule):
     @with_response("get_all_quotations")
     def get_all_quotations(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有报价
+        Get all quotes
 
         Args:
-            status_filter: 状态过滤器（可选）
-            response: 模块响应对象
+            parameter: Status filter (optional)
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含报价列表的统一响应对象
-        """
+            ModuleResponse: Unified response object with quotation list
+                """
         if status_filter:
             quotations = [q for q in self.quotations.values() if q["status"] == status_filter]
             message = f"成功获取状态为 {status_filter} 的报价 {len(quotations)} 个"
@@ -1666,14 +1661,14 @@ class SalesManager(EnhancedBaseModule):
     @with_response("calculate_sales_revenue")
     def calculate_sales_revenue(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算销售收入
+        Calculation of sales revenue
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含销售收入统计的统一响应对象
-        """
+            ModuleResponse: Unified target audience with sales income statistics
+                """
         return self.success_response(
             response,
             f"成功计算销售收入，总收入: ¥{self.sales_metrics['total_revenue']:,.2f}",
@@ -1685,17 +1680,16 @@ class SalesManager(EnhancedBaseModule):
             }
         )
 
-    # ========== 内部方法 ==========
 
     def _find_order(self, order_id: str) -> Optional[Dict]:
-        """查找订单"""
+        """Find Orders"""
         for order in self.sales_orders:
             if order["order_id"] == order_id:
                 return order
         return None
 
     def _log_event(self, event: Dict):
-        """记录销售事件"""
+        """Record sales events"""
         event["time_step"] = self.enterprise.time_manager.get_day()
         self.sales_events.append(event)
 
@@ -1806,23 +1800,23 @@ class SalesManager(EnhancedBaseModule):
 
     def _deliver_order(self, order: Dict) -> Dict:
         """
-        交付订单（内部方法）
+        Delivery orders (internal method)
 
         Args:
-            order: 订单记录
+            Order records
 
         Returns:
-            dict: 交付结果
-        """
+            dict: Delivery results
+                """
         order_id = order["order_id"]
         product_id = order["product_id"]
         quantity = order["quantity"]
         inventory_manager = super().get_module_by_type("InventoryManager")
-        # 1. 验证库存
+        # 1. Validation of inventories
         available_inventory = inventory_manager.get_inventory_level(product_id)
         quantity_available = available_inventory.data.get("quantity", 0)
         if quantity_available < quantity:
-            # 时限已到且库存不足，标记为违约
+            # Time frame is in place and insufficient inventory is marked as non-compliance
             order["status"] = "breached"
             self.sales_metrics["breached_orders"] += 1
 
@@ -1850,13 +1844,13 @@ class SalesManager(EnhancedBaseModule):
                 "available": quantity_available,
                 "breach_penalty_effect": penalty_effect
             }
-        # 2. 从仓库出库
+        # Out of warehouse
         outbound_result = inventory_manager.remove_inventory(
             product_id, quantity, "sales"
         )
 
         if not outbound_result.success:
-            # 出库失败，标记为违约
+            # Out of library failed, marked as default
             order["status"] = "breached"
             self.sales_metrics["breached_orders"] += 1
 
@@ -1881,7 +1875,7 @@ class SalesManager(EnhancedBaseModule):
                 "breach_penalty_effect": penalty_effect
             }
 
-        # 3. 记录销售收入
+        # Recording of sales revenue
         revenue = order["total_amount"]
         finance_manager = super().get_module_by_type("FinanceManager")
 
@@ -1892,7 +1886,7 @@ class SalesManager(EnhancedBaseModule):
         result = finance_manager.add_revenue(amount=revenue, source=revenue_source, order_id=order["order_id"])
 
         if not result.success:
-            # 记录事件
+            # Record Events
             self._log_event({
                 "type": "order_breached",
                 "order_id": order_id,
@@ -1904,12 +1898,12 @@ class SalesManager(EnhancedBaseModule):
                 "error": f"记录销售收入失败: {self._response_error_text(result)}"
             }
         
-        # 4. 更新订单状态
+        # 4. Updating the order status
         order["status"] = "completed"
         order["delivered_time"] = self.enterprise.time_manager.get_day()
-        order["on_time"] = (order["delivered_time"] <= order["delivery_deadline"])  # 提前或准时都算准时
+        order["on_time"] = (order["delivered_time"] <= order["delivery_deadline"])  # Early or punctual.
 
-        # 5. 更新指标
+        # 5. Updating of indicators
         self.sales_metrics["completed_orders"] += 1
         self.sales_metrics["total_revenue"] += revenue
         self.sales_metrics["total_quantity_sold"] += quantity
@@ -1921,13 +1915,13 @@ class SalesManager(EnhancedBaseModule):
         )
         self._refresh_service_level_metrics()
 
-        # 更新市场统计（如果是市场订单）
+        # Update market statistics (if market orders exist)
         if order["source_type"] == "market" and order["source_id"] in self.markets:
             market = self.markets[order["source_id"]]
             market["total_orders_completed"] += 1
             market["total_revenue"] += revenue
 
-        # 6. 记录事件
+        # 6. Recording events
         self._log_event({
             "type": "order_delivered",
             "order_id": order_id,
@@ -1964,15 +1958,15 @@ class SalesManager(EnhancedBaseModule):
 
     def _get_sales_status(self):
         """
-        获取销售状态总览
+        Get sales status overview
 
         Args:
-            response: 模块响应对象
+            respond to objects
 
         Returns:
-            ModuleResponse: 包含销售状态信息的统一响应对象
-        """
-        # 统计订单状态
+            ModeuleResponse: Unified responder with sales status information
+                """
+        # Statistical order status
         orders_by_status = {
             "available": 0,
             "accepted": 0,
@@ -1986,7 +1980,7 @@ class SalesManager(EnhancedBaseModule):
             status = order["status"]
             orders_by_status[status] = orders_by_status.get(status, 0) + 1
 
-        # 统计市场状态
+        # Statistical market status
         markets_by_status = {
             "developing": 0,
             "active": 0
@@ -1996,12 +1990,12 @@ class SalesManager(EnhancedBaseModule):
             status = market["status"]
             markets_by_status[status] = markets_by_status.get(status, 0) + 1
 
-        # 计算市场覆盖率
+        # Calculate market coverage
         self.sales_metrics["market_coverage_rate"] = (
             len(self.markets) / self.total_possible_markets
         )
 
-        # 设置成功响应
+        # Setup Successful Response
         return {
                 "orders": {
                     "total": len(self.sales_orders),
@@ -2021,16 +2015,16 @@ class SalesManager(EnhancedBaseModule):
     @with_response("generate_sales_analysis")
     def generate_sales_analysis(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        生成销售订单分析JSON
+        Generate sales order analysis JSON
 
         Args:
-            response: 响应对象，由装饰器自动注入
+            Response: respond to objects, automatically injected by decorator
 
         Returns:
-            ModuleResponse: 包含销售订单分析JSON的统一响应对象
-        """
+            ModuleResponse: A unified response to include sales orders analysis of JSON
+                """
         try:
-            # 订单状态分析
+            # Order status analysis
             orders_by_status = {}
             for order in self.sales_orders:
                 status = order.get("status", "unknown")
@@ -2038,7 +2032,7 @@ class SalesManager(EnhancedBaseModule):
                     orders_by_status[status] = []
                 orders_by_status[status].append(order)
 
-            # 市场绩效分析
+            # Market performance analysis
             market_performance = {}
             for market_id, market in self.markets.items():
                 market_orders = [o for o in self.sales_orders if o.get("source_id") == market_id and o.get("source_type") == "market"]
@@ -2061,7 +2055,7 @@ class SalesManager(EnhancedBaseModule):
                     "avg_order_value": avg_order_value
                 }
 
-            # 产品销售分析
+            # Product sales analysis
             product_sales_analysis = {}
             for order in self.sales_orders:
                 product_id = order.get("product_id")
@@ -2077,17 +2071,17 @@ class SalesManager(EnhancedBaseModule):
                     product_sales_analysis[product_id]["total_quantity"] += order.get("quantity", 0)
                     product_sales_analysis[product_id]["total_revenue"] += order.get("total_amount", 0)
 
-            # 计算平均单价
+            # Calculation of average unit price
             for product_id, data in product_sales_analysis.items():
                 if data["total_quantity"] > 0:
                     data["avg_unit_price"] = data["total_revenue"] / data["total_quantity"]
 
-            # 收入分析
+            # Income analysis
             total_revenue = self.sales_metrics.get("total_revenue", 0)
             completed_orders = len([o for o in self.sales_orders if o.get("status") == "completed"])
             avg_order_value = total_revenue / completed_orders if completed_orders > 0 else 0
 
-            # 时间趋势分析
+            # Analysis of time trends
             orders_by_time = {}
             for order in self.sales_orders:
                 created_time = order.get("created_time")
@@ -2096,7 +2090,7 @@ class SalesManager(EnhancedBaseModule):
                         orders_by_time[created_time] = []
                     orders_by_time[created_time].append(order)
 
-            # B2B报价分析
+            # B2B quotation analysis
             quotations_by_status = {}
             for quotation_id, quotation in self.quotations.items():
                 status = quotation.get("status", "unknown")
@@ -2104,13 +2098,13 @@ class SalesManager(EnhancedBaseModule):
                     quotations_by_status[status] = []
                 quotations_by_status[status].append(quotation)
 
-            # 获取当前时间
+            # Get Current Time
             try:
                 timestamp = self.enterprise.time_manager.get_day() if hasattr(self.enterprise, 'time_manager') else 0
             except Exception:
                 timestamp = 0
 
-            # 构建分析JSON
+            # Build AnalysisJSON
             analysis_json = {
                 "analysis_type": "销售订单分析",
                 "timestamp": timestamp,

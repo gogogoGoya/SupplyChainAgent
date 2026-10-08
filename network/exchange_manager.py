@@ -1,7 +1,7 @@
 """
-多企业统一交易所模块
+multi-enterprise Unified module exchange
 
-负责协调不同企业之间的交易，包括采购、销售、库存管理等。
+Coordination of transactions between different enterprises, including procurement, sales, inventory management, etc.
 """
 import uuid
 from typing import Dict, List, Optional, Any
@@ -39,32 +39,32 @@ def restore_next_id_counter_value(next_value: int) -> None:
 
 class Exchange:
     """
-    交易所类
-    
-    管理相邻层级企业之间的交易，记录销售、采购需求和订单情况
-    """
+    Category exchange
+        
+    Manage transactions between enterprise adjacent levels, recording sales, procurement requirements and orders
+        """
     
     def __init__(self, exchange_id: str, upstream_layers: List[str], downstream_layers: List[str], trading_mode: str = "market"):
         """
-        初始化交易所
-        
+        Initialise exchange
+                
         Args:
-            exchange_id: 交易所唯一标识
-            upstream_layers: 上游层级名称列表
-            downstream_layers: 下游层级名称列表
-        """
+            exchange_id: exchange Unique ID
+            upstream_layers: List of names for the upper tier
+            parameter: List of downstream level names
+                """
         self.id = exchange_id
         self.upstream_layers = upstream_layers
         self.downstream_layers = downstream_layers
         self.trading_mode = trading_mode
         
-        # 企业注册信息
-        self.upstream_enterprises: Dict[str, Dict] = {}  # 上游企业 {enterprise_id: enterprise_info}
-        self.downstream_enterprises: Dict[str, Dict] = {}  # 下游企业 {enterprise_id: enterprise_info}
-        # 订单记录
+        # Registration information enterprise
+        self.upstream_enterprises: Dict[str, Dict] = {}  # Upstream enterprise {enterprise_id: enterprise_info}
+        self.downstream_enterprises: Dict[str, Dict] = {}  # Downstream enterprise {enterprise_id: enterprise_info}
+        # Order records
         self.orders: List[Order] = []
         
-        # 交易统计
+        # Transaction statistics
         self.statistics = {
             "total_orders": 0,
             "completed_orders": 0,
@@ -74,7 +74,7 @@ class Exchange:
             "total_quantity": 0.0
         }
 
-        # 重构后新增参数
+        # Add parameters after reconfiguration
         self.buy_requests: List[BuyRequest] = []
         self.sell_requests: List[SellRequest] = []
         self.proposals: List[OrderProposal] = []
@@ -363,13 +363,13 @@ class Exchange:
 
     def generate_proposals(self, round_id: int) -> List[OrderProposal]:
         """
-        生成订单预案
-        
+        Generate order presets
+                
         Args:
-            round_id: 当前轮次
+            round_id: Current round
         Returns:
-            List[OrderProposal]: 交易提案列表
-        """
+            List [OrderProposal]: List of transaction proposals
+                """
         self._expire_stale_entities(round_id)
         new_proposals: List[OrderProposal] = []
 
@@ -441,17 +441,17 @@ class Exchange:
                 self.proposals.append(proposal)
                 new_proposals.append(proposal)
 
-        # 基础外部需求模式下，即便本轮已有部分显式撮合，剩余未匹配的下游采购需求
-        # 也应该继续生成隐式预案，避免被“有一条 proposal 就停止兜底”卡住。
+        # Under the basic external demand model, the remaining unmatched downstream procurement needs, even if the current round is partially aligned
+        # It should also continue to generate hidden scenarios, so as to avoid being stuck "with a proposal to stop " .
         if normalize_market_demand_mode(self.trading_mode) == MARKET_DEMAND_MODE_SCHEDULED_EXTERNAL:
             new_proposals.extend(self._generate_beer_game_implicit_supply_proposals(round_id))
         return new_proposals
 
     def _generate_beer_game_implicit_supply_proposals(self, round_id: int) -> List[OrderProposal]:
         """
-        Beer game 使用固定上下游链路。下游采购需求应能被上游销售部门看到并决策，
-        不强制要求上游销售 agent 在同一轮先发布 sell_request。
-        """
+        Beer game uses a fixed upstream/downstream link. Downstream procurement needs should be seen and decided by upstream sales department.
+        Upstream sales are not required to be published first in the same round sell_request.
+                """
         if not self.upstream_enterprises:
             return []
 
@@ -518,8 +518,8 @@ class Exchange:
 
     def dispatch_proposals(self) -> List[OrderProposal]:
         """
-        买方和卖方都会调用该方法来获取潜在订单
-        """
+        Buyers and sellers will call for potential orders.
+                """
         self._expire_stale_entities(self.current_round_cursor)
         proposal_list = []
         for proposal in self.proposals:
@@ -530,8 +530,8 @@ class Exchange:
 
     def get_proposal(self, proposal_id: str) -> Optional[OrderProposal]:
         """
-        按提案 ID 返回交易所中的权威提案对象。
-        """
+        By ID of the proposal returns the authoritative object of the proposal in exchange.
+                """
         for proposal in self.proposals:
             if proposal.proposal_id == proposal_id:
                 return proposal
@@ -539,12 +539,12 @@ class Exchange:
 
     def handle_company_response(self, proposal_id: str, response: str, source: str) -> None:
         """
-        处理企业响应
-        
+        Handle enterprise sound Response
+                
         Args:
-            proposal_id: 订单提案ID
-            response: 响应类型，accept或reject
-        """
+            parameter: Order Proposal ID
+            response type, accept or reject
+                """
         for proposal in self.proposals:
             if proposal.proposal_id == proposal_id:
                 if source == "buyer":
@@ -567,8 +567,8 @@ class Exchange:
                 proposal.closed_round = self.current_round_cursor
                 self._release_reserved_quantity(proposal)
             else:
-                # 只要还有一方未响应，就继续保留 pending，
-                # 允许跨轮次逐步完成 buyer / seller 的异步确认。
+                # As long as one side does not respond, keep the pending.
+                # Allows step-by-step confirmation across round for buyer / seller.
                 continue
 
     def confirm_orders(self) -> List[Order]:
@@ -622,9 +622,9 @@ class Exchange:
 
     def get_confirm_orders(self) -> List[Order]:
         """
-        向后兼容接口：返回所有已确认订单，但不再修改订单状态。
-        新逻辑应优先使用 buyer/seller 定向消费接口，避免一侧读取后另一侧不可见。
-        """
+        Backward compatibility interface: returns all confirmed orders without changing their status.
+        The new logic should give priority to the buyer/seller orientation consumption interface to avoid the invisibility of one side to the back.
+                """
         return [order for order in self.orders if order.status == "confirmed"]
 
     def get_confirm_orders_for_buyer(self, buyer_company_id: str) -> List[Order]:
@@ -707,16 +707,16 @@ class Exchange:
     
     def register_upstream_enterprise(self, enterprise_id: str, enterprise_name: str, enterprise_info: Dict = None) -> bool:
         """
-        注册上游企业
-        
+        Upstream enterprise
+                
         Args:
-            enterprise_id: 企业ID
-            enterprise_name: 企业名称
-            enterprise_info: 企业额外信息
-            
+            enterprise_id: enterpriseID
+            parameter: enterprise Name
+            enterprise_info: enterprise Additional information
+                        
         Returns:
-            bool: 注册是否成功
-        """
+            Bool: Successful registration
+                """
         if enterprise_id in self.upstream_enterprises:
             print(f"警告: 企业 {enterprise_name} 已在交易所 {self.id} 的上游注册")
             return False
@@ -732,16 +732,16 @@ class Exchange:
     
     def register_downstream_enterprise(self, enterprise_id: str, enterprise_name: str, enterprise_info: Dict = None) -> bool:
         """
-        注册下游企业
-        
+        Register downstream enterprise
+                
         Args:
-            enterprise_id: 企业ID
-            enterprise_name: 企业名称
-            enterprise_info: 企业额外信息
-            
+            enterprise_id: enterpriseID
+            parameter: enterprise Name
+            enterprise_info: enterprise Additional information
+                        
         Returns:
-            bool: 注册是否成功
-        """
+            Bool: Successful registration
+                """
         if enterprise_id in self.downstream_enterprises:
             print(f"警告: 企业 {enterprise_name} 已在交易所 {self.id} 的下游注册")
             return False
@@ -758,8 +758,8 @@ class Exchange:
 
 class ExchangeManager:
     def __init__(self):
-        self.exchanges = {}  # 交易所信息 {exchange_id: Exchange实例}
-        self.layer_to_exchanges = {}  # 层级到交易所的映射 {layer_name/enterprise_id: [exchange_ids]}
+        self.exchanges = {}  # Information exchange {exchange_id: Exchange实例}
+        self.layer_to_exchanges = {}  # Map to exchange {layer_name/enterprise_id: [exchange_ids]}
         self.trading_mode = "market"
 
     def set_trading_mode(self, trading_mode: str):
@@ -770,28 +770,28 @@ class ExchangeManager:
 
     def initialize_exchange(self, supply_chain_layers: list[list[str]]):
         """
-        初始化交易所系统
-        
-        根据层级信息在相邻层级之间创建交易所实例
-        
+        Initialization of exchange system
+                
+        Create instance exchange between adjacent levels based on level information
+                
         Args:
-            supply_chain_layers: 层级信息，例如 [['Supplier'], ['Manufacturer'], ['Distributor'], ['Retailer']]
-        """
+            supply_chain_layers: Level information, e.g. [['Supplier','Manufacturer'], ['Distributor'], ['Retailer']
+                """
         self.exchanges = {}
         self.layer_to_exchanges = {}
         
-        # 在相邻层级之间创建交易所
+        # Create exchange between adjacent levels
         for i in range(len(supply_chain_layers) - 1):
             upstream_layers = supply_chain_layers[i]
             downstream_layers = supply_chain_layers[i + 1]
             
-            # 为每对相邻层级只创建一个交易所
+            # Create only exchange for each adjacent level
             exchange_id = f"{i}-{i+1}_exchange"
-            # 使用层级名称的第一个元素作为标识
+            # Use the first element of the hierarchy name as identification
             exchange = Exchange(exchange_id, upstream_layers, downstream_layers, trading_mode=self.trading_mode)
             self.exchanges[exchange_id] = exchange
             
-            # 更新企业名称到交易所的映射
+            # Update map of enterprise name to exchange
             for upstream_layer in upstream_layers:
                 if upstream_layer not in self.layer_to_exchanges:
                     self.layer_to_exchanges[upstream_layer] = []
@@ -807,45 +807,45 @@ class ExchangeManager:
     
     def get_exchange(self, exchange_id: str) -> Optional[Exchange]:
         """
-        获取交易所实例
-        
+        Can not open message
+                
         Args:
-            exchange_id: 交易所ID
-            
+            exchange_id: exchangeID
+                        
         Returns:
-            Exchange: 交易所实例，不存在则返回None
-        """
+            Exchange: exchange instance, return Noone if none
+                """
         return self.exchanges.get(exchange_id)
     
     def get_exchanges_by_enterprise(self, enterprise_id: str) -> List[Exchange]:
         """
-        获取企业注册的所有交易所
-        
+        Get enterprise All registered exchange
+                
         Args:
-            enterprise_id: 企业ID
-            
+            enterprise_id: enterpriseID
+                        
         Returns:
-            List[Exchange]: 交易所列表
-        """
+            List [Exchange]: exchange
+                """
         exchange_ids = self.layer_to_exchanges.get(enterprise_id, [])
         return [self.exchanges[eid] for eid in exchange_ids if eid in self.exchanges]
     
     def get_all_exchanges(self) -> Dict[str, Exchange]:
         """
-        获取所有交易所
-        
+        Get All exchange
+                
         Returns:
-            Dict[str, Exchange]: 所有交易所字典
-        """
+            Dict[str, Exchange]: All exchange Dictionaries
+                """
         return self.exchanges
     
     def get_global_statistics(self) -> Dict:
         """
-        获取全局统计信息
-        
+        Access global statistical information
+                
         Returns:
-            Dict: 全局统计信息
-        """
+            Dict: Global statistical information
+                """
         total_stats = {
             "total_exchanges": len(self.exchanges),
             "total_orders": 0,
@@ -877,30 +877,30 @@ class ExchangeManager:
 
     def analyze_potential_transaction(self, round_id: int):
         """
-        分析所有订单
-        
-        遍历所有交易所，分析订单状态并更新统计信息
-        """
+        Analyse all orders
+                
+        Through exchange, analyse the order status and update statistical information
+                """
         for exchange in self.exchanges.values():
             exchange.generate_proposals(round_id)
 
     def statistics_exchange_orders(self):
         """
-        统计所有订单
-        
-        遍历所有交易所，统计订单状态并更新全局信息
-        """
+        Count all orders
+                
+        Check all exchange for order status and update global information
+                """
         for exchange in self.exchanges.values():
             exchange.collect_proposal_responses()
             exchange.confirm_orders()
 
     def get_detailed_exchange_info(self) -> Dict[str, Any]:
         """
-        获取所有交易所的详细信息
-        
+        Get all exchange details
+                
         Returns:
-            Dict: 包含所有交易所详细信息的字典，包括企业信息、订单信息、提案信息等
-        """
+            Dict: Dictionary containing all exchange details, including enterprise information, order information, proposal information, etc.
+                """
         detailed_info = {
             "global_info": {
                 "total_exchanges": len(self.exchanges),
@@ -913,7 +913,7 @@ class ExchangeManager:
         }
         
         for exchange_id, exchange in self.exchanges.items():
-            # 企业信息
+            # Information enterprise
             enterprises_info = {
                 "upstream_enterprises": list(exchange.upstream_enterprises.keys()),
                 "downstream_enterprises": list(exchange.downstream_enterprises.keys()),
@@ -921,7 +921,7 @@ class ExchangeManager:
                 "downstream_count": len(exchange.downstream_enterprises)
             }
             
-            # 采购需求 (Buy Requests) 信息
+            # Buy Requests Information
             buy_requests_info = []
             total_buy_quantity = 0.0
             for req in exchange.buy_requests:
@@ -944,7 +944,7 @@ class ExchangeManager:
                 buy_requests_info.append(req_dict)
                 total_buy_quantity += req.quantity
             
-            # 销售需求 (Sell Requests) 信息
+            # Sale Demand Information
             sell_requests_info = []
             total_sell_quantity = 0.0
             for req in exchange.sell_requests:
@@ -967,7 +967,7 @@ class ExchangeManager:
                 sell_requests_info.append(req_dict)
                 total_sell_quantity += req.quantity
             
-            # 订单提案 (Proposals) 信息
+            # Cannot initialise Evolution's mail component.
             proposals_info = []
             total_proposal_quantity = 0.0
             for proposal in exchange.proposals:
@@ -997,7 +997,7 @@ class ExchangeManager:
                 proposals_info.append(proposal_dict)
                 total_proposal_quantity += proposal.quantity
             
-            # 订单 (Orders) 信息
+            # Organisation
             orders_info = []
             total_order_quantity = 0.0
             total_order_value = 0.0
@@ -1022,11 +1022,11 @@ class ExchangeManager:
                 if order.agreed_price is not None:
                     total_order_value += order.quantity * order.agreed_price
             
-            # 活跃订单和已完成订单统计
+            # Active and completed orders statistics
             active_orders_count = len([o for o in exchange.orders if o.status == "confirmed"])
             completed_orders_count = len([o for o in exchange.orders if o.status == "delivered"])
             
-            # 按产品统计数量信息
+            # Quantitative information by product
             product_statistics = {}
             for req in exchange.buy_requests:
                 if req.product_id not in product_statistics:
@@ -1068,7 +1068,7 @@ class ExchangeManager:
                     }
                 product_statistics[order.product_id]["order_quantity"] += order.quantity
             
-            # 组装交易所详细信息
+            # Organise exchange Details
             exchange_detail = {
                 "id": exchange.id,
                 "trading_mode": exchange.trading_mode,

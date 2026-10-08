@@ -6,12 +6,12 @@ import { getActionDisplayName, isActionPassAction } from '../utils/actionLabels'
 const DEPARTMENTS = ['finance', 'production', 'sales', 'inventory', 'procurement', 'hr'];
 
 const DEPARTMENT_LABELS = {
-  finance: '财务',
-  production: '生产',
-  sales: '销售',
-  inventory: '库存',
-  procurement: '采购',
-  hr: '人力',
+  finance: 'Finance',
+  production: 'Production',
+  sales: 'Sales',
+  inventory: 'Inventory',
+  procurement: 'Procurement',
+  hr: 'Human Resources',
 };
 
 const DEPARTMENT_COLORS = {
@@ -79,7 +79,7 @@ const uniqueSortedNumbers = (values) => Array.from(new Set(
 
 const dayLabel = (day) => `Turn ${day}`;
 
-const formatMillionValue = (value) => `${(Number(value || 0) / 1000000).toFixed(2)}百万`;
+const formatMillionValue = (value) => `${(Number(value || 0) / 1000000).toFixed(2)}M`;
 
 const formatNumber = (value, suffix = '') => {
   if (value === null || value === undefined || value === '') {
@@ -112,7 +112,7 @@ const getRecordId = (record, candidates) => (
   || '-'
 );
 
-const renderValueList = (items, emptyText = '暂无数据') => {
+const renderValueList = (items, emptyText = 'Data not available') => {
   if (!items || items.length === 0) {
     return <p className="single-dept-empty">{emptyText}</p>;
   }
@@ -187,17 +187,17 @@ const COMMITTED_ORDER_STATUSES = new Set([
   'confirmed',
 ]);
 const ORDER_STATUS_LABELS = {
-  available: '待接收',
-  accepted: '已接受待履约',
-  in_progress: '履约中',
-  completed: '已完成',
-  delivered: '已交付',
-  rejected: '已拒绝',
-  breached: '已违约',
-  cancelled: '已取消',
-  canceled: '已取消',
-  failed: '失败',
-  unknown: '未知状态',
+  available: 'Available',
+  accepted: 'Accepted, Pending Fulfillment',
+  in_progress: 'In Fulfillment',
+  completed: 'Completed',
+  delivered: 'Delivered',
+  rejected: 'Rejected',
+  breached: 'Breached',
+  cancelled: 'Canceled',
+  canceled: 'Canceled',
+  failed: 'Failed',
+  unknown: 'Unknown status',
 };
 
 const normalizeOrderStatus = (status) => {
@@ -205,7 +205,7 @@ const normalizeOrderStatus = (status) => {
   return normalized || 'unknown';
 };
 
-const getOrderStatusLabel = (status) => ORDER_STATUS_LABELS[normalizeOrderStatus(status)] || String(status || '未知状态');
+const getOrderStatusLabel = (status) => ORDER_STATUS_LABELS[normalizeOrderStatus(status)] || String(status || 'Unknown status');
 
 const hasOrderDeadline = (order) => order?.delivery_deadline !== null
   && order?.delivery_deadline !== undefined
@@ -668,38 +668,38 @@ const buildSnapshotChartsFromObservations = (observationsByDay, currentDay) => {
 
   return {
     order_fulfillment_coverage: {
-      title: '订单履约覆盖图',
+      title: 'Order Fulfillment Coverage',
       latest_day_only: true,
       current_day: currentDay,
       rows: fulfillmentRows,
     },
     raw_material_coverage: {
-      title: '原料覆盖轮数/到货覆盖图',
+      title: 'Raw-Material and Arrival Coverage',
       latest_day_only: true,
       current_day: currentDay,
       rows: rawMaterialRows,
     },
     warehouse_capacity_pressure: {
-      title: '仓容压力预测图',
+      title: 'Warehouse Capacity Pressure',
       latest_day_only: true,
       current_day: currentDay,
       rows: warehouseRows,
     },
     cash_pressure_structure: {
-      title: '现金压力结构图',
+      title: 'Cash-Pressure Structure',
       latest_day_only: false,
       historical_trend: historicalTrend,
       current_state: historicalTrend[historicalTrend.length - 1] || {},
       cost_structure: totalCost ? [{ category: 'total_cost', amount: totalCost }] : [],
     },
     demand_capacity_gap: {
-      title: '需求-产能缺口图',
+      title: 'Demand–Capacity Gap',
       latest_day_only: true,
       current_day: currentDay,
       rows: demandCapacityRows,
     },
     order_funnel_and_aging: {
-      title: '订单漏斗与到期结构图',
+      title: 'Order Funnel and Deadline Structure',
       latest_day_only: true,
       current_day: currentDay,
       funnel: Object.entries(funnelMap).sort(([a], [b]) => a.localeCompare(b)).map(([status, metrics]) => ({
@@ -855,33 +855,33 @@ const buildFulfillmentOption = (charts, currentDay) => {
   });
 
   return {
-    title: { text: fulfillmentData.title || '未来3/5/7轮订单履约覆盖图', textStyle: { fontSize: 13 } },
+    title: { text: fulfillmentData.title || 'Order Fulfillment Coverage over the Next 3/5/7 Turns', textStyle: { fontSize: 13 } },
     tooltip: { trigger: 'axis' },
     legend: { type: 'scroll', top: 28, textStyle: { fontSize: 11 } },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 72, containLabel: true },
     xAxis: { type: 'category', data: days.map((day) => buildForecastLabel(currentDay, day)) },
     yAxis: [
-      { type: 'value', name: '累计供需' },
-      { type: 'value', name: '缺口' },
+      { type: 'value', name: 'Cumulative Supply / Demand' },
+      { type: 'value', name: 'Gap' },
     ],
     series: Object.keys(byProduct).flatMap((productId) => {
       const rowMap = byProduct[productId];
       return [
         {
-          name: `${productId} 供给`,
+          name: `${productId} Supply`,
           type: 'line',
           smooth: true,
           data: days.map((day) => rowMap[day]?.cumulative_supply || 0),
         },
         {
-          name: `${productId} 需求`,
+          name: `${productId} Demand`,
           type: 'line',
           smooth: true,
           lineStyle: { type: 'dashed' },
           data: days.map((day) => rowMap[day]?.cumulative_demand || 0),
         },
         {
-          name: `${productId} 缺口`,
+          name: `${productId} Gap`,
           type: 'bar',
           yAxisIndex: 1,
           barMaxWidth: 18,
@@ -905,37 +905,37 @@ const buildRawMaterialOption = (charts, currentDay) => {
   });
 
   return {
-    title: { text: rawMaterialData.title || '原料覆盖轮数/到货覆盖图', textStyle: { fontSize: 13 } },
+    title: { text: rawMaterialData.title || 'Raw-Material and Arrival Coverage', textStyle: { fontSize: 13 } },
     tooltip: { trigger: 'axis' },
     legend: { type: 'scroll', top: 28, textStyle: { fontSize: 11 } },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 72, containLabel: true },
     xAxis: { type: 'category', data: days.map((day) => buildForecastLabel(currentDay, day)) },
-    yAxis: { type: 'value', name: '库存/流量' },
+    yAxis: { type: 'value', name: 'Inventory / Flow' },
     series: Object.keys(byMaterial).flatMap((materialId) => {
       const rowMap = byMaterial[materialId];
       return [
         {
-          name: `${materialId} 预计库存`,
+          name: `${materialId} Inventory`,
           type: 'line',
           smooth: true,
           data: days.map((day) => rowMap[day]?.projected_stock || 0),
         },
         {
-          name: `${materialId} 到货`,
+          name: `${materialId} Delivery`,
           type: 'bar',
           stack: `${materialId}_flow`,
           barMaxWidth: 16,
           data: days.map((day) => rowMap[day]?.inbound_arrival || 0),
         },
         {
-          name: `${materialId} 消耗`,
+          name: `${materialId} Consumption`,
           type: 'bar',
           stack: `${materialId}_flow`,
           barMaxWidth: 16,
           data: days.map((day) => -(rowMap[day]?.planned_consumption || 0)),
         },
         {
-          name: `${materialId} 订单潜在需求`,
+          name: `${materialId} Latent Order Demand`,
           type: 'bar',
           stack: `${materialId}_flow`,
           barMaxWidth: 16,
@@ -951,31 +951,31 @@ const buildWarehouseOption = (charts, currentDay) => {
   const warehouseData = charts?.warehouse_capacity_pressure || {};
   const rows = warehouseData.rows || [];
   return {
-    title: { text: warehouseData.title || '仓容压力预测图', textStyle: { fontSize: 13 } },
+    title: { text: warehouseData.title || 'Warehouse Capacity Pressure', textStyle: { fontSize: 13 } },
     tooltip: { trigger: 'axis' },
-    legend: { top: 28, textStyle: { fontSize: 11 }, data: ['仓容上限', '预测占用', '容量缺口'] },
+    legend: { top: 28, textStyle: { fontSize: 11 }, data: ['Warehouse Capacity', 'Projected Utilization', 'Capacity Gap'] },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 72, containLabel: true },
     xAxis: { type: 'category', data: rows.map((row) => buildForecastLabel(currentDay, row.future_day)) },
     yAxis: [
-      { type: 'value', name: '容量' },
-      { type: 'value', name: '缺口' },
+      { type: 'value', name: 'Capacity' },
+      { type: 'value', name: 'Gap' },
     ],
     series: [
       {
-        name: '仓容上限',
+        name: 'Warehouse Capacity',
         type: 'line',
         smooth: true,
         lineStyle: { type: 'dashed' },
         data: rows.map((row) => row.warehouse_capacity || 0),
       },
       {
-        name: '预测占用',
+        name: 'Projected Utilization',
         type: 'line',
         smooth: true,
         data: rows.map((row) => row.projected_used_capacity || 0),
       },
       {
-        name: '容量缺口',
+        name: 'Capacity Gap',
         type: 'bar',
         yAxisIndex: 1,
         barMaxWidth: 20,
@@ -993,43 +993,43 @@ const buildCashPressureOption = (charts) => {
   const trend = cashPressureData.historical_trend || [];
   return {
     title: {
-      text: cashPressureData.title || '现金压力结构图',
-      subtext: `现金 ${formatMillionValue(cashPressureData.current_state?.cash)} | 净利润 ${formatMillionValue(cashPressureData.current_state?.net_profit)}`,
+      text: cashPressureData.title || 'Cash-Pressure Structure',
+      subtext: `Cash ${formatMillionValue(cashPressureData.current_state?.cash)} | Net profit ${formatMillionValue(cashPressureData.current_state?.net_profit)}`,
       textStyle: { fontSize: 13 },
       subtextStyle: { fontSize: 11 },
     },
     tooltip: { trigger: 'axis' },
-    legend: { top: 46, textStyle: { fontSize: 11 }, data: ['现金', '收入', '成本', '净利润'] },
+    legend: { top: 46, textStyle: { fontSize: 11 }, data: ['Cash', 'Revenue', 'Cost', 'Net Profit'] },
     grid: { left: '6%', right: '44%', top: 96, bottom: '10%' },
     xAxis: { type: 'category', data: trend.map((item) => dayLabel(item.day)) },
-    yAxis: { type: 'value', name: '百万元' },
+    yAxis: { type: 'value', name: 'Millions' },
     series: [
       {
-        name: '现金',
+        name: 'Cash',
         type: 'line',
         smooth: true,
         data: trend.map((item) => Number(item.cash || 0) / 1000000),
       },
       {
-        name: '收入',
+        name: 'Revenue',
         type: 'line',
         smooth: true,
         data: trend.map((item) => Number(item.revenue || 0) / 1000000),
       },
       {
-        name: '成本',
+        name: 'Cost',
         type: 'line',
         smooth: true,
         data: trend.map((item) => Number(item.total_cost_proxy || 0) / 1000000),
       },
       {
-        name: '净利润',
+        name: 'Net Profit',
         type: 'line',
         smooth: true,
         data: trend.map((item) => Number(item.net_profit || 0) / 1000000),
       },
       {
-        name: '成本结构',
+        name: 'Cost Structure',
         type: 'pie',
         radius: ['22%', '40%'],
         center: ['80%', '58%'],
@@ -1059,38 +1059,38 @@ const buildDemandCapacityOption = (charts, currentDay) => {
   });
 
   return {
-    title: { text: demandData.title || '需求-产能缺口图', textStyle: { fontSize: 13 } },
+    title: { text: demandData.title || 'Demand–Capacity Gap', textStyle: { fontSize: 13 } },
     tooltip: { trigger: 'axis' },
     legend: { type: 'scroll', top: 28, textStyle: { fontSize: 11 } },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 72, containLabel: true },
     xAxis: { type: 'category', data: days.map((day) => buildForecastLabel(currentDay, day)) },
     yAxis: [
-      { type: 'value', name: '日产出' },
-      { type: 'value', name: '累计缺口' },
+      { type: 'value', name: 'Day output' },
+      { type: 'value', name: 'Cumulative shortfall' },
     ],
     series: Object.keys(byProduct).flatMap((productId) => {
       const rowMap = byProduct[productId];
       return [
         {
-          name: `${productId} 需求`,
+          name: `${productId} Demand`,
           type: 'bar',
           stack: `${productId}_req`,
           data: days.map((day) => rowMap[day]?.required_output || 0),
         },
         {
-          name: `${productId} 已计划`,
+          name: `${productId} Planned`,
           type: 'bar',
           stack: `${productId}_supply`,
           data: days.map((day) => rowMap[day]?.planned_output || 0),
         },
         {
-          name: `${productId} 可用产能`,
+          name: `${productId} Available Capacity`,
           type: 'line',
           smooth: true,
           data: days.map((day) => rowMap[day]?.free_output_equiv || 0),
         },
         {
-          name: `${productId} 累计缺口`,
+          name: `${productId} Cumulative shortfall`,
           type: 'line',
           smooth: true,
           yAxisIndex: 1,
@@ -1107,11 +1107,11 @@ const buildOrderFunnelOption = (charts) => {
   const deadlineRows = funnelData.commitment_deadline_distribution || [];
   const deadlineBuckets = ['overdue', 'due_today', 'due_in_1_2_days', 'due_in_3_5_days', 'due_after_5_days'];
   const bucketLabels = {
-    overdue: '已逾期',
-    due_today: '当天到期',
-    due_in_1_2_days: '1-2轮内到期',
-    due_in_3_5_days: '3-5轮内到期',
-    due_after_5_days: '5轮后到期',
+    overdue: 'Overdue',
+    due_today: 'Due on day',
+    due_in_1_2_days: 'Term expires on 1-2 rounds',
+    due_in_3_5_days: 'Term expires on 3-5 rounds',
+    due_after_5_days: 'Term expires after 5 rounds',
   };
   const rowStatusLabel = (row) => row?.status_label || getOrderStatusLabel(row?.status);
   const statuses = Array.from(new Set(deadlineRows.map(rowStatusLabel)));
@@ -1124,13 +1124,13 @@ const buildOrderFunnelOption = (charts) => {
 
   return {
     title: {
-      text: funnelData.title || '订单漏斗与积压老化图',
-      subtext: `订单总数 ${funnelData.orders_summary?.total || 0}`,
+      text: funnelData.title || 'Order Funnel and Backlog Aging',
+      subtext: `Total orders ${funnelData.orders_summary?.total || 0}`,
       textStyle: { fontSize: 13 },
       subtextStyle: { fontSize: 11 },
     },
     tooltip: { trigger: 'axis' },
-    legend: { type: 'scroll', top: 46, textStyle: { fontSize: 11 }, data: ['订单数', ...statuses] },
+    legend: { type: 'scroll', top: 46, textStyle: { fontSize: 11 }, data: ['Order Count', ...statuses] },
     grid: [
       { left: '8%', right: '4%', top: 92, height: '26%' },
       { left: '8%', right: '4%', top: '58%', height: '24%' },
@@ -1140,12 +1140,12 @@ const buildOrderFunnelOption = (charts) => {
       { type: 'category', gridIndex: 1, data: deadlineBuckets.map((bucket) => bucketLabels[bucket]) },
     ],
     yAxis: [
-      { type: 'value', gridIndex: 0, name: '订单数' },
-      { type: 'value', gridIndex: 1, name: '未终结订单数' },
+      { type: 'value', gridIndex: 0, name: 'Order Count' },
+      { type: 'value', gridIndex: 1, name: 'Open Orders' },
     ],
     series: [
       {
-        name: '订单数',
+        name: 'Order Count',
         type: 'bar',
         xAxisIndex: 0,
         yAxisIndex: 0,
@@ -1167,16 +1167,16 @@ const buildOrderFunnelOption = (charts) => {
 const buildFinancialTrendOption = (charts) => {
   const data = charts?.financial_trend || {};
   return {
-    title: { text: data.title || '财务指标趋势' },
+    title: { text: data.title || 'Financial Indicator Trends' },
     tooltip: { trigger: 'axis' },
-    legend: { top: 30, data: ['现金', '收入', '利润'] },
+    legend: { top: 30, data: ['Cash', 'Revenue', 'Profit'] },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 74, containLabel: true },
     xAxis: { type: 'category', data: data.days || [] },
-    yAxis: { type: 'value', name: data.unit || '百万元' },
+    yAxis: { type: 'value', name: data.unit || 'Millions' },
     series: [
-      { name: '现金', data: data.series?.cash || [], type: 'line', smooth: true, itemStyle: { color: '#1890ff' } },
-      { name: '收入', data: data.series?.revenue || [], type: 'line', smooth: true, itemStyle: { color: '#52c41a' } },
-      { name: '利润', data: data.series?.profit || [], type: 'line', smooth: true, itemStyle: { color: '#faad14' } },
+      { name: 'Cash', data: data.series?.cash || [], type: 'line', smooth: true, itemStyle: { color: '#1890ff' } },
+      { name: 'Revenue', data: data.series?.revenue || [], type: 'line', smooth: true, itemStyle: { color: '#52c41a' } },
+      { name: 'Profit', data: data.series?.profit || [], type: 'line', smooth: true, itemStyle: { color: '#faad14' } },
     ],
   };
 };
@@ -1184,18 +1184,18 @@ const buildFinancialTrendOption = (charts) => {
 const buildProductionSalesTrendOption = (charts) => {
   const data = charts?.production_sales_trend || {};
   return {
-    title: { text: data.title || '生产与销售趋势' },
+    title: { text: data.title || 'Production and Sales Trends' },
     tooltip: { trigger: 'axis' },
-    legend: { top: 30, data: ['产量', '销售收入'] },
+    legend: { top: 30, data: ['Production', 'Sales Revenue'] },
     grid: { left: '4%', right: '5%', bottom: '5%', top: 74, containLabel: true },
     xAxis: { type: 'category', data: data.days || [] },
     yAxis: [
-      { type: 'value', name: '产量' },
-      { type: 'value', name: '销售收入(百万)' },
+      { type: 'value', name: 'Production' },
+      { type: 'value', name: 'Sales Revenue (Millions)' },
     ],
     series: [
-      { name: '产量', data: data.series?.production || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#722ed1' } },
-      { name: '销售收入', data: data.series?.sales_revenue_million || [], type: 'line', smooth: true, yAxisIndex: 1, itemStyle: { color: '#eb2f96' } },
+      { name: 'Production', data: data.series?.production || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#722ed1' } },
+      { name: 'Sales Revenue', data: data.series?.sales_revenue_million || [], type: 'line', smooth: true, yAxisIndex: 1, itemStyle: { color: '#eb2f96' } },
     ],
   };
 };
@@ -1203,21 +1203,21 @@ const buildProductionSalesTrendOption = (charts) => {
 const buildCapacityOption = (charts) => {
   const data = charts?.capacity_utilization_analysis || {};
   return {
-    title: { text: data.title || '产能与利用率分析' },
+    title: { text: data.title || 'Capacity and Utilization Analysis' },
     tooltip: { trigger: 'axis' },
-    legend: { top: 30, data: ['总产能', '占用产能', '可用产能', '产能利用率'] },
+    legend: { top: 30, data: ['Total Capacity', 'Occupied Capacity', 'Available Capacity', 'Capacity Utilization'] },
     grid: { left: '4%', right: '5%', bottom: '5%', top: 74, containLabel: true },
     xAxis: { type: 'category', data: data.days || [] },
     yAxis: [
-      { type: 'value', name: '产能' },
-      { type: 'value', name: '利用率(%)', max: 100 },
+      { type: 'value', name: 'Capacity' },
+      { type: 'value', name: 'Utilization rate (%)', max: 100 },
     ],
     series: [
-      { name: '总产能', data: data.series?.total_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#52c41a' } },
-      { name: '占用产能', data: data.series?.occupied_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#1890ff' } },
-      { name: '可用产能', data: data.series?.available_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#13c2c2' } },
+      { name: 'Total Capacity', data: data.series?.total_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#52c41a' } },
+      { name: 'Occupied Capacity', data: data.series?.occupied_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#1890ff' } },
+      { name: 'Available Capacity', data: data.series?.available_capacity || [], type: 'bar', yAxisIndex: 0, itemStyle: { color: '#13c2c2' } },
       {
-        name: '产能利用率',
+        name: 'Capacity Utilization',
         data: data.series?.capacity_utilization_percent || [],
         type: 'line',
         smooth: true,
@@ -1232,19 +1232,19 @@ const buildCapacityOption = (charts) => {
 const buildEfficiencyOption = (charts) => {
   const data = charts?.production_efficiency_analysis || {};
   return {
-    title: { text: data.title || '生产效率与产量分析' },
+    title: { text: data.title || 'Production Efficiency and Output Analysis' },
     tooltip: { trigger: 'axis' },
-    legend: { top: 30, data: ['生产效率', '总产量', '计划产量'] },
+    legend: { top: 30, data: ['Production Efficiency', 'Total Output', 'Planned Output'] },
     grid: { left: '4%', right: '5%', bottom: '5%', top: 74, containLabel: true },
     xAxis: { type: 'category', data: data.days || [] },
     yAxis: [
-      { type: 'value', name: '效率(%)', max: 100 },
-      { type: 'value', name: '产量' },
+      { type: 'value', name: 'Efficiency (%)', max: 100 },
+      { type: 'value', name: 'Production' },
     ],
     series: [
-      { name: '生产效率', data: data.series?.production_efficiency_percent || [], type: 'line', smooth: true, yAxisIndex: 0, itemStyle: { color: '#fa8c16' } },
-      { name: '总产量', data: data.series?.total_production || [], type: 'bar', yAxisIndex: 1, itemStyle: { color: '#722ed1' } },
-      { name: '计划产量', data: data.series?.total_planned || [], type: 'bar', yAxisIndex: 1, itemStyle: { color: '#eb2f96' } },
+      { name: 'Production Efficiency', data: data.series?.production_efficiency_percent || [], type: 'line', smooth: true, yAxisIndex: 0, itemStyle: { color: '#fa8c16' } },
+      { name: 'Total Output', data: data.series?.total_production || [], type: 'bar', yAxisIndex: 1, itemStyle: { color: '#722ed1' } },
+      { name: 'Planned Output', data: data.series?.total_planned || [], type: 'bar', yAxisIndex: 1, itemStyle: { color: '#eb2f96' } },
     ],
   };
 };
@@ -1261,7 +1261,7 @@ const buildInventoryQuantityOption = (charts) => {
   const series = Object.keys(items).map((itemId) => {
     const item = items[itemId] || {};
     const type = String(item.item_type || '').toLowerCase();
-    const label = type.includes('material') ? `原料 ${itemId}` : `产品 ${itemId}`;
+    const label = type.includes('material') ? `Raw Material ${itemId}` : `Product ${itemId}`;
     legend.push(label);
     return {
       name: label,
@@ -1273,12 +1273,12 @@ const buildInventoryQuantityOption = (charts) => {
   });
 
   return {
-    title: { text: data.title || '仓库数量变化' },
+    title: { text: data.title || 'Inventory Quantity Changes' },
     tooltip: { trigger: 'axis' },
     legend: { type: 'scroll', top: 30, data: legend },
     grid: { left: '4%', right: '4%', bottom: '5%', top: 76, containLabel: true },
     xAxis: { type: 'category', data: data.days || [] },
-    yAxis: { type: 'value', name: '数量' },
+    yAxis: { type: 'value', name: 'Quantity' },
     series,
   };
 };
@@ -1298,15 +1298,15 @@ const buildOrderTrackingOption = (charts, availableDays) => {
   orders.forEach((order, index) => {
     const tasks = [];
     if (order.accepted_time !== null && order.accepted_time !== undefined) {
-      tasks.push({ name: '创建到接受', value: [order.created_time, order.accepted_time] });
+      tasks.push({ name: 'Created to Accepted', value: [order.created_time, order.accepted_time] });
     } else {
-      tasks.push({ name: '待接受', value: [order.created_time, Number(order.created_time || 0) + 1] });
+      tasks.push({ name: 'Pending', value: [order.created_time, Number(order.created_time || 0) + 1] });
     }
 
     if (order.accepted_time !== null && order.accepted_time !== undefined && order.delivered_time !== null && order.delivered_time !== undefined) {
-      tasks.push({ name: '接受到交付', value: [order.accepted_time, order.delivered_time] });
+      tasks.push({ name: 'Accepted to Delivered', value: [order.accepted_time, order.delivered_time] });
     } else if (order.accepted_time !== null && order.accepted_time !== undefined) {
-      tasks.push({ name: '待交付', value: [order.accepted_time, Number(order.accepted_time || 0) + 1] });
+      tasks.push({ name: 'Pending Delivery', value: [order.accepted_time, Number(order.accepted_time || 0) + 1] });
     }
 
     orderSeries.push({
@@ -1347,7 +1347,7 @@ const buildOrderTrackingOption = (charts, availableDays) => {
   );
 
   return {
-    title: { text: data.title || '订单追踪' },
+    title: { text: data.title || 'Order Tracking' },
     tooltip: {
       formatter: (params) => {
         const row = orders[params.data?.[0]];
@@ -1355,20 +1355,20 @@ const buildOrderTrackingOption = (charts, availableDays) => {
           return params.seriesName;
         }
         return [
-          `订单: ${row.order_id}`,
-          `状态: ${row.status}`,
-          `产品: ${row.product_id || '-'}`,
-          `数量: ${row.quantity || 0}`,
-          `金额: ${(Number(row.total_amount || 0) / 10000).toFixed(2)}万`,
-          `阶段: ${params.data[3]}`,
-          `时间: Turn ${params.data[1]} - Turn ${params.data[2]}`,
+          `Order: ${row.order_id}`,
+          `Status: ${row.status}`,
+          `Product: ${row.product_id || '-'}`,
+          `Quantity: ${row.quantity || 0}`,
+          `Amount: ${Number(row.total_amount || 0).toFixed(2)}`,
+          `Phase: ${params.data[3]}`,
+          `Time: Turn ${params.data[1]} - Turn ${params.data[2]}`,
         ].join('<br/>');
       },
     },
     grid: { left: '8%', right: '4%', top: 76, bottom: '8%', containLabel: true },
     xAxis: {
       type: 'value',
-      name: '模拟轮次',
+      name: 'Simulation Turn',
       min: availableDays.length > 0 ? Math.min(...availableDays) : 0,
       max: Number.isFinite(orderMaxDay) ? orderMaxDay : 0,
     },
@@ -1401,7 +1401,7 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
         ? details.filter((detail) => {
           const rawActionType = detail.actionType || detail.actionName;
           const isLegacyPrewarmSeed = (
-            rawActionType === '未知动作'
+            rawActionType === 'Unknown Action'
             && String(detail.message || '').includes('prewarm seed action')
           );
           return !isActionPassAction(isLegacyPrewarmSeed ? 'action_pass' : rawActionType);
@@ -1420,7 +1420,7 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
   const dayKeys = Object.keys(rawData).sort((a, b) => Number(a) - Number(b));
 
   return {
-    title: { text: actionData.title || '部门执行动作统计' },
+    title: { text: actionData.title || 'Department Action Statistics' },
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -1432,7 +1432,7 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
           const chartDetails = (actionData.details?.[dayKey]?.[dept] || []).filter((detail) => {
             const rawActionType = detail.actionType || detail.actionName;
             const isLegacyPrewarmSeed = (
-              rawActionType === '未知动作'
+              rawActionType === 'Unknown Action'
               && String(detail.message || '').includes('prewarm seed action')
             );
             return !isActionPassAction(isLegacyPrewarmSeed ? 'action_pass' : rawActionType);
@@ -1443,13 +1443,13 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
             : chartDetails;
           html += `<div style="margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 5px;">`;
           html += `<span style="display: inline-block; width: 10px; height: 10px; background: ${param.color}; border-radius: 50%; margin-right: 5px;"></span>`;
-          html += `<strong>${param.seriesName}</strong>: ${param.value} 个动作<br/>`;
+          html += `<strong>${param.seriesName}</strong>: ${param.value} actions<br/>`;
           details.forEach((detail) => {
             const statusColor = detail.success ? '#52c41a' : '#ff4d4f';
             const statusIcon = detail.success ? '✓' : '✗';
             const rawActionType = detail.actionType || detail.actionName;
             const isLegacyPrewarmSeed = (
-              rawActionType === '未知动作'
+              rawActionType === 'Unknown Action'
               && String(detail.message || '').includes('prewarm seed action')
             );
             const actionLabel = getActionDisplayName(isLegacyPrewarmSeed ? 'action_pass' : rawActionType);
@@ -1473,10 +1473,10 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
     xAxis: {
       type: 'category',
       data: dayKeys.map((dayKey) => `Turn ${dayKey}`),
-      name: '模拟轮次',
+      name: 'Simulation Turn',
       axisLabel: { rotate: 35 },
     },
-    yAxis: { type: 'value', name: '动作数量', minInterval: 1 },
+    yAxis: { type: 'value', name: 'Number of Actions', minInterval: 1 },
     series: departments.map((dept) => ({
       name: DEPARTMENT_LABELS[dept] || dept,
       type: 'bar',
@@ -1489,13 +1489,13 @@ const buildActionStatisticsOption = (charts, fallbackRows) => {
 const renderActionDetails = (details = []) => {
   const visibleDetails = details.filter((detail) => !isActionPassAction(detail.actionType || detail.actionName));
   if (!visibleDetails.length) {
-    return <p className="single-dept-empty">当前部门本轮没有非跳过动作。</p>;
+    return <p className="single-dept-empty">No executable action was recorded for this department in the current turn.</p>;
   }
   return (
     <div className="single-dept-action-list">
       {visibleDetails.map((detail, index) => (
         <article key={`${detail.actionType || 'action'}-${index}`}>
-          <b>{getActionDisplayName(detail.actionType || detail.actionName || '未知动作')}</b>
+          <b>{getActionDisplayName(detail.actionType || detail.actionName || 'Unknown Action')}</b>
           {detail.message && <span>{detail.message}</span>}
         </article>
       ))}
@@ -1514,19 +1514,19 @@ const renderProductionDetails = (state) => {
   return (
     <>
       {renderValueList([
-        { label: '产线总数', value: formatNumber(productionLines.total ?? lineRows.length) },
-        { label: '总产能', value: formatNumber(productionLines.total_capacity ?? state.total_capacity) },
-        { label: '可用产能', value: formatNumber(productionLines.available_capacity ?? state.available_capacity) },
-        { label: '占用产能', value: formatNumber(productionLines.occupied_capacity ?? state.occupied_capacity) },
-        { label: '产能利用率', value: formatNumber(toNumber(state.production_metrics?.capacity_utilization ?? state.capacity_utilization) * 100, '%') },
-        { label: '累计产量', value: formatNumber(state.production_metrics?.total_production) },
-        { label: '产品种类', value: formatNumber((state.products_idList || []).length) },
-        { label: '恢复候选', value: formatNumber(recoverySummary.candidate_count ?? state.recovery_guard?.candidates?.length) },
-        { label: '扩产候选', value: formatNumber(marginSummary.capacity_expansion_candidate_count ?? marginSummary.capacity_candidate_count) },
+        { label: 'Production Lines', value: formatNumber(productionLines.total ?? lineRows.length) },
+        { label: 'Total Capacity', value: formatNumber(productionLines.total_capacity ?? state.total_capacity) },
+        { label: 'Available Capacity', value: formatNumber(productionLines.available_capacity ?? state.available_capacity) },
+        { label: 'Occupied Capacity', value: formatNumber(productionLines.occupied_capacity ?? state.occupied_capacity) },
+        { label: 'Capacity Utilization', value: formatNumber(toNumber(state.production_metrics?.capacity_utilization ?? state.capacity_utilization) * 100, '%') },
+        { label: 'Cumulative Output', value: formatNumber(state.production_metrics?.total_production) },
+        { label: 'Product Types', value: formatNumber((state.products_idList || []).length) },
+        { label: 'Recovery Candidates', value: formatNumber(recoverySummary.candidate_count ?? state.recovery_guard?.candidates?.length) },
+        { label: 'Capacity-Expansion Candidates', value: formatNumber(marginSummary.capacity_expansion_candidate_count ?? marginSummary.capacity_candidate_count) },
       ])}
       {Object.keys(byStatus).length > 0 && (
         <div className="single-dept-section">
-          <h4>产线状态汇总</h4>
+          <h4>Production-Line Summary</h4>
           <div className="single-dept-chip-list">
             {Object.entries(byStatus).map(([status, count]) => (
               <span key={status}>{status}: {formatNumber(count)}</span>
@@ -1535,10 +1535,10 @@ const renderProductionDetails = (state) => {
         </div>
       )}
       <div className="single-dept-section">
-        <h4>产线状态</h4>
+        <h4>Production Line Status</h4>
         {lineRows.length ? (
           <div className="single-dept-table compact">
-            <span>产线</span><span>状态</span><span>类型</span><span>产能</span>
+            <span>Production Line</span><span>Status</span><span>Type</span><span>Capacity</span>
             {lineRows.map((line, index) => (
               <React.Fragment key={line.line_id || line.id || index}>
                 <strong>{line.line_id || line.id || `Line ${index + 1}`}</strong>
@@ -1548,13 +1548,13 @@ const renderProductionDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无产线明细。</p>}
+        ) : <p className="single-dept-empty">No production-line details available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>生产计划</h4>
+        <h4>Production Plans</h4>
         {planRows.length ? (
           <div className="single-dept-table plan">
-            <span>计划</span><span>产品</span><span>状态</span><span>数量/每轮产能</span><span>进度</span>
+            <span>Plan</span><span>Product</span><span>Status</span><span>Quantity / Daily Capacity</span><span>Progress</span>
             {planRows.map((plan, index) => {
               const quantity = toNumber(plan.quantity);
               const produced = toNumber(plan.progress?.quantity_produced ?? plan.produced_quantity);
@@ -1569,25 +1569,25 @@ const renderProductionDetails = (state) => {
               );
             })}
           </div>
-        ) : <p className="single-dept-empty">暂无生产计划。</p>}
+        ) : <p className="single-dept-empty">No production plans available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>产品配方</h4>
+        <h4>Product Recipes</h4>
         {recipeRows.length ? (
           <div className="single-dept-table compact">
-            <span>产品</span><span>原料</span><span>用量</span><span>单位</span>
+            <span>Product</span><span>Raw Material</span><span>Usage</span><span>Unit</span>
             {recipeRows.flatMap(([productId, materials]) => (
               Object.entries(materials || {}).map(([materialId, amount]) => (
                 <React.Fragment key={`${productId}-${materialId}`}>
                   <strong>{productId}</strong>
                   <em>{materialId}</em>
                   <em>{formatNumber(amount)}</em>
-                  <em>每单位产品</em>
+                  <em>per product unit</em>
                 </React.Fragment>
               ))
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无配方明细。</p>}
+        ) : <p className="single-dept-empty">No recipe details available.</p>}
       </div>
     </>
   );
@@ -1606,20 +1606,20 @@ const renderSalesDetails = (state) => {
   return (
     <>
       {renderValueList([
-        { label: '订单总数', value: formatNumber(state.sales_metrics?.total_orders) },
-        { label: '已接受订单', value: formatNumber(state.sales_metrics?.accepted_orders) },
-        { label: '已完成订单', value: formatNumber(state.sales_metrics?.completed_orders) },
-        { label: '违约订单', value: formatNumber(state.sales_metrics?.breached_orders) },
-        { label: '销售收入', value: formatNumber(state.sales_metrics?.total_revenue) },
-        { label: '履约率', value: formatNumber(toNumber(state.sales_metrics?.order_fulfillment_rate) * 100, '%') },
-        { label: '订单入口汇总', value: formatNumber(ordersSummary.total) },
-        { label: '活跃市场', value: formatNumber(marketsSummary.active ?? marketsSummary.active_count) },
-        { label: '市场覆盖率', value: formatNumber(toNumber(state.sales_metrics?.market_coverage_rate) * 100, '%') },
-        { label: '待响应提案', value: formatNumber(state.pending_proposals_count) },
+        { label: 'Total Orders', value: formatNumber(state.sales_metrics?.total_orders) },
+        { label: 'Accepted Orders', value: formatNumber(state.sales_metrics?.accepted_orders) },
+        { label: 'Completed Orders', value: formatNumber(state.sales_metrics?.completed_orders) },
+        { label: 'Breached Orders', value: formatNumber(state.sales_metrics?.breached_orders) },
+        { label: 'Sales Revenue', value: formatNumber(state.sales_metrics?.total_revenue) },
+        { label: 'Fulfillment Rate', value: formatNumber(toNumber(state.sales_metrics?.order_fulfillment_rate) * 100, '%') },
+        { label: 'Orders in Summary', value: formatNumber(ordersSummary.total) },
+        { label: 'Active Markets', value: formatNumber(marketsSummary.active ?? marketsSummary.active_count) },
+        { label: 'Market Coverage', value: formatNumber(toNumber(state.sales_metrics?.market_coverage_rate) * 100, '%') },
+        { label: 'Pending Proposals', value: formatNumber(state.pending_proposals_count) },
       ])}
       {Object.keys(backlogBreakdown).length > 0 && (
         <div className="single-dept-section">
-          <h4>需求与积压</h4>
+          <h4>Demand and Backlog</h4>
           <div className="single-dept-chip-list">
             {Object.entries(backlogBreakdown).slice(0, 10).map(([key, value]) => (
               <span key={key}>
@@ -1630,10 +1630,10 @@ const renderSalesDetails = (state) => {
         </div>
       )}
       <div className="single-dept-section">
-        <h4>销售订单</h4>
+        <h4>Sales Orders</h4>
         {orders.length ? (
           <div className="single-dept-table orders">
-            <span>订单</span><span>状态</span><span>产品</span><span>数量</span><span>金额/期限</span>
+            <span>Order</span><span>Status</span><span>Product</span><span>Quantity</span><span>Amount / Deadline</span>
             {orders.map((order, index) => (
               <React.Fragment key={order.order_id || order.id || index}>
                 <strong>{getRecordId(order, ['order_id', 'sales_order_id'])}</strong>
@@ -1644,29 +1644,29 @@ const renderSalesDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无销售订单。</p>}
+        ) : <p className="single-dept-empty">No sales orders available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>市场状态</h4>
+        <h4>Market status</h4>
         {markets.length ? (
           <div className="single-dept-table compact">
-            <span>市场</span><span>类型</span><span>状态</span><span>人员</span>
+            <span>Market</span><span>Type</span><span>Status</span><span>Personnel</span>
             {markets.map((market, index) => (
               <React.Fragment key={market.market_id || market.market_name || market.id || index}>
-                <strong>{market.market_name || market.market_id || market.id || `市场 ${index + 1}`}</strong>
+                <strong>{market.market_name || market.market_id || market.name || market.id || `Market ${index + 1}`}</strong>
                 <em>{market.market_type || market.type || '-'}</em>
                 <em>{market.status || '-'}</em>
                 <em>{formatNumber(market.assigned_workers || market.workers || market.staff_count)}</em>
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无市场明细。</p>}
+        ) : <p className="single-dept-empty">No market details are available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>销售提案</h4>
+        <h4>Sales Proposals</h4>
         {proposals.length ? (
           <div className="single-dept-table orders">
-            <span>提案</span><span>状态</span><span>产品</span><span>数量</span><span>金额/对象</span>
+            <span>Proposals</span><span>Status</span><span>Products</span><span>Number</span><span>Amount/Object</span>
             {proposals.map((proposal, index) => (
               <React.Fragment key={proposal.proposal_id || proposal.id || index}>
                 <strong>{getRecordId(proposal, ['proposal_id'])}</strong>
@@ -1677,7 +1677,7 @@ const renderSalesDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无销售提案。</p>}
+        ) : <p className="single-dept-empty">No sales proposals available.</p>}
       </div>
     </>
   );
@@ -1696,21 +1696,21 @@ const renderProcurementDetails = (state) => {
   return (
     <>
       {renderValueList([
-        { label: '采购订单数', value: formatNumber(state.procurement_metrics?.total_orders) },
-        { label: '完成订单数', value: formatNumber(state.procurement_metrics?.completed_orders) },
-        { label: '采购成本', value: formatNumber(state.procurement_metrics?.total_cost) },
-        { label: '采购数量', value: formatNumber(state.procurement_metrics?.total_quantity) },
-        { label: '准时率', value: formatNumber(toNumber(state.procurement_metrics?.on_time_rate) * 100, '%') },
-        { label: '可采购物料', value: formatNumber((state.purchasable_materials_idList || []).length) },
-        { label: '待收物料种类', value: formatNumber(Object.keys(pendingByMaterial).length) },
-        { label: '恢复信号物料', value: formatNumber(Object.keys(recoverySignals).length) },
-        { label: '待响应提案', value: formatNumber(state.pending_proposals_count) },
+        { label: 'Procurement Orders', value: formatNumber(state.procurement_metrics?.total_orders) },
+        { label: 'Completed Orders', value: formatNumber(state.procurement_metrics?.completed_orders) },
+        { label: 'Procurement Cost', value: formatNumber(state.procurement_metrics?.total_cost) },
+        { label: 'Purchased Quantity', value: formatNumber(state.procurement_metrics?.total_quantity) },
+        { label: 'On-Time Rate', value: formatNumber(toNumber(state.procurement_metrics?.on_time_rate) * 100, '%') },
+        { label: 'Purchasable Materials', value: formatNumber((state.purchasable_materials_idList || []).length) },
+        { label: 'Materials Pending Receipt', value: formatNumber(Object.keys(pendingByMaterial).length) },
+        { label: 'Materials with Recovery Signals', value: formatNumber(Object.keys(recoverySignals).length) },
+        { label: 'Pending Proposals', value: formatNumber(state.pending_proposals_count) },
       ])}
       {(Object.keys(pendingByMaterial).length > 0 || Object.keys(inventoryPositions).length > 0) && (
         <div className="single-dept-section">
-          <h4>物料库存位</h4>
+          <h4>Material Inventory Position</h4>
           <div className="single-dept-table orders">
-            <span>物料</span><span>在手</span><span>在途</span><span>积压</span><span>库存位/待收</span>
+            <span>Material</span><span>On Hand</span><span>In Transit</span><span>Backlog</span><span>Inventory Position / Pending</span>
             {Array.from(new Set([
               ...Object.keys(pendingByMaterial),
               ...Object.keys(inventoryPositions),
@@ -1730,10 +1730,10 @@ const renderProcurementDetails = (state) => {
         </div>
       )}
       <div className="single-dept-section">
-        <h4>采购订单</h4>
+        <h4>Procurement Orders</h4>
         {orders.length ? (
           <div className="single-dept-table orders">
-            <span>订单</span><span>状态</span><span>物料</span><span>数量</span><span>供应商/到货</span>
+            <span>Order</span><span>Status</span><span>Material</span><span>Quantity</span><span>Supplier / Arrival</span>
             {orders.map((order, index) => (
               <React.Fragment key={order.order_id || order.id || index}>
                 <strong>{getRecordId(order, ['order_id', 'purchase_order_id', 'procurement_order_id'])}</strong>
@@ -1744,20 +1744,20 @@ const renderProcurementDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无采购订单。</p>}
+        ) : <p className="single-dept-empty">No procurement orders available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>供应商</h4>
+        <h4>Suppliers</h4>
         {suppliers.length ? (
           <div className="single-dept-chip-list">
             {suppliers.map((supplier, index) => (
               <span key={supplier.supplier_name || supplier.id || index}>
-                {supplier.supplier_name || supplier.name || supplier.id || `供应商 ${index + 1}`}
+                {supplier.supplier_name || supplier.name || supplier.id || `Supplier ${index + 1}`}
                 {supplier.unit_price ? ` / ${formatNumber(supplier.unit_price)}` : ''}
               </span>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无供应商明细。</p>}
+        ) : <p className="single-dept-empty">No supplier details are available.</p>}
       </div>
     </>
   );
@@ -1771,32 +1771,32 @@ const renderInventoryDetails = (state) => {
   return (
     <>
       {renderValueList([
-        { label: '仓容上限', value: formatNumber(warehouseCapacity) },
-        { label: '已用仓容', value: formatNumber(usedCapacity) },
-        { label: '仓容利用率', value: formatNumber(toNumber(state.warehouse_utilization, warehouseCapacity > 0 ? usedCapacity / warehouseCapacity : 0) * 100, '%') },
-        { label: '库存品类', value: formatNumber(items.length) },
-        { label: '库存总量', value: formatNumber(state.total_inventory_su ?? state.total_inventory) },
-        { label: '库存总值', value: formatNumber(state.total_value ?? metrics.total_value) },
-        { label: '运营成本', value: formatNumber(state.total_operating_cost) },
-        { label: '维护成本', value: formatNumber(state.total_maintenance_cost) },
-        { label: '库存事件', value: formatNumber(state.event_count) },
+        { label: 'Warehouse Capacity', value: formatNumber(warehouseCapacity) },
+        { label: 'Used Capacity', value: formatNumber(usedCapacity) },
+        { label: 'Warehouse Utilization', value: formatNumber(toNumber(state.warehouse_utilization, warehouseCapacity > 0 ? usedCapacity / warehouseCapacity : 0) * 100, '%') },
+        { label: 'Inventory Item Types', value: formatNumber(items.length) },
+        { label: 'Total Inventory', value: formatNumber(state.total_inventory_su ?? state.total_inventory) },
+        { label: 'Total Inventory Value', value: formatNumber(state.total_value ?? metrics.total_value) },
+        { label: 'Operating Costs', value: formatNumber(state.total_operating_cost) },
+        { label: 'Maintenance Costs', value: formatNumber(state.total_maintenance_cost) },
+        { label: 'Inventory Events', value: formatNumber(state.event_count) },
       ])}
       <div className="single-dept-section">
-        <h4>库存明细</h4>
+        <h4>Inventory Details</h4>
         {items.length ? (
           <div className="single-dept-table inventory">
-            <span>物品</span><span>类型</span><span>数量</span><span>安全库存</span><span>状态</span>
+            <span>Item</span><span>Type</span><span>Quantity</span><span>Safety Stock</span><span>Status</span>
             {items.map((item, index) => (
               <React.Fragment key={item.item_id || index}>
                 <strong>{item.item_id || '-'}</strong>
                 <em>{item.item_type || '-'}</em>
                 <em>{formatNumber(item.quantity)}</em>
                 <em>{formatNumber(item.safety_stock)}</em>
-                <em>{item.is_low_stock || item.is_below_reorder_point ? '需关注' : '正常'}</em>
+                <em>{item.is_low_stock || item.is_below_reorder_point ? 'Attention' : 'Normal'}</em>
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无库存明细。</p>}
+        ) : <p className="single-dept-empty">No inventory details available.</p>}
       </div>
     </>
   );
@@ -1809,19 +1809,19 @@ const renderHrDetails = (state) => {
   return (
     <>
       {renderValueList([
-        { label: '总薪酬', value: formatNumber(state.total_payroll) },
-        { label: '人力总成本', value: formatNumber(state.total_human_cost) },
-        { label: '工资成本', value: formatNumber(state.salary_cost_total) },
-        { label: '招聘成本', value: formatNumber(state.recruit_cost_total) },
-        { label: '累计招聘', value: formatNumber(recruitmentStatus.total_recruited) },
-        { label: '待入职记录', value: formatNumber((recruitmentStatus.pending || []).length) },
-        { label: '弹性人手', value: state.staffing_relaxation ? '启用' : '未启用' },
+        { label: 'Total Payroll', value: formatNumber(state.total_payroll) },
+        { label: 'Total Human-Resource Cost', value: formatNumber(state.total_human_cost) },
+        { label: 'Salary Cost', value: formatNumber(state.salary_cost_total) },
+        { label: 'Recruitment Cost', value: formatNumber(state.recruit_cost_total) },
+        { label: 'Cumulative Recruits', value: formatNumber(recruitmentStatus.total_recruited) },
+        { label: 'Pending Onboarding Records', value: formatNumber((recruitmentStatus.pending || []).length) },
+        { label: 'Staffing Relaxation', value: state.staffing_relaxation ? 'Enabled' : 'Disabled' },
       ])}
       <div className="single-dept-section">
-        <h4>部门人手</h4>
+        <h4>Department Staffing</h4>
         {staffing.length ? (
           <div className="single-dept-table staffing">
-            <span>部门</span><span>人数</span><span>可用</span><span>占用</span><span>待入职</span>
+            <span>Department</span><span>Employees</span><span>Available</span><span>Allocated</span><span>Pending Recruits</span>
             {staffing.map(([code, row]) => (
               <React.Fragment key={code}>
                 <strong>{row.label || code}</strong>
@@ -1832,13 +1832,13 @@ const renderHrDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无人手明细。</p>}
+        ) : <p className="single-dept-empty">No staffing records available.</p>}
       </div>
       <div className="single-dept-section">
-        <h4>招聘记录</h4>
+        <h4>Recruitment Records</h4>
         {history.length ? (
           <div className="single-dept-table compact">
-            <span>记录</span><span>部门</span><span>人数</span><span>完成轮次</span>
+            <span>Record</span><span>Department</span><span>People</span><span>Completion Turn</span>
             {history.map((record, index) => (
               <React.Fragment key={record.record_id || index}>
                 <strong>{record.record_id || `REC ${index + 1}`}</strong>
@@ -1848,7 +1848,7 @@ const renderHrDetails = (state) => {
               </React.Fragment>
             ))}
           </div>
-        ) : <p className="single-dept-empty">暂无招聘记录。</p>}
+        ) : <p className="single-dept-empty">No recruitment records are available.</p>}
       </div>
     </>
   );
@@ -1857,25 +1857,25 @@ const renderHrDetails = (state) => {
 const renderFinanceDetails = (state) => (
   <>
     {renderValueList([
-      { label: '当前现金', value: formatNumber(state.cash_summary?.current_cash ?? state.cash) },
-      { label: '预警缓冲后现金', value: formatNumber(state.cash_summary?.available_after_warning_buffer) },
-      { label: '预警阈值', value: formatNumber(state.cash_summary?.warning_threshold) },
-      { label: '临界阈值', value: formatNumber(state.cash_summary?.critical_threshold) },
-      { label: '现金等级', value: state.cash_summary?.cash_level || '-' },
-      { label: '应付账款', value: formatNumber(state.cash_summary?.accounts_payable_balance) },
-      { label: '总收入', value: formatNumber(state.total_revenue) },
-      { label: '总成本', value: formatNumber(state.total_cost) },
-      { label: '净利润', value: formatNumber(state.financial_indicators?.net_profit) },
-      { label: '毛利润', value: formatNumber(state.financial_indicators?.gross_profit) },
-      { label: '净利率', value: formatNumber(toNumber(state.financial_indicators?.net_profit_rate) * 100, '%') },
-      { label: '毛利率', value: formatNumber(toNumber(state.financial_indicators?.gross_profit_rate) * 100, '%') },
+      { label: 'Current Cash', value: formatNumber(state.cash_summary?.current_cash ?? state.cash) },
+      { label: 'Cash after Warning Buffer', value: formatNumber(state.cash_summary?.available_after_warning_buffer) },
+      { label: 'Warning Threshold', value: formatNumber(state.cash_summary?.warning_threshold) },
+      { label: 'Critical Threshold', value: formatNumber(state.cash_summary?.critical_threshold) },
+      { label: 'Cash Level', value: state.cash_summary?.cash_level || '-' },
+      { label: 'Accounts Payable', value: formatNumber(state.cash_summary?.accounts_payable_balance) },
+      { label: 'Total Revenue', value: formatNumber(state.total_revenue) },
+      { label: 'Total Cost', value: formatNumber(state.total_cost) },
+      { label: 'Net Profit', value: formatNumber(state.financial_indicators?.net_profit) },
+      { label: 'Gross Profit', value: formatNumber(state.financial_indicators?.gross_profit) },
+      { label: 'Net Profit Margin', value: formatNumber(toNumber(state.financial_indicators?.net_profit_rate) * 100, '%') },
+      { label: 'Gross Profit Margin', value: formatNumber(toNumber(state.financial_indicators?.gross_profit_rate) * 100, '%') },
     ])}
   </>
 );
 
 const renderDepartmentBusinessDetails = (dept, state) => {
   if (!state || Object.keys(state).length === 0) {
-    return <p className="single-dept-empty">当前轮次未读取到该部门状态文件。</p>;
+    return <p className="single-dept-empty">No department state was recorded for this turn.</p>;
   }
   if (dept === 'production') {
     return renderProductionDetails(state);
@@ -1895,7 +1895,7 @@ const renderDepartmentBusinessDetails = (dept, state) => {
   if (dept === 'finance') {
     return renderFinanceDetails(state);
   }
-  return <p className="single-dept-empty">暂无部门详情。</p>;
+  return <p className="single-dept-empty">No department details available.</p>;
 };
 
 const SingleEnterprisePerformanceView = ({
@@ -1977,9 +1977,9 @@ const SingleEnterprisePerformanceView = ({
           ].filter((item) => !isActionPassEntry(item));
           actionCounts[dept] = rawActions.length;
           actionDetails[dept] = rawActions.map((item) => ({
-            actionType: getActionNameFromEntry(item) || '未知动作',
+            actionType: getActionNameFromEntry(item) || 'Unknown Action',
             success: true,
-            message: item.action_reason || item.decision_source || '从动作文件读取',
+            message: item.action_reason || item.decision_source || 'Read from Action File',
           }));
           errorCounts[dept] = (
             countErrorPayload(error)
@@ -2138,17 +2138,17 @@ const SingleEnterprisePerformanceView = ({
       } else {
         const days = rows.map((row) => row.dayLabel);
         initChart(financeRef, {
-          title: { text: '财务指标趋势' },
+          title: { text: 'Trends in financial indicators' },
           tooltip: { trigger: 'axis' },
           legend: { top: 30 },
           grid: { left: 42, right: 20, top: 74, bottom: 30 },
           xAxis: { type: 'category', data: days },
           yAxis: { type: 'value' },
           series: [
-            { name: '现金', type: 'line', smooth: true, data: rows.map((row) => row.cash) },
-            { name: '收入', type: 'line', smooth: true, data: rows.map((row) => row.revenue) },
-            { name: '成本', type: 'line', smooth: true, data: rows.map((row) => row.cost) },
-            { name: '净利润', type: 'line', smooth: true, data: rows.map((row) => row.netProfit) },
+            { name: 'cash', type: 'line', smooth: true, data: rows.map((row) => row.cash) },
+            { name: 'Income', type: 'line', smooth: true, data: rows.map((row) => row.revenue) },
+            { name: 'Cost', type: 'line', smooth: true, data: rows.map((row) => row.cost) },
+            { name: 'Net profit', type: 'line', smooth: true, data: rows.map((row) => row.netProfit) },
           ],
         });
         initChart(actionStatisticsRef, buildActionStatisticsOption(null, rows));
@@ -2165,7 +2165,7 @@ const SingleEnterprisePerformanceView = ({
   }, [rows, loading, trendCharts, snapshotCharts, viewMode, currentDay, availableDays.join(',')]);
 
   if (loading) {
-    return <div className="loading">加载单企业性能图表...</div>;
+    return <div className="loading">Loading enterprise performance charts...</div>;
   }
 
   if (!rows.length) {
@@ -2182,15 +2182,15 @@ const SingleEnterprisePerformanceView = ({
       : `${Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}${suffix}`
   );
   const snapshotCards = [
-    { label: '当前轮次', value: `Turn ${latest.day ?? currentDay}` },
-    { label: '现金余额', value: formatMetric(latest.cash) },
-    { label: '净利润', value: formatMetric(latest.netProfit) },
-    { label: '生产产量', value: formatMetric(latest.production) },
-    { label: '销售订单', value: formatMetric(latest.salesOrders) },
-    { label: '采购订单', value: formatMetric(latest.procurementOrders) },
-    { label: '库存总量', value: formatMetric(latest.inventoryQuantity) },
+    { label: 'Current Turn', value: `Turn ${latest.day ?? currentDay}` },
+    { label: 'Cash Balance', value: formatMetric(latest.cash) },
+    { label: 'Net Profit', value: formatMetric(latest.netProfit) },
+    { label: 'Production Output', value: formatMetric(latest.production) },
+    { label: 'Sales Orders', value: formatMetric(latest.salesOrders) },
+    { label: 'Procurement Orders', value: formatMetric(latest.procurementOrders) },
+    { label: 'Total Inventory', value: formatMetric(latest.inventoryQuantity) },
     {
-      label: '仓容利用率',
+      label: 'Warehouse Utilization',
       value: latest.warehouseUtilization === null || latest.warehouseUtilization === undefined
         ? '-'
         : formatMetric(latest.warehouseUtilization * 100, '%'),
@@ -2211,7 +2211,7 @@ const SingleEnterprisePerformanceView = ({
       <div className="single-performance-header">
         <div>
           <span>Single Enterprise Performance</span>
-          <strong>{activeViewMode === 'trend' ? '整体过程趋势分析' : '单轮数据状态'}</strong>
+          <strong>{activeViewMode === 'trend' ? 'End-to-End Trend Analysis' : 'Turn-Level Operating State'}</strong>
         </div>
         <div className="single-performance-header-actions">
           <div className="single-performance-toggle">
@@ -2220,14 +2220,14 @@ const SingleEnterprisePerformanceView = ({
               className={activeViewMode === 'trend' ? 'active' : ''}
               onClick={() => onViewModeChange?.('trend')}
             >
-              过程趋势
+              Process Trends
             </button>
             <button
               type="button"
               className={activeViewMode === 'snapshot' ? 'active' : ''}
               onClick={() => onViewModeChange?.('snapshot')}
             >
-              单轮状态
+              Turn-Level State
             </button>
           </div>
         </div>
@@ -2257,10 +2257,10 @@ const SingleEnterprisePerformanceView = ({
                     onClick={() => setSelectedDepartment(dept)}
                   >
                     <strong>{DEPARTMENT_LABELS[dept] || dept}</strong>
-                    <span>{actionCount} 动作</span>
-                    <span className={errorCount > 0 ? 'danger' : ''}>{errorCount} 错误</span>
+                    <span>{actionCount} Actions</span>
+                    <span className={errorCount > 0 ? 'danger' : ''}>{errorCount} Errors</span>
                     <em className={errorCount > 0 ? 'failed' : 'success'}>
-                      {errorCount > 0 ? '需检查' : '正常'}
+                      {errorCount > 0 ? 'Checked' : 'Normal'}
                     </em>
                   </button>
                 );
@@ -2270,17 +2270,17 @@ const SingleEnterprisePerformanceView = ({
             <article className="single-dept-detail-panel">
               <header>
                 <div>
-                  <span>部门详情</span>
+                  <span>Details</span>
                   <strong>{DEPARTMENT_LABELS[activeDepartment] || activeDepartment}</strong>
                 </div>
                 <small>{`Turn ${latest.day ?? currentDay}`}</small>
               </header>
               <div className="single-dept-section">
-                <h4>本轮动作</h4>
+                <h4>Current Round Actions</h4>
                 {renderActionDetails(latest.actionDetails?.[activeDepartment] || [])}
               </div>
               <div className="single-dept-section">
-                <h4>业务状态</h4>
+                <h4>Operating State</h4>
                 {renderDepartmentBusinessDetails(activeDepartment, activeDepartmentState)}
               </div>
             </article>
@@ -2289,71 +2289,71 @@ const SingleEnterprisePerformanceView = ({
           {hasSnapshotCharts ? (
             <div className="single-performance-grid snapshot-charts">
               <article>
-                <h3>未来3/5/7轮订单履约覆盖图</h3>
+                <h3>Order Fulfillment Coverage over the Next 3/5/7 Turns</h3>
                 <div className="single-performance-chart" ref={fulfillmentRef} />
               </article>
               <article>
-                <h3>原料覆盖轮数/到货覆盖图</h3>
+                <h3>Raw-Material and Arrival Coverage</h3>
                 <div className="single-performance-chart" ref={rawMaterialRef} />
               </article>
               <article>
-                <h3>仓容压力预测图</h3>
+                <h3>Warehouse Capacity Pressure</h3>
                 <div className="single-performance-chart" ref={warehouseRef} />
               </article>
               <article className="tall">
-                <h3>现金压力结构图</h3>
+                <h3>Cash-Pressure Structure</h3>
                 <div className="single-performance-chart tall" ref={cashPressureRef} />
               </article>
               <article>
-                <h3>需求-产能缺口图</h3>
+                <h3>Demand–Capacity Gap</h3>
                 <div className="single-performance-chart" ref={demandCapacityRef} />
               </article>
               <article className="tall">
-                <h3>订单漏斗与积压老化图</h3>
+                <h3>Order Funnel and Backlog Aging</h3>
                 <div className="single-performance-chart tall" ref={orderFunnelRef} />
               </article>
             </div>
           ) : (
             <article className="single-performance-empty">
-              <h3>单轮预测图表</h3>
-              <p>当前轮次未读取到 charts_data_export.json 中的六类单轮预测图表数据。</p>
+              <h3>Turn-Level Projection Charts</h3>
+              <p>No projection-chart data were recorded for the current turn.</p>
             </article>
           )}
         </div>
       ) : (
         <div className="single-performance-grid trend-charts">
           <article>
-            <h3>财务指标趋势</h3>
+            <h3>Financial Indicator Trends</h3>
             <div className="single-performance-chart" ref={financeRef} />
           </article>
           <article>
-            <h3>生产与销售趋势</h3>
+            <h3>Production and Sales Trends</h3>
             <div className="single-performance-chart" ref={productionSalesRef} />
           </article>
           <article>
-            <h3>产能与利用率分析</h3>
+            <h3>Capacity and Utilization Analysis</h3>
             <div className="single-performance-chart" ref={capacityRef} />
           </article>
           <article>
-            <h3>生产效率与产量分析</h3>
+            <h3>Production Efficiency and Output Analysis</h3>
             <div className="single-performance-chart" ref={efficiencyRef} />
           </article>
           <article>
-            <h3>仓库数量变化</h3>
+            <h3>Inventory Quantity Changes</h3>
             <div className="single-performance-chart" ref={inventoryQuantityRef} />
           </article>
           <article className="tall">
-            <h3>订单追踪</h3>
+            <h3>Order Tracking</h3>
             <div className="single-performance-chart tall" ref={orderTrackingRef} />
           </article>
           <article>
-            <h3>部门执行动作统计</h3>
+            <h3>Department Action Statistics</h3>
             <div className="single-performance-chart" ref={actionStatisticsRef} />
           </article>
           {!trendCharts && (
             <article className="single-performance-empty">
-              <h3>趋势图表数据</h3>
-              <p>当前任务未读取到 charts_data_export.json，已显示可从部门状态直接构造的基础财务和动作统计图。</p>
+              <h3>Trend Chart Data</h3>
+              <p>No exported chart bundle was found; the view uses department-state records to construct core financial and operating trends.</p>
             </article>
           )}
         </div>

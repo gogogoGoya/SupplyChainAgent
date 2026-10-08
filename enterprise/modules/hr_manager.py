@@ -8,7 +8,7 @@ from enterprise.modules.decorators import with_response, validate_positive, vali
 from config.module_config import HRConfig
 import time
 class DepartmentType(Enum):
-    """部门类型枚举"""
+    """department Type count"""
     HR = "人力资源部门"
     PRODUCTION = "生产部门"
     SALES = "销售部门"
@@ -18,7 +18,7 @@ class DepartmentType(Enum):
 
 @dataclass
 class DepartmentConfig:
-    """部门配置数据类"""
+    """department Configure data class"""
     name: str
     wage_per_person: float
     recruit_cost: float
@@ -26,7 +26,7 @@ class DepartmentConfig:
 
 @dataclass
 class RecruitmentRecord:
-    """招聘记录数据类"""
+    """Recruitment records data category"""
     record_id: str
     department: DepartmentType
     num_people: int
@@ -37,37 +37,37 @@ class RecruitmentRecord:
 
 class HRManager(EnhancedBaseModule):
     """
-    人力资源管理模块
+    Human resources management module
 
-    负责企业的人员配置、招聘、工资管理、利用率统计和人力成本核算
-    """
+    Responsible for enterprise staffing, recruitment, payroll management, utilization statistics and human cost accounting
+        """
 
     def __init__(self, enterprise, module_id=None, config: HRConfig = None):
         """
-        初始化人力资源管理器
+        Initializing Human Resource Manager
 
         Args:
-            enterprise: 所属企业实例
-            module_id: 模块唯一标识（可选）
-            config: HR配置对象（可选，默认使用HRConfig()）
+            Enterprise: Examples of enterprise
+            parameter: Only identification of modules (optional)
+            Config: HR Configuration Object (optional, default HRonfig())
 
         Raises:
-            ValueError: enterprise对象为空
-        """
+            ValueError: empty object
+                """
         if not enterprise:
             raise ValueError("enterprise对象不能为空")
 
-        # 使用配置或默认配置
+        # Use configuration or default configuration
         self.config = config or HRConfig()
 
-        # 调用父类初始化
+        # Call Parent Initialization
         super().__init__(
             enterprise,
             module_id or f"hr_{enterprise.id}",
             self.config
         )
         self.module_type = "HRManager"
-        # 从配置创建部门配置字典
+        # Create department Configure Dictionary from Configuration
         self.DEPARTMENT_CONFIGS = {
             DepartmentType.HR: DepartmentConfig(
                 name="人力资源部门",
@@ -107,7 +107,7 @@ class HRManager(EnhancedBaseModule):
             ),
         }
 
-        # 从配置中提取常用属性
+        # Extract common properties from configuration
         self.MAX_RECRUIT_PER_TIME = self.config.MAX_RECRUIT_PER_TIME
         self.MIN_RECRUIT_PER_TIME = self.config.MIN_RECRUIT_PER_TIME
         self.UTILIZATION_SURPLUS_THRESHOLD = self.config.UTILIZATION_SURPLUS_THRESHOLD
@@ -115,25 +115,25 @@ class HRManager(EnhancedBaseModule):
         self.OPTIMAL_UTILIZATION_LOWER = self.config.OPTIMAL_UTILIZATION_LOWER
         self.OPTIMAL_UTILIZATION_UPPER = self.config.OPTIMAL_UTILIZATION_UPPER
 
-        # 部门人员配置
+        # department Staffing
         self.department_employees: Dict[DepartmentType, int] = {
             dept: 0 for dept in DepartmentType
         }
-        # 部门利用率
+        # department Utilization
         self.department_utilization: Dict[DepartmentType, float] = {
             dept: 0.0 for dept in DepartmentType
         }
-        # 招聘记录
+        # Recruitment records
         self.recruitment_records: List[RecruitmentRecord] = []
         self.recruitment_counter = 0
-        # 工资历史记录
+        # Wage history
         self.salary_history: List[Dict] = []
-        # 成本统计
+        # Cost statistics
         self.cumulative_recruit_cost = 0.0
         self.cumulative_salary_cost = 0.0
-        # 员工流失记录
+        # Staff loss records
         self.employee_attrition_history: List[Dict] = []
-        # 招聘成本和薪资基础属性（兼容data_initializer.py）
+        # Recruitment costs and pay base attributes (data initializer.py)
         self.recruitment_cost = {
             dept.value: config.recruit_cost 
             for dept, config in self.DEPARTMENT_CONFIGS.items()
@@ -147,7 +147,7 @@ class HRManager(EnhancedBaseModule):
 
     @staticmethod
     def _resolve_recruit_cycle_days(recruit_cycle) -> int:
-        """招聘周期默认回落为 1 个工作日，保证标准配置下次日到岗。"""
+        """The recruitment cycle defaults a working day to ensure that the standard configuration arrives on the next day."""
         try:
             cycle_days = int(recruit_cycle)
         except (TypeError, ValueError):
@@ -155,7 +155,7 @@ class HRManager(EnhancedBaseModule):
         return max(1, cycle_days)
 
     def _get_staffing_relaxation_policy(self) -> Dict:
-        """读取场景级弱化人手策略，避免 Beer Game 主链被 staffing fail 打断。"""
+        """Reads the scene level weak-man strategy to avoid the break of the Beer Game main chain by staffing fail."""
         try:
             from config.simulation_preset_config import get_runtime_injection_config
 
@@ -181,7 +181,7 @@ class HRManager(EnhancedBaseModule):
         }
 
     def _get_relaxed_available_workers(self, total: int, allocated: int) -> int:
-        """在人手弱化模式下，向各业务模块提供更宽松的可用人数。"""
+        """Under the downsized model, more relaxed availability is provided to the business modules."""
         physical_available = max(0, total - allocated)
         policy = self._get_staffing_relaxation_policy()
         if not policy.get("enabled"):
@@ -190,8 +190,8 @@ class HRManager(EnhancedBaseModule):
 
     def _recalculate_department_utilization(self, department: DepartmentType) -> None:
         """
-        基于当前总人数和已分配人数重算部门利用率。
-        """
+        Recost department utilization factor based on current and assigned population.
+                """
         total = max(0, self.department_employees.get(department, 0))
         allocated = max(0, self.allocated_workers.get(department, 0))
         if total <= 0:
@@ -201,8 +201,8 @@ class HRManager(EnhancedBaseModule):
 
     def _get_pending_recruitment_by_department(self) -> Dict[DepartmentType, int]:
         """
-        汇总各部门尚未完成的招聘人数。
-        """
+        Summarize all outstanding recruitments at department.
+                """
         pending_by_department = {dept: 0 for dept in DepartmentType}
         for record in self.recruitment_records:
             if record.status == "进行中":
@@ -212,18 +212,18 @@ class HRManager(EnhancedBaseModule):
     @with_response("initialize_staffing")
     def initialize_staffing(self, initial_staffing: Dict[str, int], dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        初始化部门人员配置
+        Initialization of department Staffing
 
         Args:
-            initial_staffing: 包含各部门初始人员配置的字典，键为部门名称，值为人员数量
-            response: 响应对象（由装饰器注入）
+            initial_staffing: Dictionary containing each department initial staffing, key department name, value of personnel
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含初始化结果的统一响应对象
-        """
-        # 更新部门人员配置
+            ModuleResponse: Unified response object with initial results
+                """
+        # Update department Staffing
         for dept_name, num_employees in initial_staffing.items():
-            # 验证人员数量
+            # Number of certifying officers
             if not isinstance(num_employees, int) or num_employees < 0:
                 return self.error_response(
                     response,
@@ -234,13 +234,13 @@ class HRManager(EnhancedBaseModule):
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
         for dept_name, num_employees in initial_staffing.items():
-            # 查找对应的部门类型（不区分大小写）
+            # Finds the corresponding department type (without case sensitive)
             dept_type = self._convert_to_department_type(dept_name)
             self.department_employees[dept_type] = num_employees
-            # 初始化部门利用率
+            # Initialization department Utilization
             self.department_utilization[dept_type] = 0.0
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "部门人员配置初始化成功",
@@ -252,19 +252,19 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_department_employees")
     def get_department_employees(self, department, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取指定部门的员工数
+        Get specified department Number of employees
 
         Args:
-            department: 部门类型或部门名称字符串
-            response: 响应对象（由装饰器注入）
+            Department: department Type or department Name string
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含部门员工数的统一响应对象
-        """
+            ModuleResponse: Unified response object with department number of employees
+                """
         dept_type = self._convert_to_department_type(department)
         employee_count = self.department_employees.get(dept_type, 0)
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取{dept_type.value}的员工数",
@@ -277,17 +277,17 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_all_employees")
     def get_all_employees(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取企业总员工数
+        Access to enterprise total staff
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含企业总员工数的统一响应对象
-        """
+            ModuleResponse: Unified response object with enterprise total number of employees
+                """
         total_employees = sum(self.department_employees.values())
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功获取企业总员工数",
@@ -299,19 +299,19 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_department_utilization")
     def get_department_utilization(self, department, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取指定部门的利用率
+        Access to specified department utilization factor
 
         Args:
-            department: 部门类型或部门名称字符串
-            response: 响应对象（由装饰器注入）
+            Department: department Type or department Name string
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含部门利用率的统一响应对象
-        """
+            ModuleResponse: Harmonized response subject with department utilization factor
+                """
         dept_type = self._convert_to_department_type(department)
         utilization = self.department_utilization.get(dept_type, 0.0)
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取{dept_type.value}的利用率",
@@ -324,21 +324,21 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_average_utilization")
     def get_average_utilization(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取企业平均利用率
+        Access enterprise average utilization factor
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含企业平均利用率的统一响应对象
-        """
+            ModuleResponse: Unified target with enterprise average utilization factor
+                """
         utilizations = list(self.department_utilization.values())
         if not utilizations:
             average_utilization = 0.0
         else:
             average_utilization = sum(utilizations) / len(utilizations)
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功获取企业平均利用率",
@@ -347,7 +347,6 @@ class HRManager(EnhancedBaseModule):
             }
         )
     
-    # ========== 招聘管理方法 ==========
     
     @with_response("handle_recruitment")
     @validate_positive("num_people")
@@ -359,21 +358,21 @@ class HRManager(EnhancedBaseModule):
         response: ModuleResponse = None
     ) -> ModuleResponse:
         """
-        发起招聘流程,验证资金并创建招聘记录
+        Launching of recruitment processes, validation of funds and creation of recruitment records
 
         Args:
-            department: 部门类型或部门名称字符串
-            num_people: 招聘人数
-            response: 响应对象（由装饰器注入）
+            Department: department Type or department Name string
+            parameter: Recruitments
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含招聘结果的统一响应对象
-        """
-        # 参数验证
+            ModuleResponse: Unified response with recruitment results
+                """
+        # Parameter Authentication
         department = self._convert_to_department_type(department)
         finance_manager = super().get_module_by_type("FinanceManager")
 
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         balance_result = finance_manager.get_balance()
         if isinstance(balance_result, (int, float)):
             current_cash = balance_result
@@ -391,7 +390,7 @@ class HRManager(EnhancedBaseModule):
                 "现金不能为负数"
             )
 
-        # 验证招聘人数
+        # Number of confirmed recruits
         if not isinstance(num_people, int) or num_people < 1 or num_people > self.MAX_RECRUIT_PER_TIME:
             return self.error_response(
                 response,
@@ -399,11 +398,11 @@ class HRManager(EnhancedBaseModule):
                 f"招聘人数必须在1-{self.MAX_RECRUIT_PER_TIME}之间"
             )
 
-        # 获取部门配置
+        # Fetch department Configuration
         dept_config = self.DEPARTMENT_CONFIGS[department]
         recruit_cost = dept_config.recruit_cost * num_people
 
-        # 验证资金充足
+        # Verification of adequacy of funds
         if current_cash < recruit_cost:
             return self.error_response(
                 response,
@@ -414,7 +413,7 @@ class HRManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
         
-        # 创建招聘记录
+        # Create a recruitment record
         record_id = f"REC_{self.recruitment_counter}"
         self.recruitment_counter += 1
 
@@ -434,10 +433,10 @@ class HRManager(EnhancedBaseModule):
         self.recruitment_records.append(record)
         self.cumulative_recruit_cost += recruit_cost
 
-        # 记录招聘成本
+        # Recording of recruitment costs
         result = finance_manager.add_cost(amount=recruit_cost, category="labor_cost", description="Recruitment costs")
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功发起{department.value}的招聘流程,预计{recruit_cycle_days}个工作日后完成正式招聘入职",
@@ -456,30 +455,30 @@ class HRManager(EnhancedBaseModule):
     @with_response("process_recruitment_completion")
     def process_recruitment_completion(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        处理招聘完成,自动更新部门人员
+        Processing completed recruitment and automatic update of department personnel
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含招聘完成结果的统一响应对象
-        """
+            ModuleResponse: Unified response with results of recruitment
+                """
         completed_records = []
         total_cost = 0.0
         current_time = self.enterprise.time_manager.get_day()
 
         for record in self.recruitment_records:
             if record.status == "进行中" and current_time >= record.complete_time:
-                # 更新部门人员
+                # Update department personnel
                 department = record.department
                 self.department_employees[department] += record.num_people
                 self._recalculate_department_utilization(department)
-                # 更新记录状态
+                # Update Record Status
                 record.status = "已到岗"
                 completed_records.append(record.record_id)
                 total_cost += record.recruit_cost
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功处理 {len(completed_records)} 个招聘完成记录",
@@ -493,14 +492,14 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_pending_recruitments")
     def get_pending_recruitments(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取进行中的招聘列表
+        Getting an ongoing recruitment list
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含进行中招聘列表的统一响应对象
-        """
+            ModuleResponse: A unified response with a list of ongoing recruitments
+                """
         pending_recruitments = [
             {
                 "record_id": r.record_id,
@@ -514,7 +513,7 @@ class HRManager(EnhancedBaseModule):
             for r in self.recruitment_records if r.status == "进行中"
         ]
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取 {len(pending_recruitments)} 个进行中的招聘记录",
@@ -527,14 +526,14 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_recruitment_history")
     def get_recruitment_history(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取所有招聘历史记录
+        Access all recruitment history records
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含招聘历史记录的统一响应对象
-        """
+            ModuleResponse: Unified target with recruitment history
+                """
         recruitment_history = [
             {
                 "record_id": r.record_id,
@@ -548,7 +547,7 @@ class HRManager(EnhancedBaseModule):
             for r in self.recruitment_records
         ]
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取 {len(recruitment_history)} 条招聘历史记录",
@@ -558,7 +557,6 @@ class HRManager(EnhancedBaseModule):
             }
         )
     
-    # ========== 工资管理方法 ==========
 
     def _long_horizon_salary_cost_multiplier(self) -> float:
         runtime_config = getattr(self.enterprise, "runtime_injection_config", None)
@@ -587,15 +585,15 @@ class HRManager(EnhancedBaseModule):
     @with_response("calculate_department_salary")
     def calculate_department_salary(self, department, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算指定部门的工资总额
+        Calculates the total salary of department
 
         Args:
-            department: 部门类型或部门名称字符串
-            response: 响应对象（由装饰器注入）
+            Department: department Type or department Name string
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含部门工资总额的统一响应对象
-        """
+            ModuleResponse: A unified response with department total wages
+                """
         dept_type = self._convert_to_department_type(department)
 
         num_employees = self.department_employees[dept_type]
@@ -605,7 +603,7 @@ class HRManager(EnhancedBaseModule):
         total_salary = num_employees * wage_per_person
 
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功计算{dept_type.value}的工资总额",
@@ -622,19 +620,19 @@ class HRManager(EnhancedBaseModule):
     @with_response("calculate_total_salary")
     def calculate_total_salary(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        计算企业总工资
+        Calculate enterprise gross salary
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含企业总工资的统一响应对象
-        """
+            ModuleResponse: Unified target with enterprise gross salary
+                """
         total = 0.0
         department_breakdown = {}
 
         for department in DepartmentType:
-            # 从ModuleResponse中提取部门工资总额
+            # Draw department gross salary from ModuleResponse
             dept_salary_response = self.calculate_department_salary(department)
             if dept_salary_response.success:
                 dept_salary = dept_salary_response.data["total_salary"]
@@ -645,7 +643,7 @@ class HRManager(EnhancedBaseModule):
                     "total_salary": dept_salary
                 }
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功计算企业总工资",
@@ -658,22 +656,22 @@ class HRManager(EnhancedBaseModule):
     @with_response("process_salary_payment")
     def process_salary_payment(self, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
         """
-        执行工资支付流程,记录历史,更新成本
+        Implement payroll payment processes, record history, update costs
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含工资支付结果的统一响应对象
-        """
+            ModuleResponse: Unified target with pay results
+                """
         finance_manager = super().get_module_by_type("FinanceManager")
 
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         balance_result = finance_manager.get_balance()
         if isinstance(balance_result, (int, float)):
             available_cash = balance_result
         elif hasattr(balance_result, 'data'):
-            # ModuleResponse 对象
+            # ModeuleResponse Object
             available_cash = balance_result.data.get("balance", 0) if isinstance(balance_result.data, dict) else 0
         elif isinstance(balance_result, dict):
             available_cash = balance_result.get("balance", 0)
@@ -687,7 +685,7 @@ class HRManager(EnhancedBaseModule):
                 "现金不能为负数"
             )
 
-        # 从ModuleResponse中提取总工资
+        # Draw the gross salary from ModuleResponse
         total_salary_response = self.calculate_total_salary()
         if not total_salary_response.success:
             return self.error_response(
@@ -698,7 +696,7 @@ class HRManager(EnhancedBaseModule):
 
         total_salary = total_salary_response.data["total_salary"]
 
-        # 无员工时无需支付
+        # No payment for no employees
         if total_salary == 0:
             return self.success_response(
                 response,
@@ -706,7 +704,7 @@ class HRManager(EnhancedBaseModule):
                 {"total_salary": total_salary}
             )
 
-        # 资金不足
+        # Insufficient funding
         if available_cash < total_salary:
             return self.error_response(
                 response,
@@ -716,7 +714,7 @@ class HRManager(EnhancedBaseModule):
         if dry_run:
             return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
 
-        # 记录工资支付
+        # Recording of salary payments
         salary_record = {
             "time": self.enterprise.time_manager.get_day(),
             "amount": total_salary,
@@ -724,10 +722,10 @@ class HRManager(EnhancedBaseModule):
             "department_breakdown": {}
         }
 
-        # 执行成本记录
+        # Implementation cost records
         result = finance_manager.add_cost(amount=total_salary, category="labor_cost", description="Salary payment")
 
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         cost_success = result.success
         if not cost_success:
             cost_error = result.get("error", "未知错误") if isinstance(result, dict) else getattr(result, "message", "未知错误")
@@ -741,9 +739,9 @@ class HRManager(EnhancedBaseModule):
                 f"成本记录失败: {cost_error}"
             )
 
-        # 填充部门明细
+        # Fill department Details
         for department in DepartmentType:
-            # 从ModuleResponse中提取部门工资
+            # Draw department from ModuleResponse
             dept_salary_response = self.calculate_department_salary(department)
             if dept_salary_response.success:
                 dept_salary = dept_salary_response.data["total_salary"]
@@ -753,11 +751,11 @@ class HRManager(EnhancedBaseModule):
                     "salary_total": dept_salary
                 }
 
-        # 更新历史记录和成本
+        # Update historical records and costs
         self.salary_history.append(salary_record)
         self.cumulative_salary_cost += total_salary
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             "成功执行工资支付",
@@ -771,21 +769,21 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_salary_history")
     def get_salary_history(self, limit: Optional[int] = None, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取工资支付历史,若limit为None返回全部
+        Get a pay history, if limit returns to the net
 
         Args:
-            limit: 返回记录数量限制（可选）
-            response: 响应对象（由装饰器注入）
+            Limited number of returns (optional)
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含工资支付历史的统一响应对象
-        """
+            ModuleResponse: A unified response with a history of wage payments
+                """
         if limit is None:
             history = self.salary_history
         else:
             history = self.salary_history[-limit:]
 
-        # 返回成功响应
+        # Returns Successful Response
         return self.success_response(
             response,
             f"成功获取 {len(history)} 条工资支付历史记录",
@@ -799,14 +797,14 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_latest_salary_payment")
     def get_latest_salary_payment(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取最近一次工资支付记录
+        Obtaining last salary payment records
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含最近一次工资支付记录的统一响应对象
-        """
+            ModuleResponse: Unified response with last pay history
+                """
         if not self.salary_history:
             return self.error_response(
                 response,
@@ -820,19 +818,19 @@ class HRManager(EnhancedBaseModule):
             "成功获取最近一次工资支付记录",
             latest_record
         )
-    # ========== 成本统计方法 ==========
+    # == sync, corrected by elderman ==
     
     @with_response("get_cumulative_recruit_cost")
     def get_cumulative_recruit_cost(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取累计招聘成本
+        Acquisition of accumulated recruitment costs
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含累计招聘成本的统一响应对象
-        """
+            ModuleResponse: Unified target audience with accumulated recruitment costs
+                """
         return self.success_response(
             response,
             "成功获取累计招聘成本",
@@ -844,14 +842,14 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_cumulative_salary_cost")
     def get_cumulative_salary_cost(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取累计工资成本
+        Accumulated wage costs
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含累计工资成本的统一响应对象
-        """
+            ModuleResponse: Unified target with accumulated salary costs
+                """
         return self.success_response(
             response,
             "成功获取累计工资成本",
@@ -863,14 +861,14 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_total_human_cost")
     def get_total_human_cost(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取总人力成本(招聘+工资)
+        Total labour cost (recruitment + wages)
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含总人力成本的统一响应对象
-        """
+            ModuleResponse: Unified target with total human cost
+                """
         total_cost = self.cumulative_recruit_cost + self.cumulative_salary_cost
 
         return self.success_response(
@@ -886,15 +884,15 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_cost_breakdown")
     def get_cost_breakdown(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取成本分解详情
+        Obtain cost breakdown details
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含成本分解详情的统一响应对象
-        """
-        # 从ModuleResponse中提取总人力成本
+            ModuleResponse: Unified response object with cost breakdown details
+                """
+        # Draw total manpower costs from ModuleResponse
         total_cost_response = self.get_total_human_cost(response)
         if not total_cost_response.success:
             return self.error_response(
@@ -905,7 +903,7 @@ class HRManager(EnhancedBaseModule):
 
         total = total_cost_response.data["total_human_cost"]
 
-        # 计算成本比例
+        # Calculate cost ratio
         recruit_cost_ratio = self.cumulative_recruit_cost / total if total > 0 else 0.0
         salary_cost_ratio = self.cumulative_salary_cost / total if total > 0 else 0.0
 
@@ -921,27 +919,26 @@ class HRManager(EnhancedBaseModule):
             }
         )
     
-        # ========== 查询和验证方法 ==========
-
+    
     def get_summary(self) -> dict:
-        """获取HR模块的完整状态快照（内部方法，返回字典）"""
-        # 计算进行中的招聘数量（直接访问数据而不是调用返回ModuleResponse的方法）
+        """Get a complete state snapshot of the HR module (internal method, return dictionary)"""
+        # Calculate the number of recruitments in progress (direct access to data rather than call back to ModeuleResponse)
         pending_recruitments_count = len([
             r for r in self.recruitment_records
             if r.status in ["进行中", "pending"]
         ])
 
-        # 计算总员工流失数（直接访问数据）
+        # Calculate total staff loss (direct access data)
         total_attrition = len(self.employee_attrition_history)
 
-        # 计算总员工数（直接计算）
+        # Calculation of total staff (direct calculation)
         total_employees = sum(self.department_employees.values())
 
-        # 计算平均利用率（直接计算）
+        # Calculated average utilization rate (direct calculation)
         utilizations = list(self.department_utilization.values())
         average_utilization = sum(utilizations) / len(utilizations) if utilizations else 0.0
 
-        # 计算总人力成本（直接计算）
+        # Calculate total manpower costs (direct calculation)
         total_human_cost = self.cumulative_recruit_cost + self.cumulative_salary_cost
 
         return {
@@ -966,8 +963,7 @@ class HRManager(EnhancedBaseModule):
             "salary_payment_times": len(self.salary_history)
         }
     
-        # ========== 员工流失管理方法 ==========
-    
+        
     @with_response("process_employee_attrition")
     def process_employee_attrition(
         self,
@@ -977,7 +973,7 @@ class HRManager(EnhancedBaseModule):
         dry_run: bool = False,
         response: ModuleResponse = None
     ) -> ModuleResponse:
-        """解聘员工,更新部门人员,记录解聘原因"""
+        """Dismissal of staff, update of department personnel, recording of reasons for dismissal"""
         department_type = self._convert_to_department_type(department_name)
         
         if not isinstance(num_people, int) or num_people < 0:
@@ -1034,20 +1030,20 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_state")
     def get_state(self, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取当前模块状态
+        Get Current Module Status
 
         Args:
-            response: 响应对象（由装饰器注入）
+            Response: Respond objects (injected by decorator)
 
         Returns:
-            ModuleResponse: 包含模块状态的统一响应对象
-        """
+            ModuleResponse: Unified response object with modular status
+                """
         try:
-            # 获取HR状态摘要
+            # Get HR Status Summary
             hr_summary = self.get_summary()
             staffing_relaxation_policy = self._get_staffing_relaxation_policy()
 
-            # 构造员工列表（Observer 期望的格式）
+            # Construct a list of employees (Observer desired format)
             employees = []
             for dept, count in self.department_employees.items():
                 if count > 0:
@@ -1058,7 +1054,7 @@ class HRManager(EnhancedBaseModule):
                         "utilization": self.department_utilization.get(dept, 0.0)
                     })
 
-            # 获取最近的招聘历史（最多5条）
+            # Access to recent recruitment history (up to 5)
             recent_recruitment_history = []
             for r in self.recruitment_records[-5:]:
                 recent_recruitment_history.append({
@@ -1075,7 +1071,7 @@ class HRManager(EnhancedBaseModule):
             state = {
                 # "module_id": self.module_id,
                 "module_type": self.module_type,
-                "employees": employees,  # Observer 期望的字段
+                "employees": employees,  # Expected Fields for Observer
                 "department_staffing": {
                     dept.value: {
                         "count": self.department_employees.get(dept, 0),
@@ -1093,8 +1089,8 @@ class HRManager(EnhancedBaseModule):
                     }
                     for dept in DepartmentType
                 },
-                "total_payroll": hr_summary["salary_cost_total"],  # Observer 期望的字段
-                "recruitment_status": {  # Observer 期望的字段
+                "total_payroll": hr_summary["salary_cost_total"],  # Expected Fields for Observer
+                "recruitment_status": {  # Expected Fields for Observer
                     "pending": hr_summary["pending_recruitments"],
                     "total_recruited": len([r for r in self.recruitment_records if r.status == "已到岗"]),
                     "pending_by_department": {
@@ -1119,7 +1115,7 @@ class HRManager(EnhancedBaseModule):
                 state
             )
         except Exception as e:
-            # 处理异常情况
+            # Addressing anomalies
             return self.error_response(
                 response,
                 "STATE_ERROR",
@@ -1129,21 +1125,21 @@ class HRManager(EnhancedBaseModule):
     @with_response("get_available_workers")
     def get_available_workers(self, department, response: ModuleResponse = None) -> ModuleResponse:
         """
-        获取部门中可用的（未分配的）工人数（公共接口）
+        Number of workers available (undistributed) in department (public interface)
 
         Args:
-            department: 部门类型 (DepartmentType 枚举) 或部门名称字符串
+            Partment: < x6/ > Type (DepartmentType Count) or parameter Name String
 
         Returns:
-            ModuleResponse: 包含可用工人数的统一响应对象
-        """
+            ModuleResponse: Unified response object with number of available workers
+                """
         if not hasattr(self, 'allocated_workers'):
             self.allocated_workers = {dept: 0 for dept in DepartmentType}
 
         dept_type = self._convert_to_department_type(department)
         total_result = self.get_department_employees(dept_type)
 
-        # 处理不同返回类型的情况
+        # Addressing different types of return
         if isinstance(total_result, int):
             total = total_result
         elif hasattr(total_result, 'data'):
@@ -1171,22 +1167,22 @@ class HRManager(EnhancedBaseModule):
     def assign_workers(self, department, assignment_id: str,
                       num_workers: int, response: ModuleResponse = None) -> ModuleResponse:
         """
-        分配工人到特定任务
+        Assignment of workers to specific tasks
 
         Args:
-            department: 部门类型 (DepartmentType 枚举) 或部门名称字符串
-            assignment_id: 任务ID (如生产线ID)
-            num_workers: 要分配的人数
+            Partment: < x6/ > Type (DepartmentType Count) or parameter Name String
+            assignment_id: Task ID (e.g. production line ID)
+            parameter: Number to be distributed
 
         Returns:
-            ModuleResponse: 包含分配结果的统一响应对象
+            ModuleResponse: Unified responder with distributed results
 
-        **代码实现**:
-        - 检查可用工人数是否充足
-        - 如果充足，更新已分配计数
-        - 记录分配任务
-        - 返回结果
-        """
+        **Code achieved**:
+        - Check the adequacy of available workers
+        - Update the allocated count if sufficient
+        - Recording assignments
+        - Return results
+                """
         dept_type = self._convert_to_department_type(department)
         hr_result = self.get_available_workers(dept_type)
         available = hr_result.data.get("count", 0)
@@ -1200,10 +1196,10 @@ class HRManager(EnhancedBaseModule):
                 f"可用工人不足。需要: {num_workers}, 可用: {available}",
             )
 
-        # 更新已分配人数
+        # Update allocated
         self.allocated_workers[department] = self.allocated_workers.get(department, 0) + num_workers
         self._recalculate_department_utilization(department)
-        # 记录分配
+        # Distribution of records
         existing_assignment = self.assignments.get(assignment_id, {})
         self.assignments[assignment_id] = {
             "department": department,
@@ -1231,22 +1227,22 @@ class HRManager(EnhancedBaseModule):
     def release_workers(self, department, assignment_id: str,
                       num_workers: int,state:str, response: ModuleResponse = None) -> ModuleResponse:
         """
-        将工人从特定任务中释放
+        Release of workers from specific assignments
 
         Args:
-            department: 部门类型 (DepartmentType 枚举) 或部门名称字符串
-            assignment_id: 任务ID (如生产线ID)
-            num_workers: 要释放的人数
+            Partment: < x6/ > Type (DepartmentType Count) or parameter Name String
+            assignment_id: Task ID (e.g. production line ID)
+            parameter: Number of persons to be released
 
         Returns:
-            ModuleResponse: 包含释放结果的统一响应对象
+            ModuleResponse: Unified responder with release results
 
-        **代码实现**:
-        - 检查可用工人数是否充足
-        - 如果充足，更新已分配计数
-        - 记录释放任务
-        - 返回结果
-        """
+        **Code achieved**:
+        - Check the adequacy of available workers
+        - Update the allocated count if sufficient
+        - Record release.
+        - Return results
+                """
         dept_type = self._convert_to_department_type(department)
         department = dept_type
         assignment = self.assignments.get(assignment_id)
@@ -1281,12 +1277,12 @@ class HRManager(EnhancedBaseModule):
                     f"工人释放数量不符，预释放人数: {num_workers}, 任务当前投入人数: {assignment_workers}",
                 )
         
-        # 更新已分配人数
+        # Update allocated
         self.allocated_workers[department] = max(0, self.allocated_workers.get(department, 0) - num_workers)
         self._recalculate_department_utilization(department)
         remaining_workers = max(0, self.department_employees[department] - self.allocated_workers.get(department, 0))
 
-        # 更新分配
+        # Update distribution
         self.assignments[assignment_id] = {
             "department": department,
             "num_workers": max(0, assignment_workers - num_workers),
@@ -1309,7 +1305,7 @@ class HRManager(EnhancedBaseModule):
 
 
     def reset(self):
-        """重置所有数据(仅用于测试)"""
+        """Reset all data (for testing only)"""
         self.department_employees = {dept: 0 for dept in DepartmentType}
         self.department_utilization = {dept: 0.0 for dept in DepartmentType}
         self.recruitment_records = []
@@ -1320,10 +1316,9 @@ class HRManager(EnhancedBaseModule):
         self.employee_attrition_history = []
 
 
-    # ========== 性能指标方法 ==========
     
     def _calculate_per_capita_output(self, total_revenue: float) -> float:
-        """计算人均产出(总收入/总员工数)"""
+        """Calculated per capita output (total income/total staff)"""
         if total_revenue < 0:
             raise ValueError("总收入不能为负")
         
@@ -1333,7 +1328,7 @@ class HRManager(EnhancedBaseModule):
         return total_revenue / total_employees
     
     def _calculate_labor_cost_rate(self, total_cost: float) -> float:
-        """计算人工成本率(人工成本/总成本)"""
+        """Calculated labour cost rate (work cost/total cost)"""
         if total_cost < 0:
             raise ValueError("总成本不能为负")
         
@@ -1345,15 +1340,15 @@ class HRManager(EnhancedBaseModule):
     
 
     def _get_attrition_history(self) -> List[Dict]:
-        """获取所有员工流失历史记录"""
+        """Get all lost staff history."""
         return self.employee_attrition_history
     
     def _get_total_attrition(self) -> int:
-        """获取累计流失人数"""
+        """Accumulated loss"""
         return sum(record["num_people"] for record in self.employee_attrition_history)
 
     def _get_utilization_status(self, department: DepartmentType) -> str:
-        """获取部门利用率的状态描述（内部方法，直接访问数据）"""
+        """Access status description of department utilization (internal method, direct access to data)"""
         util = self.department_utilization.get(department, 0.0)
         if util < self.UTILIZATION_SURPLUS_THRESHOLD:
             return "人员冗余"
@@ -1365,25 +1360,25 @@ class HRManager(EnhancedBaseModule):
             return "偏低利用"
     
     def _validate_state(self) -> Tuple[bool, List[str]]:
-        """验证HR模块状态的一致性"""
+        """Verify consistency of HR module status"""
         issues = []
         
-        # 检查员工数一致性
+        # Check for consistency in the number of employees
         for dept in DepartmentType:
             if self.department_employees[dept] < 0:
                 issues.append(f"{dept.value}员工数为负数")
         
-        # 检查利用率范围
+        # Check utilization coverage
         for dept in DepartmentType:
             util = self.department_utilization[dept]
             if util < 0 or util > 2:
                 issues.append(f"{dept.value}利用率超出合理范围: {util}")
         
-        # 检查成本一致性
+        # Check for cost consistency
         if self.cumulative_recruit_cost < 0 or self.cumulative_salary_cost < 0:
             issues.append("成本数据为负数")
         
-        # 检查招聘记录一致性
+        # Check for consistency in recruitment records
         for record in self.recruitment_records:
             if record.num_people < 0:
                 issues.append(f"招聘记录{record.record_id}人数为负")
@@ -1394,22 +1389,22 @@ class HRManager(EnhancedBaseModule):
       
     def _convert_to_department_type(self, department_input):
         """
-        将输入转换为DepartmentType枚举（支持字符串和枚举类型输入，大小写不敏感）
-        
+        Convert input to DepartmentType count (support string and number type input, case insensitive)
+                
         Args:
-            department_input: 部门名称字符串或DepartmentType枚举
-            
+            department_input: department Name string or DepartType Lift
+                        
         Returns:
-            DepartmentType: 对应的部门类型枚举
-            
+            DepartmentType: corresponding list of department types
+                        
         Raises:
-            ValueError: 如果输入无效
-        """
+            ValueError: If input is invalid
+                """
         if isinstance(department_input, DepartmentType):
             return department_input
         
         if isinstance(department_input, str):
-            # 转换为大写以进行不区分大小写的匹配
+            # Convert to uppercase to match case-neutral
             input_lower = department_input.strip().lower()
             aliases = {
                 "hr": DepartmentType.HR,
@@ -1449,15 +1444,15 @@ class HRManager(EnhancedBaseModule):
     
     
     def _is_department_surplus(self, department) -> bool:
-        """判断部门是否人员冗余(利用率<0.3)"""
-        # 从ModuleResponse中提取利用率值
+        """Determination of redundancy at department (utilization rate <0.3)"""
+        # Draw utilization from ModuleResponse
         utilization_response = self.get_department_utilization(department)
         utilization = utilization_response.data["utilization"] if utilization_response.success else 0.0
         return utilization < self.UTILIZATION_SURPLUS_THRESHOLD
     
     def _is_department_shortage(self, department) -> bool:
-        """判断部门是否人员不足(利用率>1.0)"""
-        # 从ModuleResponse中提取利用率值
+        """Determination of department understaffing (utilization > 1.0)"""
+        # Draw utilization from ModuleResponse
         utilization_response = self.get_department_utilization(department)
         utilization = utilization_response.data["utilization"] if utilization_response.success else 0.0
         return utilization > self.UTILIZATION_SHORTAGE_THRESHOLD

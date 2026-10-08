@@ -70,7 +70,7 @@
             "action_param": {
                 "suppliers_data": [
                     {
-                        "supplier_name": "供应商A",
+                        "supplier_name": "Supplier A",
                         "supplier_type": "external",
                         "materials": {
                             "MATERIAL_1": {

@@ -29,10 +29,10 @@ const ActionList = ({ company, day, dataRoot }) => {
           ]);
 
           if (preActionData) {
-            phases.push({ label: '预执行阶段', payload: preActionData });
+            phases.push({ label: 'Pre-execution', payload: preActionData });
           }
           if (actionData) {
-            phases.push({ label: '执行阶段', payload: actionData });
+            phases.push({ label: 'Execution', payload: actionData });
           }
           if (phases.length > 0) {
             actionList.push({
@@ -43,14 +43,14 @@ const ActionList = ({ company, day, dataRoot }) => {
             });
           }
         } catch (e) {
-          // 忽略不存在的部门
+          // Some scenarios do not instantiate every department.
         }
       }
 
       setActions(actionList);
     } catch (error) {
-      console.error('加载动作数据失败:', error);
-      setError('加载动作数据失败: ' + error.message);
+      console.error('Failed to load action data:', error);
+      setError('Failed to load action data: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ const ActionList = ({ company, day, dataRoot }) => {
   };
 
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
   if (error) {
@@ -79,7 +79,7 @@ const ActionList = ({ company, day, dataRoot }) => {
   }
 
   if (actions.length === 0) {
-    return <div className="loading">暂无动作数据</div>;
+    return <div className="loading">No action data available</div>;
   }
 
   const normalizeActionItems = (actionData) => {
@@ -96,22 +96,21 @@ const ActionList = ({ company, day, dataRoot }) => {
     const actions = normalizeActionItems(actionData);
 
     if (actions.length === 0) {
-      return <div className="action-detail-item">暂无详细信息</div>;
+      return <div className="action-detail-item">No details available</div>;
     }
 
-    // 检查是否有 pass_reason
+    // A pass-only response explains why no action was submitted.
     const hasPassReason = actions.some(item => item.pass_reason);
     const hasAction = actions.some(item => item.action);
 
     if (hasPassReason && !hasAction) {
-      // 只显示未执行原因
       return (
         <div className="action-details">
           <div className="pass-reason-section">
-            <h4>{actionType}{actionType ? ' - ' : ''}未执行原因</h4>
+            <h4>{actionType}{actionType ? ' - ' : ''}Reason Not Executed</h4>
             {actions.map((item, idx) => (
               <div key={idx} className="pass-reason-item">
-                <div className="pass-reason-content">{item.pass_reason || '无'}</div>
+                <div className="pass-reason-content">{item.pass_reason || 'None provided'}</div>
               </div>
             ))}
           </div>
@@ -121,20 +120,20 @@ const ActionList = ({ company, day, dataRoot }) => {
 
     return (
       <div className="action-details">
-        {/* 执行的动作信息 */}
+        {/* Executed action details */}
         <div className="action-section">
-          <h4>{actionType}{actionType ? ' - ' : ''}执行的动作</h4>
+          <h4>{actionType}{actionType ? ' - ' : ''}Executed Actions</h4>
           {actions.length > 0 ? (
             actions.map((action, idx) => (
               <div key={idx} className="action-detail-item">
                 {action.action ? (
                   <>
                     <div className="action-name">
-                      <strong>动作:</strong> {getActionDisplayName(action.action?.action_name)}
+                      <strong>Action:</strong> {getActionDisplayName(action.action?.action_name)}
                     </div>
                     {action.action?.action_param && typeof action.action.action_param === 'object' && !Array.isArray(action.action.action_param) ? (
                       <div className="action-params">
-                        <strong>参数:</strong> 
+                        <strong>Parameters:</strong>
                         {Object.entries(action.action.action_param).map(([key, value], paramIdx) => (
                           <span key={paramIdx} className="action-param">
                             {key}: {formatValue(value)}
@@ -143,28 +142,28 @@ const ActionList = ({ company, day, dataRoot }) => {
                       </div>
                     ) : action.action?.action_param ? (
                       <div className="action-reason">
-                        <strong>参数:</strong> {formatValue(action.action.action_param)}
+                        <strong>Parameters:</strong> {formatValue(action.action.action_param)}
                       </div>
                     )}
                     <div className="action-reason">
-                      <strong>原因:</strong> {action.action_reason || '无'}
+                      <strong>Reason:</strong> {action.action_reason || 'None provided'}
                     </div>
                     <div className="action-meta">
-                      <span className="module-type">模块: {action.module_type || '未知'}</span>
-                      <span className="executor">执行: {action.executor_id || '未知'}</span>
+                      <span className="module-type">Module: {action.module_type || 'Unknown'}</span>
+                      <span className="executor">Executor: {action.executor_id || 'Unknown'}</span>
                     </div>
                   </>
                 ) : action.pass_reason ? (
                   <div className="pass-reason-content">
-                    <strong>未执行原因:</strong> {action.pass_reason}
+                    <strong>Reason Not Executed:</strong> {action.pass_reason}
                   </div>
                 ) : (
-                  <div className="action-detail-item">暂无执行动作</div>
+                  <div className="action-detail-item">No executed action</div>
                 )}
               </div>
             ))
           ) : (
-            <div className="action-detail-item">暂无执行动作</div>
+            <div className="action-detail-item">No executed action</div>
           )}
         </div>
 
@@ -177,12 +176,12 @@ const ActionList = ({ company, day, dataRoot }) => {
       {actions.map((action, index) => (
         <div className="action-item" key={index} onClick={() => toggleDetails(index)}>
           <div className="action-header">
-            {action.department.toUpperCase()} 部门动作
-            {action.hasPreAction && action.hasAction && <span className="action-phase-indicator"> (预执行 + 执行)</span>}
-            {action.hasPreAction && !action.hasAction && <span className="action-phase-indicator"> (预执行)</span>}
-            {!action.hasPreAction && action.hasAction && <span className="action-phase-indicator"> (执行)</span>}
+            {action.department.toUpperCase()} Department Actions
+            {action.hasPreAction && action.hasAction && <span className="action-phase-indicator"> (Pre-execution + Execution)</span>}
+            {action.hasPreAction && !action.hasAction && <span className="action-phase-indicator"> (Pre-execution)</span>}
+            {!action.hasPreAction && action.hasAction && <span className="action-phase-indicator"> (Execution)</span>}
           </div>
-          <div className="action-content">点击查看详情</div>
+          <div className="action-content">Click to view details</div>
           <div className={`details-panel ${expandedIndex === index ? 'active' : ''}`}>
             {Array.isArray(action.action) && action.action.map((phase) => (
               <React.Fragment key={phase.label}>
