@@ -92,7 +92,7 @@ class Controller:
         if config:
             self.create_components()
 
-            print("开始创建企业")
+            print("Creating enterprises")
             try:
                 # Prioritize external incoming configuration, otherwise use the current master link unified preset
                 enterprise_configs = self.enterprise_configs
@@ -104,7 +104,7 @@ class Controller:
                     # Directly setting ID to avoid Enterprise class overlay
                     enterprise.id = enterprise_config['id']
                     enterprises[enterprise.id] = enterprise
-                    print(f"创建企业: {enterprise.name}, ID: {enterprise.id}, 层级: {enterprise.tier}")
+                    print(f"Created enterprise: {enterprise.name}; ID: {enterprise.id}; tier: {enterprise.tier}")
                 
                 # Initialization of business modules
                 for enterprise in enterprises.values():
@@ -112,9 +112,9 @@ class Controller:
                 # Register enterprise to controller
                 for enterprise in enterprises.values():
                     self.register_enterprise(enterprise)
-                print(f"企业创建完成，控制器中的企业数量: {len(self.enterprises)}")
+                print(f"Enterprise creation complete; controller now manages {len(self.enterprises)} enterprises")
             except Exception as e:
-                print(f"创建企业时发生错误: {str(e)}")
+                print(f"Failed to create enterprises: {str(e)}")
                 import traceback
                 traceback.print_exc()
             
@@ -235,7 +235,7 @@ class Controller:
         self.environment = Environment()
         self.environment.set_controller(self)
         
-        print("控制器核心组件创建完成")
+        print("Controller core components initialized")
     
     def hanlde_network_action(self, step: int, action: dict):
         """
@@ -269,7 +269,7 @@ class Controller:
         """
         Generate Initial Event
                 """
-        print("控制器生成初始事件...")
+        print("Controller is generating initial events...")
         
         if self.event_manager:
             # Generate initial sales orders for retailers
@@ -294,9 +294,9 @@ class Controller:
                 
         Args:
             enterprise_id: enterpriseID
-            décisions: enterprise Decision-making Results
+            decisions: Enterprise decision results.
                 """
-        print(f"企业 {enterprise_id} 决策完成: {decisions}")
+        print(f"Enterprise {enterprise_id} completed its decision: {decisions}")
         
         # You can add here the logic of processing after the decision is made.
     
@@ -351,10 +351,10 @@ class Controller:
                     "type": "integrated" if hasattr(enterprise, 'type') else "unknown"
                 },enterprise)
             
-            print(f"企业 {enterprise.name} ({enterprise.id}) 已成功注册到控制系统")
+            print(f"Enterprise {enterprise.name} ({enterprise.id}) registered with the controller")
             return True
         except Exception as e:
-            print(f"注册企业时出错: {str(e)}")
+            print(f"Failed to register enterprise: {str(e)}")
             return False
 
     def set_runtime_injection_config(self, runtime_injection_config: Optional[Dict[str, Any]] = None):
@@ -373,7 +373,7 @@ class Controller:
                 """
         # Make sure enterprise has a message manager in place
         if not hasattr(enterprise, 'message_manager') or enterprise.message_manager is None:
-            print(f"警告: 企业 {enterprise.name} 尚未设置消息管理器")
+            print(f"Warning: enterprise {enterprise.name} has no message manager")
             return
         
         # Use message manager register processor
@@ -381,17 +381,17 @@ class Controller:
         
         # Define an inventory update processing function
         def handle_inventory_update(message):
-            print(f"企业 {enterprise.name} 处理库存更新消息: {message.get('content', '')}")
+            print(f"Enterprise {enterprise.name} processing inventory update: {message.get('content', '')}")
             # You can add specific inventory update logic here.
             
         # Defines the price change process function
         def handle_price_change(message):
-            print(f"企业 {enterprise.name} 处理价格变动消息: {message.get('content', '')}")
+            print(f"Enterprise {enterprise.name} processing price update: {message.get('content', '')}")
             # Here you can add specific price logic.
             
         # Defines the order confirmation processing function
         def handle_order_confirmed(message):
-            print(f"企业 {enterprise.name} 处理订单确认消息: {message.get('content', '')}")
+            print(f"Enterprise {enterprise.name} processing order confirmation: {message.get('content', '')}")
             # Here you can add specific order confirmation logic.
             
         # Register message processor to message manager (use subscribe method)
@@ -431,8 +431,8 @@ class Controller:
         if (step + 1) % 10 != 0:
             return
             
-        print(f"\n--- 时间步 {step + 1} 统计信息 ---")
-        print(f"企业总数: {len(self.enterprises)}")
+        print(f"\n--- Time Step {step + 1} Statistics ---")
+        print(f"Total enterprises: {len(self.enterprises)}")
         
         # You can add more statistical information
         # For example: number of orders, level of stock, sales, etc.
@@ -457,10 +457,10 @@ class Controller:
                 # Save only the last few states to reduce the amount of data
                 results["last_states"] = self.environment.state_history[-10:] if len(self.environment.state_history) > 10 else self.environment.state_history
             
-            print(f"模拟结果已收集: 总工作日 {self.time_manager.get_day()}, 企业数量 {len(self.enterprises)}")
+            print(f"Simulation results collected: {self.time_manager.get_day()} working days; {len(self.enterprises)} enterprises")
             return results
         except Exception as e:
-            print(f"保存模拟结果时出错: {str(e)}")
+            print(f"Failed to save simulation results: {str(e)}")
             return {"error": str(e)}
     
     def initialize_network_structure(self, structure: str = None, enterprises_config=None):
@@ -471,22 +471,22 @@ class Controller:
             stringure: network structure type (linear, star, mesh, etc.), if not specified, use the configuration value
             enterprises_config: enterprise Configuration
                 """
-        print(f"开始初始化网络结构，当前企业数量: {len(self.enterprises)}")
+        print(f"Initializing network structure for {len(self.enterprises)} enterprises")
         
         # Fetch from configuration if no structure is specified
         if structure is None:
             structure = self.config.get("network_config", {}).get("structure", "linear")
         
-        print(f"初始化网络结构: {structure}")
+        print(f"Network structure: {structure}")
         
         # Make sure network manager is initialized
         if not self.network_manager:
-            print("错误: 网络管理器未初始化")
+            print("Error: network manager is not initialized")
             return
         
         # Check if enterprise exists
         if len(self.enterprises) == 0:
-            print("警告: 未检测到企业")
+            print("Warning: no enterprises detected")
             return
         
         # Build default supply chain level
@@ -529,7 +529,7 @@ class Controller:
                 supply_chain_layers[tier].append(enterprise.id)
         if supply_chain_layers and self.network_manager and hasattr(self.network_manager, 'build_supply_chain'):
             self.network_manager.build_supply_chain(supply_chain_layers)
-            print(f"供应链网络构建完成，层数: {len(supply_chain_layers)}")
+            print(f"Supply-chain network built with {len(supply_chain_layers)} tiers")
         # Set here exchangeexchange for each layer using network
         self.exchange_manager.initialize_exchange(supply_chain_layers)
         for enterprise in self.enterprises.values():
@@ -544,10 +544,10 @@ class Controller:
                 
         Register all enterprise into the environment
                 """
-        print(f"开始初始化环境，当前企业数量: {len(self.enterprises)}")
+        print(f"Initializing environment for {len(self.enterprises)} enterprises")
         
         if not self.environment:
-            print("错误: 环境未初始化")
+            print("Error: environment is not initialized")
             return
         
         # Reset Environment
@@ -561,23 +561,23 @@ class Controller:
                 self.environment.enterprises[enterprise_id] = enterprise
                 registered_count += 1
             except Exception as e:
-                print(f"注册企业 {enterprise_id} 到环境时出错: {str(e)}")
+                print(f"Failed to register enterprise {enterprise_id} with the environment: {str(e)}")
         # Ensure that the environment 's enterprises properties are set correctly
         if hasattr(self.environment, 'enterprises') and not isinstance(self.environment.enterprises, dict):
             self.environment.enterprises = self.enterprises
-            print("已将企业字典直接设置到环境")
-        print(f"环境初始化完成，已注册 {registered_count} 家企业")
+            print("Enterprise registry assigned directly to the environment")
+        print(f"Environment initialization complete; registered {registered_count} enterprises")
 
     def stop(self):
         """
         Stop controller
                 """
         self.is_running = False
-        print("控制器已停止")
+        print("Controller stopped")
 
     # Simulation Executive
     # Common Step Implementation
-    async def _execute_time_step(self, actions=None, log_file=None, part="常规工作流"):
+    async def _execute_time_step(self, actions=None, log_file=None, part="standard_workflow"):
         """
         Simulation to execute a single time step 
 
@@ -667,7 +667,7 @@ class Controller:
                             )
                             return result
                         except asyncio.TimeoutError:
-                            return Exception(f"企业 {enterprise_name} 部门 {dept} 执行任务超时 ({timeout}秒)")
+                            return Exception(f"Enterprise {enterprise_name}, department {dept}, timed out after {timeout} seconds")
                     
                     action_name = action.get("action_name") if isinstance(action, dict) else None
                     task = create_timeout_task(enterprise, action, dept, self.time_manager.get_tick())
@@ -681,7 +681,7 @@ class Controller:
             for i, result in enumerate(results_in_line):
                 enterprise_name, dept, action_name = task_info[i]  # Get the right variable from parameter
                 if isinstance(result, Exception):
-                    print(f"企业 {enterprise_name} 部门 {dept} 执行任务时出错: {str(result)}")
+                    print(f"Enterprise {enterprise_name}, department {dept}, failed during task execution: {str(result)}")
                     normalized_results.append({
                         "action_type": action_name,
                         "executor_id": enterprise_name,
@@ -727,7 +727,7 @@ class Controller:
                 #     department_time[result.module_id] += result.consumed_time
                 if log_file and hasattr(result, "to_dict"):
                     with open(log_file, "a", encoding="utf-8") as f:
-                        print(f"企业 {enterprise_name} 部门 {dept} 执行任务: {result.action_type}\n{result.to_dict()}\n")
+                        print(f"Enterprise {enterprise_name}, department {dept}, executed action: {result.action_type}\n{result.to_dict()}\n")
             
             flattened_results.extend(normalized_results)
             # total_elapsed = max(department_time.values(), default=0)
@@ -735,9 +735,9 @@ class Controller:
             # if delta > 0:
             #     await self.time_manager.run_timer(delta)
             # last_elapsed_time = total_elapsed
-        if log_file and part == "常规工作流":
+        if log_file and part == "standard_workflow":
             with open(log_file, "a", encoding="utf-8") as f:
-                f.write(f"时间步 {self.time_manager.get_day()} 企业 {enterprise_name} 执行完成当前任务流\n")
+                f.write(f"Time step {self.time_manager.get_day()}: enterprise {enterprise_name} completed the current workflow\n")
         
         return {
             "day": self.time_manager.get_day(),
@@ -748,10 +748,10 @@ class Controller:
     # Independently release the start, end and advance of the simulation to angent
     async def start_simulation(self, total_steps: int = None, environment=None):
         """
-        Initialize and start simulation and can call multiple < x17/ > advances
+        Initialize the simulation and support repeated step advancement.
                 """
 
-        print("===== 初始化模拟环境 =====")
+        print("===== Initializing Simulation Environment =====")
 
         if environment:
             self.set_environment(environment)
@@ -767,7 +767,7 @@ class Controller:
         if not hasattr(self, "enterprises"):
             self.enterprises = {}
 
-        print(f"模拟初始化完成，总步数上限: {self.total_steps}")
+        print(f"Simulation initialization complete; maximum steps: {self.total_steps}")
 
     def configure_simulation(
         self,
@@ -1164,26 +1164,26 @@ class Controller:
             },
         }
 
-    async def advance_simulation(self, workflow=None, log_file=None, part = "常规工作流"):
+    async def advance_simulation(self, workflow=None, log_file=None, part="standard_workflow"):
         """
         Push once, workflow, multiple step
         It can be used over and over again to advance time. Axis
                 """
 
         if not self.is_running:
-            print("模拟未运行，请先调用 start_simulation")
+            print("Simulation is not running; call start_simulation first")
             return {
                 "enterprise_results": [],
                 "environment_result": None
             }
         
         # {\cHFFFFFF}{\cH00FFFF} print ("=== = advance simulation======")
-        if log_file and part == "每日系统自动操作":
+        if log_file and part == "daily_system_actions":
             with open(log_file, "a", encoding="utf-8") as f:
                 f.write(f"\n{'='*70}\n")
-                f.write(f"工作日 {self.time_manager.get_day()} - {part}\n")
+                f.write(f"Working day {self.time_manager.get_day()} - {part}\n")
                 f.write(f"{'='*70}\n")
-                f.write(f"执行时间: {datetime.now().isoformat()}\n\n")
+                f.write(f"Execution time: {datetime.now().isoformat()}\n\n")
         # Parsing WorkFlow
         step_actions_map = {}
         if isinstance(workflow, dict) and "workflows" in workflow:
@@ -1315,7 +1315,7 @@ class Controller:
         """
         End simulation, save and return final results
                 """ 
-        print("===== 模拟结束 =====")
+        print("===== Simulation Complete =====")
         self.is_running = False
 
         if self.environment:
@@ -1336,11 +1336,11 @@ class Controller:
         Returns:
             dict: Simulation results
                 """
-        print("===== 开始运行模拟 =====")
+        print("===== Starting Simulation =====")
         
         # Ensure environment is set
         if environment:
-            print("使用提供的环境实例")
+            print("Using the supplied environment instance")
             self.set_environment(environment)
         
         # If no total number of steps is specified, get from the configuration
@@ -1359,7 +1359,7 @@ class Controller:
                 total_steps = max_key + 1
             else:
                 total_steps = 0
-        print(f"控制器开始运行模拟，总步数: {total_steps}")
+        print(f"Controller started simulation for {total_steps} steps")
         
         # Set the status of operation
         self.is_running = True
@@ -1386,7 +1386,7 @@ class Controller:
             
             # Check to stop
             if not self.is_running:
-                print("模拟已停止")
+                print("Simulation stopped")
                 break
         
         # Save Results

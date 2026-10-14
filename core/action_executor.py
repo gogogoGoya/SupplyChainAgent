@@ -33,7 +33,7 @@ class ActionExecutor:
         if not enterprise:
             return {
                 "status": "error", 
-                "message": f"企业 {enterprise_id} 不存在",
+                "message": f"Enterprise {enterprise_id} does not exist",
                 "action_type": action_type,
                 "event_type": "ACTION_FAILED"
             }
@@ -41,7 +41,7 @@ class ActionExecutor:
         if not action_type:
             return {
                 "status": "error", 
-                "message": "动作类型未指定",
+                "message": "Action type not specified",
                 "action_type": action_type,
                 "event_type": "ACTION_FAILED"
             }
@@ -67,7 +67,7 @@ class ActionExecutor:
         if not confirmation_result.get("confirmed", False):
             # If action execution fails, reset sequence status
             if state["in_sequence"]:
-                print(f"企业 {enterprise_id} 动作序列执行失败: 动作未通过企业部门模块确认")
+                print(f"Enterprise {enterprise_id} action sequence failed: the department module did not confirm the action")
                 state["in_sequence"] = False
                 state["sequence_type"] = None
                 state["current_step"] = 0
@@ -76,7 +76,7 @@ class ActionExecutor:
             
             return {
                 "status": "error",
-                "message": "动作未通过企业部门模块确认",
+                "message": "Action not confirmed by enterprisedepartment module",
                 "confirmations": confirmation_result.get("confirmations", []),
                 "action_type": action_type,
                 "event_type": "ACTION_REJECTED"
@@ -101,25 +101,25 @@ class ActionExecutor:
                 # Process action sequences
                 if state["in_sequence"] and module_result.get("status") == "success":
                     state["current_step"] += 1
-                    print(f"企业 {enterprise_id} 完成动作序列步骤 {state['current_step']}: {action_type}")
+                    print(f"Enterprise {enterprise_id} completed action-sequence step {state['current_step']}: {action_type}")
                     
                     # If this is a production move, the next step should be to increase the stock.
                     if action_type == "PRODUCTION" and hasattr(enterprise, "inventory_manager"):
                         # Automatically create and execute inventory addition actions
-                        print(f"企业 {enterprise_id} 自动触发库存增加动作")
+                        print(f"Enterprise {enterprise_id} automatically triggered an inventory-addition action")
                         # Here we only mark the state. The actual execution will be triggered by the controller at the next step.
                         state["next_action"] = "INVENTORY_TRANSFER"
                     
                     # If this is an inventory transfer, the next step is sales.
                     elif action_type in ["INVENTORY_TRANSFER", "B2B_PURCHASE"] and hasattr(enterprise, "sales_manager"):
                         # Automatically create and execute sales actions
-                        print(f"企业 {enterprise_id} 自动触发销售动作")
+                        print(f"Enterprise {enterprise_id} automatically triggered a sales action")
                         # Mark Next Action
                         state["next_action"] = "SALES"
                     
                     # If it's a sales move, the action sequence is complete.
                     elif action_type in ["SALES", "B2B_SALES"]:
-                        print(f"企业 {enterprise_id} 完成整个动作序列: 生产->库存->销售")
+                        print(f"Enterprise {enterprise_id} completed the action sequence: production -> inventory -> sales")
                         # Reset Serial Status
                         state["in_sequence"] = False
                         state["sequence_type"] = None
@@ -131,7 +131,7 @@ class ActionExecutor:
             except Exception as e:
                 # If action execution fails, reset sequence status
                 if state["in_sequence"]:
-                    print(f"企业 {enterprise_id} 动作序列执行失败: {str(e)}")
+                    print(f"Enterprise {enterprise_id} action sequence failed: {str(e)}")
                     state["in_sequence"] = False
                     state["sequence_type"] = None
                     state["current_step"] = 0
@@ -140,7 +140,7 @@ class ActionExecutor:
                 
                 return {
                     "status": "error",
-                    "message": f"模块执行动作出错: {str(e)}",
+                    "message": f"Module action execution failed: {str(e)}",
                     "executing_module": getattr(executing_module, 'module_id', 'unknown'),
                     "action_type": action_type,
                     "event_type": "ACTION_FAILED"

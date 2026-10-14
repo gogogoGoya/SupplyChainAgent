@@ -406,7 +406,7 @@ class Enterprise:
             parameter: Examples of modules
                 """
         self.business_modules[module_name] = module_instance
-        print(f"企业 {self.name} 已注册业务模块: {module_name}")
+        print(f"Enterprise {self.name} registered business module: {module_name}")
         
     def get_business_module(self, module_name: str):
         """
@@ -468,7 +468,7 @@ class Enterprise:
                 """
         # Check if the module is the case of BaseBusinesModule
         if not isinstance(module, BaseBusinessModule):
-            raise TypeError(f"模块必须继承BaseBusinessModule，当前类型: {type(module)}")
+            raise TypeError(f"Module must inherit BaseBusinessModule; received: {type(module)}")
         
         # Registration module
         if not hasattr(self, 'business_modules'):

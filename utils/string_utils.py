@@ -572,7 +572,7 @@ if __name__ == "__main__":
     print(f"Phone validation '{phone}': {StringUtils.is_valid_phone_cn(phone)}")
     
     # Sensitive information mask
-    masked_email = StringUtils.mask_email("zhang.san@example.com")
+    masked_email = StringUtils.mask_email("alice.smith@example.com")
     print(f"Masked email: '{masked_email}'")
     
     masked_phone = StringUtils.mask_phone_cn("13812345678")

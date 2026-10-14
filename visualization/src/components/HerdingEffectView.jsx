@@ -41,7 +41,7 @@ const formatNumber = (value, digits = 2) => {
   if (!Number.isFinite(numeric)) {
     return '-';
   }
-  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: digits }).format(numeric);
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: digits }).format(numeric);
 };
 
 const formatPercent = (value, digits = 1) => {

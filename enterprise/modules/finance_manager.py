@@ -272,7 +272,7 @@ class FinanceManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_ACCOUNTS_PAYABLE",
-                f"应付账款余额不足。需要: ¥{amount:.2f}, 当前: ¥{self.liabilities['accounts_payable']:.2f}"
+                f"Insufficient accounts payable balance. Required: {amount:.2f}; current: {self.liabilities['accounts_payable']:.2f}."
             )
         
         # Verification of cash balances
@@ -280,7 +280,7 @@ class FinanceManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_CASH",
-                f"现金余额不足。需要: ¥{amount:.2f}, 当前: ¥{self.cash:.2f}"
+                f"Insufficient cash. Required: {amount:.2f}; current: {self.cash:.2f}."
             )
         if dry_run:
             return self.success_response(
@@ -463,7 +463,7 @@ class FinanceManager(EnhancedBaseModule):
             error_message = (
                 cost_result.errors[0]["message"]
                 if getattr(cost_result, "errors", None)
-                else "折旧成本记录失败"
+                else "Depreciation cost record failed"
             )
             return self.error_response(
                 response,
@@ -509,7 +509,7 @@ class FinanceManager(EnhancedBaseModule):
         Args:
             asset_type: Asset type (validated by decorator)
             amount: disposal amount (validated by decorator > 0)
-            < x17/ >: Sales price (certified by decorator > 0)
+            sale_price: sale price (validated by the decorator as greater than zero)
             description:
             Response: Respond objects (injected by decorator)
                         
@@ -521,7 +521,7 @@ class FinanceManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_ASSET_BALANCE",
-                f"{asset_type} 资产余额不足。需要: ¥{amount:.2f}, 当前: ¥{self.assets[asset_type]:.2f}"
+                f"Insufficient {asset_type} asset balance. Required: {amount:.2f}; current: {self.assets[asset_type]:.2f}."
             )
         if dry_run:
             return self.success_response(
@@ -552,7 +552,7 @@ class FinanceManager(EnhancedBaseModule):
             error_message = (
                 revenue_result.errors[0]["message"]
                 if getattr(revenue_result, "errors", None)
-                else "资产处置收入记录失败"
+                else "Failure to record income from asset disposal"
             )
             return self.error_response(
                 response,
@@ -1148,7 +1148,7 @@ class FinanceManager(EnhancedBaseModule):
                 """
         return self.success_response(
             response,
-            f"当前现金余额为 ¥{self.cash:.2f}",
+            f"Current cash balance: {self.cash:.2f}.",
             {"balance": self.cash}
         )
     
@@ -1343,7 +1343,7 @@ class FinanceManager(EnhancedBaseModule):
             "success": True,
             "old_balance": old_balance,
             "new_balance": balance_amount,
-            "message": f"财务余额已设置为 {balance_amount}，原因: {reason}"
+            "message": f"Financial balance set to {balance_amount}. Reason: {reason}."
         }
 
     def _interpret_indicators(self, indicators: Dict) -> str:

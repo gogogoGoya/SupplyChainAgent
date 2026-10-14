@@ -530,7 +530,7 @@ class Exchange:
 
     def get_proposal(self, proposal_id: str) -> Optional[OrderProposal]:
         """
-        By ID of the proposal returns the authoritative object of the proposal in exchange.
+        Return the exchange's authoritative proposal object by proposal ID.
                 """
         for proposal in self.proposals:
             if proposal.proposal_id == proposal_id:
@@ -718,7 +718,7 @@ class Exchange:
             Bool: Successful registration
                 """
         if enterprise_id in self.upstream_enterprises:
-            print(f"警告: 企业 {enterprise_name} 已在交易所 {self.id} 的上游注册")
+            print(f"Warning: enterprise {enterprise_name} is already registered upstream on exchange {self.id}")
             return False
         
         self.upstream_enterprises[enterprise_id] = {
@@ -727,7 +727,7 @@ class Exchange:
             "registered_at": datetime.now(),
             "info": enterprise_info or {}
         }
-        print(f"上游企业 {enterprise_name} 注册到交易所 {self.id}")
+        print(f"Registered upstream enterprise {enterprise_name} on exchange {self.id}")
         return True
     
     def register_downstream_enterprise(self, enterprise_id: str, enterprise_name: str, enterprise_info: Dict = None) -> bool:
@@ -743,7 +743,7 @@ class Exchange:
             Bool: Successful registration
                 """
         if enterprise_id in self.downstream_enterprises:
-            print(f"警告: 企业 {enterprise_name} 已在交易所 {self.id} 的下游注册")
+            print(f"Warning: enterprise {enterprise_name} is already registered downstream on exchange {self.id}")
             return False
         
         self.downstream_enterprises[enterprise_id] = {
@@ -752,13 +752,13 @@ class Exchange:
             "registered_at": datetime.now(),
             "info": enterprise_info or {}
         }
-        print(f"下游企业 {enterprise_name} 注册到交易所 {self.id}")
+        print(f"Registered downstream enterprise {enterprise_name} on exchange {self.id}")
         return True
           
 
 class ExchangeManager:
     def __init__(self):
-        self.exchanges = {}  # Information exchange {exchange_id: Exchange实例}
+        self.exchanges = {}  # Exchanges keyed by exchange_id.
         self.layer_to_exchanges = {}  # Map to exchange {layer_name/enterprise_id: [exchange_ids]}
         self.trading_mode = "market"
 
@@ -802,7 +802,7 @@ class ExchangeManager:
                     self.layer_to_exchanges[downstream_layer] = []
                 self.layer_to_exchanges[downstream_layer].append(exchange_id)
         
-        print(f"交易所初始化完成，共创建 {len(self.exchanges)} 个交易所",self.exchanges)
+        print(f"Exchange initialization complete: created {len(self.exchanges)} exchanges", self.exchanges)
         return self.exchanges
     
     def get_exchange(self, exchange_id: str) -> Optional[Exchange]:

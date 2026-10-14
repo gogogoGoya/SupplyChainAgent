@@ -340,13 +340,13 @@ class MultiTenantUtils:
                 raw_material_total += qty
 
         summary = (
-            "根据当前运行状态生成保底低频分析："
-            f"现金={cash:.2f}({cash_level})；"
-            f"可用订单量={order_qty.get('available', 0.0):.2f}，已接/积压需求={backlog_quantity:.2f}；"
-            f"MATERIAL_1库存位点={material_1_available:.2f}，在途={pending_material_1:.2f}；"
-            f"可用产能={available_capacity:.2f}/总产能={total_capacity:.2f}；"
-            f"PRODUCTION可用人手={production_available_staff:.2f}，待招聘={pending_production_recruitment:.2f}；"
-            f"成品库存={finished_goods_total:.2f}，原料库存={raw_material_total:.2f}。"
+            "Generate bottom low frequency analysis based on current operational status:"
+            f"cash={cash:.2f} ({cash_level}); "
+            f"available order quantity={order_qty.get('available', 0.0):.2f}, accepted/backlog demand={backlog_quantity:.2f}; "
+            f"MATERIAL_1 inventory position={material_1_available:.2f}, inbound={pending_material_1:.2f}; "
+            f"available capacity={available_capacity:.2f}/total capacity={total_capacity:.2f}; "
+            f"available PRODUCTION staff={production_available_staff:.2f}, pending recruits={pending_production_recruitment:.2f}; "
+            f"finished-goods inventory={finished_goods_total:.2f}, raw-material inventory={raw_material_total:.2f}."
         )
 
         return {
@@ -355,24 +355,24 @@ class MultiTenantUtils:
             "enterprise_summarys": summary,
             "department_targets": {
                 "sales": {
-                    "target": "基于真实非零订单、交期、成品库存和近期待产判断是否接单；若需求不足且现金与履约能力允许，再考虑市场开发。",
-                    "evaluation": "sales_action.json 必须引用真实订单或说明当前无可履约真实需求；不得把零数量或无金额订单当作增长目标。",
-                    "reason": "销售动作应由订单真实性、库存覆盖、交付期限和现金影响共同决定。",
+                    "target": "Whether or not to take orders based on real, non-zero orders, delivery dates, inventory of finished products and near-anticipatory production; consideration of market development if demand is insufficient and cash and fulfillment capacity allows.",
+                    "evaluation": "sales_action.json must cite real orders or state that there is no current need for fulfillment; zero or no orders may not be targeted for growth.",
+                    "reason": "Sales movements should be determined by the authenticity of orders, stock cover, delivery period and cash impact.",
                 },
                 "procurement": {
-                    "target": "基于 MATERIAL_1 库存位点、在途补货、配方需求和已接订单/backlog 判断是否采购；已有覆盖时避免重复采购。",
-                    "evaluation": "procurement_action.json 的采购数量、物料和物流方式必须可由库存位点、供应商、在途记录或生产恢复需求解释。",
-                    "reason": "采购动作应解决真实原料覆盖缺口，而不是无条件补货。",
+                    "target": "Based on MATERIAL_1 stockpoint, in transit replenishment, formulation needs and orders received/backlog, procurement is not repeated when coverage is available.",
+                    "evaluation": "procurement_action.json The quantity, material and logistics to be procured must be accounted for by stock location, supplier, in transit recording or production recovery needs.",
+                    "reason": "The procurement action should address the real raw material coverage gap rather than the unconditional replenishment.",
                 },
                 "production": {
-                    "target": "基于真实订单/backlog、原料可行量、可用产能、产线状态和可用生产人手判断是否排产或扩线。",
-                    "evaluation": "production_action.json 必须说明原料、人手和产能均支持动作；若任一硬条件不足，应说明阻断并等待。",
-                    "reason": "生产动作需要同时满足需求、原料、人手和产能约束。",
+                    "target": "Based on a real order/backlog, raw material practicable, available at capacity, production line state and available producer hands to determine whether production scheduling or extension.",
+                    "evaluation": "production_action.json must state that raw material, hands and capacity all support the action; if any hard condition is inadequate, a stop and wait.",
+                    "reason": "Production operations need to meet both demand, raw material, manpower and capacity constraints.",
                 },
                 "hr": {
-                    "target": "基于各部门员工数量、空闲人数、利用率、待招聘和人员不足失败记录判断是否招聘。",
-                    "evaluation": "hr_action.json 只有在真实人员缺口或执行失败显示人手阻断时输出招聘；已有待招聘覆盖时避免重复招聘。",
-                    "reason": "HR 动作应由真实人员状态触发。",
+                    "target": "Recruitment is judged on the basis of a record of department number of staff, availability, utilization, pending recruitment and understaffing.",
+                    "evaluation": "hr_action.json Only when a real staff gap or a failure in implementation indicates that recruitment has been interrupted; duplication of recruitment is avoided when recruitment coverage is pending.",
+                    "reason": "HR actions should be triggered by real human status.",
                 },
             },
             "fallback_analysis": {
@@ -602,9 +602,9 @@ class MultiTenantUtils:
             if (
                 "expired" in lowered
                 or "superseded" in lowered
-                or "已完成采购侧响应" in content
-                or "已完成销售侧响应" in content
-                or "已完成" in content and "响应" in content
+                or "Procurement side responses completed" in content
+                or "Sales side response completed" in content
+                or "Completed" in content and "Response" in content
             ):
                 stale_trade_files.append(file_path)
             if final_action_valid and final_result_present:
@@ -720,8 +720,8 @@ class MultiTenantUtils:
                 "enterprise_id": enterprise_id,
                 "reason_code": "NO_ORDER_AND_ECONOMIC_DECLINE",
                 "message": (
-                    f"{enterprise_id} 已连续 {no_order_window} 轮未获得交易订单，且 {metric_name} 连续 "
-                    f"{decline_window} 轮下滑，当前值 {current_metric:.2f}。"
+                    f"{enterprise_id} received no transaction orders for {no_order_window} consecutive turns, while {metric_name} "
+                    f"declined for {decline_window} consecutive turns to {current_metric:.2f}."
                 ),
                 "policy": policy,
                 "order_history": order_history,
@@ -751,7 +751,7 @@ class MultiTenantUtils:
         for error_file in error_dir.glob(f"{dept}_error*.json"):
             payload = MultiTenantUtils._read_json_if_exists(error_file, {})
             flattened = json.dumps(payload, ensure_ascii=False)
-            if "INSUFFICIENT_STAFF" in flattened or "人手不足" in flattened:
+            if "INSUFFICIENT_STAFF" in flattened or "We're short-staffed." in flattened:
                 count += 1
         return count
 
@@ -926,7 +926,7 @@ class MultiTenantUtils:
             return {
                 "trigger": trigger,
                 "severity": len(negative_items) + (1 if pending_total > policy["procurement_pending_quantity_trigger"] else 0),
-                "reason": f"负库存位物料 {len(negative_items)} 个, 在途待收总量 {int(pending_total)}"
+                "reason": f"{len(negative_items)} items have negative inventory positions; total inbound quantity is {int(pending_total)}"
             }
 
         def calc_sales_pressure() -> Dict[str, object]:
@@ -951,7 +951,7 @@ class MultiTenantUtils:
             return {
                 "trigger": trigger,
                 "severity": total_plans if trigger else 0,
-                "reason": f"在制计划 {total_plans} 条, 可用产能 {available_capacity:.0f}"
+                "reason": f"{total_plans} production plans in progress; available capacity {available_capacity:.0f}"
             }
 
         def calc_inventory_pressure() -> Dict[str, object]:
@@ -965,7 +965,7 @@ class MultiTenantUtils:
             return {
                 "trigger": trigger,
                 "severity": alert_count + (1 if capacity_utilization >= policy["inventory_support_threshold"] else 0),
-                "reason": f"仓容利用率 {capacity_utilization:.2f}, 库存告警 {alert_count} 项"
+                "reason": f"warehouse utilization {capacity_utilization:.2f}; {alert_count} inventory alerts"
             }
 
         pressure_by_department = {
@@ -985,7 +985,7 @@ class MultiTenantUtils:
             utilization = staffing.get("utilization", 0.0)
             pending_recruits = int(pending_by_department.get(dept, 0) or 0)
             prior_failures = MultiTenantUtils._count_insufficient_staff_failures(enterprise_name, dept.lower(), round_id)
-            pressure = pressure_by_department.get(dept, {"trigger": False, "severity": 0, "reason": "无额外压力"})
+            pressure = pressure_by_department.get(dept, {"trigger": False, "severity": 0, "reason": "No extra pressure."})
 
             recruit_need = 0
             reason_codes = []
@@ -1029,9 +1029,9 @@ class MultiTenantUtils:
                     }
                 },
                 "action_reason": (
-                    f"{dept}部门触发前视化招聘，建议补员 {recruit_need} 人；"
-                    f"当前人数={count}，空闲={available}，利用率={utilization:.2f}；"
-                    f"原因={', '.join(reason_codes) if reason_codes else pressure.get('reason', '无')}"
+                    f"The {dept} department triggered anticipatory recruitment for {recruit_need} additional staff; "
+                    f"current staff={count}, available={available}, utilization={utilization:.2f}; "
+                    f"reason={', '.join(reason_codes) if reason_codes else pressure.get('reason', 'None')}"
                 ),
                 "module_type": "HRManager",
                 "executor_id": enterprise_name
@@ -1041,9 +1041,9 @@ class MultiTenantUtils:
             actions.append({
                 "action": {
                     "action_name": "action_pass",
-                    "action_param": "当前无显著用工压力，暂无新增招聘"
+                    "action_param": "There is currently no significant labour pressure and no new recruitment"
                 },
-                "action_reason": "当前利用率、压力信号和上一轮人手失败记录均未触发招聘阈值",
+                "action_reason": "Current utilization, pressure signals, and recent staffing failures do not trigger the recruitment threshold.",
                 "module_type": "HRManager",
                 "executor_id": enterprise_name
         })
@@ -1105,9 +1105,9 @@ class MultiTenantUtils:
                         }
                     },
                     "action_reason": (
-                        f"库存利用率过高({inventory_utilization:.2%})，需要增加{increment}容量。"
-                        f"当前低库存项: {', '.join(low_stock_items) if low_stock_items else '无'}；"
-                        f"低于再订购点项: {', '.join(below_reorder_point_items) if below_reorder_point_items else '无'}"
+                        f"Inventory utilization is high ({inventory_utilization:.2%}); increase capacity by {increment}. "
+                        f"Low-stock items: {', '.join(low_stock_items) if low_stock_items else 'None'}; "
+                        f"items below reorder point: {', '.join(below_reorder_point_items) if below_reorder_point_items else 'None'}"
                     ),
                     "module_type": "InventoryManager",
                     "executor_id": enterprise_name
@@ -1116,16 +1116,16 @@ class MultiTenantUtils:
                 low_stock_reason = ""
                 if low_stock_items or below_reorder_point_items:
                     low_stock_reason = (
-                        f" 已识别低库存项({', '.join(low_stock_items) if low_stock_items else '无'})"
-                        f" 与再订购点告警({', '.join(below_reorder_point_items) if below_reorder_point_items else '无'})，"
-                        "当前优先交由采购/生产链路处理。"
+                        f" Low-stock items ({', '.join(low_stock_items) if low_stock_items else 'None'})"
+                        f" and reorder-point alerts ({', '.join(below_reorder_point_items) if below_reorder_point_items else 'None'}) were identified; "
+                        "Currently, priority is given to procurement/production links."
                     )
                 actions.append({
                     "action": {
                         "action_name": "action_pass",
-                        "action_param": f"库存利用率正常，无需增加容量。{low_stock_reason}".strip()
+                        "action_param": f"Inventory utilization is within range; no capacity increase is needed. {low_stock_reason}".strip()
                     },
-                    "action_reason": f"库存利用率正常，无需增加容量。{low_stock_reason}".strip(),
+                    "action_reason": f"Inventory utilization is within range; no capacity increase is needed. {low_stock_reason}".strip(),
                     "module_type": "InventoryManager",
                     "executor_id": enterprise_name
                 })
@@ -1134,9 +1134,9 @@ class MultiTenantUtils:
             actions.append({
                 "action": {
                     "action_name": "action_pass",
-                    "action_param": "无法获取库存数据"
+                    "action_param": "Inventory data not available"
                 },
-                "action_reason": "无法获取库存数据",
+                "action_reason": "Inventory data not available",
                 "module_type": "InventoryManager",
                 "executor_id": enterprise_name
             })
@@ -1986,16 +1986,16 @@ class MultiTenantUtils:
         """Summarize whether Agent action reasons cite market heat, peers, and risk signals."""
         keyword_groups = {
             "market_heat": [
-                "市场热度", "热度", "市场信号", "需求信号", "可见需求", "visible_demand_signal",
-                "行业趋势", "趋势", "market heat", "market_heat", "trend",
+                "Market heat", "Heat", "Market signals", "Demand signal", "Visible Needs", "visible_demand_signal",
+                "Industry trends", "Trends", "market heat", "market_heat", "trend",
             ],
             "peer_signal": [
-                "同业", "同行", "同伴", "聚合摘要", "同业摘要", "peer", "peer_summary",
-                "herding_signal", "herding", "同步", "synchronization", "竞争", "市场份额", "份额",
+                "Practice", "Peer", "Peer", "Syndication Summary", "Summary of practice", "peer", "peer_summary",
+                "herding_signal", "herding", "Sync", "synchronization", "Competition", "Market share", "Share",
             ],
-            "inventory_risk": ["库存", "积压", "滞销", "inventory", "backlog"],
-            "cash_risk": ["现金", "资金", "财务", "利润", "cash", "profit"],
-            "order_demand": ["订单", "需求", "客户", "order", "demand"],
+            "inventory_risk": ["Inventory", "Backlog", "Demurrage", "inventory", "backlog"],
+            "cash_risk": ["Cash", "Funds", "Financial", "Profit", "cash", "profit"],
+            "order_demand": ["Orders", "Requirements", "Client", "order", "demand"],
         }
         result = {
             "round": round_id,
@@ -2216,16 +2216,16 @@ class MultiTenantUtils:
                         with open(exchange_dir / "external_environment.json", 'w', encoding='utf-8') as f:
                             json.dump(external_environment, f, indent=2, ensure_ascii=False)
                     
-                print(f"交易所信息已保存到: {exchange_file}")
+                print(f"Exchange data saved to: {exchange_file}")
             else:
-                print(f"获取交易所信息失败，HTTP状态码: {response.status_code}")
+                print(f"Failed to retrieve exchange data; HTTP status: {response.status_code}")
                 
         except requests.exceptions.RequestException as e:
-            print(f"请求交易所信息时发生错误: {str(e)}")
+            print(f"Error while requesting exchange data: {str(e)}")
         except json.JSONDecodeError as e:
-            print(f"解析交易所信息响应时发生错误: {str(e)}")
+            print(f"Error while parsing the exchange response: {str(e)}")
         except Exception as e:
-            print(f"保存交易所信息时发生未知错误: {str(e)}")
+            print(f"Unexpected error while saving exchange data: {str(e)}")
 
     @staticmethod
     def materialize_exchange_root_alias(round_id: int, source_stage: str = "end_of_day"):
@@ -2281,4 +2281,4 @@ class MultiTenantUtils:
                 with open(snapshot_file, "w", encoding="utf-8") as f:
                     json.dump(snapshot, f, indent=2, ensure_ascii=False)
             except Exception as e:
-                print(f"保存 {enterprise_name} observer_state 失败: {str(e)}")
+                print(f"Failed to save observer_state for {enterprise_name}: {str(e)}")

@@ -72,7 +72,7 @@ class ProductionManager(EnhancedBaseModule):
         # Production Event Log
         self.production_events: List[Dict] = []
 
-    # == sync, corrected by elderman ==
+    # Synchronization helpers.
 
     @skip_dry_run_validation
     @with_response("initialize_production_line")
@@ -90,16 +90,16 @@ class ProductionManager(EnhancedBaseModule):
         It does not trigger construction costs, construction workers occupy or wait for completion.
                 """
         if line_type not in self.LINE_CONFIGS:
-            return self.error_response(response, "INVALID_LINE_TYPE", f"无效的生产线类型，请选择 'small', 'medium', 或 'large'")
+            return self.error_response(response, "INVALID_LINE_TYPE", "Invalid production-line type; choose 'small', 'medium', or 'large'")
 
         if len(self.production_lines) >= self.max_lines:
-            return self.error_response(response, "MAX_LINES_REACHED", f"已达到生产线数量上限（{self.max_lines}条）")
+            return self.error_response(response, "MAX_LINES_REACHED", f"Production-line limit reached ({self.max_lines})")
 
         config = self.LINE_CONFIGS[line_type]
         current_day = self.enterprise.time_manager.get_day() if getattr(self.enterprise, "time_manager", None) else 0
         status = initial_status or ("idle" if ready_at_start else "under_construction")
         if status not in {"idle", "under_construction", "maintaining"}:
-            return self.error_response(response, "INVALID_INITIAL_LINE_STATUS", "初始产线状态必须为 idle、under_construction 或 maintaining")
+            return self.error_response(response, "INVALID_INITIAL_LINE_STATUS", "Initial line status must be idle, building, or producing")
 
         line_id = f"line_{self.next_line_id}"
         self.next_line_id += 1
@@ -129,7 +129,7 @@ class ProductionManager(EnhancedBaseModule):
             "completion_time": completion_time,
         })
 
-        return self.success_response(response, f"初始生产线 {line_id} 已配置为 {status}", {
+        return self.success_response(response, f"Initial production line {line_id} configured with status {status}", {
             "line_id": line_id,
             "line_type": line_type,
             "status": status,
@@ -148,7 +148,7 @@ class ProductionManager(EnhancedBaseModule):
         Construction of production lines
 
         Args:
-            < x17/>: Type of production line ("small", "mediam", "large")
+            line_type: production-line type ("small", "medium", or "large")
             Response: Respond objects (automated by decorator)
 
         Returns:
@@ -157,18 +157,18 @@ class ProductionManager(EnhancedBaseModule):
         # Inspection of department personnel
         hr_manager = super().get_module_by_type("HRManager")
         if line_type not in self.LINE_CONFIGS:
-            return self.error_response(response, "INVALID_LINE_TYPE", f"无效的生产线类型，请选择 'small', 'medium', 或 'large'")
+            return self.error_response(response, "INVALID_LINE_TYPE", "Invalid production-line type; choose 'small', 'medium', or 'large'")
         config = self.LINE_CONFIGS[line_type]
         workers_assigned = 0  # Number of workers recorded
         hr_result = hr_manager.get_available_workers(department='production')
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < config["workers_needed"]:
-            return self.error_response(response, "INSUFFICIENT_PRODUCTION_WORKERS", f"生产工人不足。需要: {config['workers_needed']}, 可用: {employee_count}")
+            return self.error_response(response, "INSUFFICIENT_PRODUCTION_WORKERS", f"Insufficient production workers. Required: {config['workers_needed']}; available: {employee_count}")
 
         # 3. Inspection of space constraints (up to 10 production lines)
         total_lines = len(self.production_lines)
         if total_lines >= self.max_lines:
-            return self.error_response(response, "MAX_LINES_REACHED", f"已达到生产线数量上限（{self.max_lines}条）")
+            return self.error_response(response, "MAX_LINES_REACHED", f"Production-line limit reached ({self.max_lines})")
 
         
         finance_manager = super().get_module_by_type("FinanceManager")
@@ -186,14 +186,14 @@ class ProductionManager(EnhancedBaseModule):
             balance_value = 0
 
         if balance_value < config["build_cost"]:
-            return self.error_response(response, "INSUFFICIENT_FUNDS", f"资金不足，需要 ¥{config['build_cost']:,}")
+            return self.error_response(response, "INSUFFICIENT_FUNDS", f"Insufficient funds; required: {config['build_cost']:,}")
 
         margin_guard = self._get_margin_guard_status()
         usable_lines = [
             line for line in self.production_lines.values()
             if line.get("status") in {"idle", "working", "maintaining"}
         ]
-        # It is considered to be a cold start only when there is no available line that has been completed, so as to avoid being miscalculated as an expansion “only if the line is built”.
+        # Treat this as a cold start only when no completed line is available, so a newly built line is not misclassified as expansion capacity.
         is_cold_start_build = len(usable_lines) == 0
         if (
             (not is_cold_start_build)
@@ -205,7 +205,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MARGIN_GUARD_BLOCKED",
-                "当前没有满足毛利护栏的扩产候选产品，不建议建设新产线"
+                "No expansion candidate currently meets the gross-margin floor, so a new production line is not recommended."
             )
 
         if dry_run:
@@ -243,7 +243,7 @@ class ProductionManager(EnhancedBaseModule):
         )
         assign_success = assign_result.success if hasattr(assign_result, "success") else bool(assign_result.get("success"))
         if not assign_success:
-            assign_error = getattr(assign_result, "message", None) or assign_result.get("error", "生产工人分配失败")
+            assign_error = getattr(assign_result, "message", None) or assign_result.get("error", "Failure in the distribution of productive workers")
             return self.error_response(response, "ASSIGN_WORKERS_ERROR", assign_error)
         workers_assigned = config["workers_needed"]
 
@@ -258,7 +258,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "COST_RECORD_FAILED",
-                getattr(cost_result, "message", "生产线建设成本记录失败")
+                getattr(cost_result, "message", "Failure to record production line construction costs")
             )
 
         # 7. Creation of production line records
@@ -288,7 +288,7 @@ class ProductionManager(EnhancedBaseModule):
         })
 
         # Returns Successful Response
-        return self.success_response(response, f"生产线 {line_id} 开始建设，将于第 {completion_time} 个工作日完工", {
+        return self.success_response(response, f"Construction started for production line {line_id}; completion is scheduled for working day {completion_time}", {
             "line_id": line_id,
             "line_type": line_type,
             "completion_time": completion_time
@@ -333,7 +333,7 @@ class ProductionManager(EnhancedBaseModule):
                 })
 
         # Returns Successful Response
-        return self.success_response(response, f"成功检查并激活 {len(completed_lines)} 条已完工生产线", {
+        return self.success_response(response, f"Checked and activated {len(completed_lines)} completed production lines", {
             "completed_lines": completed_lines,
             "total_completed": len(completed_lines),
             "production_lines": self.production_lines
@@ -353,9 +353,9 @@ class ProductionManager(EnhancedBaseModule):
                 """
         line_data = self.production_lines.get(line_id)
         if line_data:
-            return self.success_response(response, f"成功获取生产线 {line_id} 的状态", line_data)
+            return self.success_response(response, f"Retrieved status for production line {line_id}", line_data)
         else:
-            return self.error_response(response, "LINE_NOT_FOUND", f"生产线 {line_id} 不存在")
+            return self.error_response(response, "LINE_NOT_FOUND", f"Production line {line_id} does not exist")
 
 
     @with_response("get_total_capacity")
@@ -374,7 +374,7 @@ class ProductionManager(EnhancedBaseModule):
             if line_data["status"] in ["idle", "working"]:
                 total += line_data["capacity"]
 
-        return self.success_response(response, "成功获取总产能", {
+        return self.success_response(response, "Successfully obtained total capacity", {
             "total_capacity": total
         })
 
@@ -394,7 +394,7 @@ class ProductionManager(EnhancedBaseModule):
             if line_data["status"] in ["idle", "working"]:
                 available += line_data["remaining_capacity"]
 
-        return self.success_response(response, "成功获取可用产能", {
+        return self.success_response(response, "Successfully accessed at capacity", {
             "available_capacity": available
         })
 
@@ -414,7 +414,7 @@ class ProductionManager(EnhancedBaseModule):
             if line_data["status"] in ["idle", "working"]:
                 occupied += line_data["capacity"] - line_data["remaining_capacity"]
 
-        return self.success_response(response, "成功获取已占用产能", {
+        return self.success_response(response, "Successfully acquired capacity", {
             "occupied_capacity": occupied
         })
 
@@ -443,7 +443,7 @@ class ProductionManager(EnhancedBaseModule):
         # Update indicators
         self.production_metrics["capacity_utilization"] = utilization
 
-        return self.success_response(response, "成功计算产能利用率", {
+        return self.success_response(response, "Successful calculation of capacity utilization factor", {
             "capacity_utilization": utilization
         })
 
@@ -469,10 +469,10 @@ class ProductionManager(EnhancedBaseModule):
                 """
         # Authentication Parameters
         if not product_id:
-            return self.error_response(response, "INVALID_PRODUCT_ID", "产品ID不能为空")
+            return self.error_response(response, "INVALID_PRODUCT_ID", "Product ID cannot be empty.")
         
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # Set the product formulation
         self.product_recipes[product_id] = {
@@ -483,7 +483,7 @@ class ProductionManager(EnhancedBaseModule):
             "equipment_cost_per_unit": equipment_cost_per_unit
         }
 
-        return self.success_response(response, f"产品 {product_id} 的配方已设置", {
+        return self.success_response(response, f"Recipe for product {product_id} configured", {
             "product_id": product_id,
             "recipe": self.product_recipes[product_id]
         })
@@ -502,9 +502,9 @@ class ProductionManager(EnhancedBaseModule):
                 """
         recipe = self.product_recipes.get(product_id)
         if recipe:
-            return self.success_response(response, f"成功获取产品 {product_id} 的配方", recipe)
+            return self.success_response(response, f"Retrieved recipe for product {product_id}", recipe)
         else:
-            return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在")
+            return self.error_response(response, "RECIPE_NOT_FOUND", f"Recipe for product {product_id} does not exist")
 
 
     @with_response("create_production_plan")
@@ -532,12 +532,12 @@ class ProductionManager(EnhancedBaseModule):
         capacity_per_worker = self.config.PLAN_QUANTITY_PER_WORKER
         needed_workers = quantity // capacity_per_worker + 1 if quantity % capacity_per_worker != 0 else quantity // capacity_per_worker
         if employee_count < needed_workers:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法创建生产计划。至少需要: {needed_workers}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff to create a production plan. Minimum required: {needed_workers}")
 
         # 2. Validation of product formulations
         recipe_response = self.get_product_recipe(product_id)
         if not recipe_response.success:
-            return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在，请先设置配方")
+            return self.error_response(response, "RECIPE_NOT_FOUND", f"Recipe for product {product_id} is not configured")
 
         recipe = recipe_response.data
 
@@ -560,7 +560,7 @@ class ProductionManager(EnhancedBaseModule):
             else:
                 available_qty = 0
             if available_qty < needed_qty:
-                return self.error_response(response, "INSUFFICIENT_MATERIALS", f"原材料 {material_id} 库存不足。需要: {needed_qty}, 当前: {available_qty}")
+                return self.error_response(response, "INSUFFICIENT_MATERIALS", f"Insufficient inventory of raw material {material_id}. Required: {needed_qty}; available: {available_qty}")
 
         # Processing capacity parameters per day
         if daily_capacity is None:
@@ -569,17 +569,17 @@ class ProductionManager(EnhancedBaseModule):
             daily_capacity = available_capacity
         else:
             if daily_capacity <= 0:
-                return self.error_response(response, "INVALID_DAILY_CAPACITY", "每日产能必须为正数")
+                return self.error_response(response, "INVALID_DAILY_CAPACITY", "Every day capacity must be positive")
             capacity_response = self.get_available_capacity()
             available_capacity = capacity_response.data["available_capacity"]
             if available_capacity < daily_capacity:
-                return self.error_response(response, "INSUFFICIENT_AVAILABLE_CAPACITY", f"可用产能不足指定每日产能。需要: {daily_capacity}, 可用: {available_capacity}")
+                return self.error_response(response, "INSUFFICIENT_AVAILABLE_CAPACITY", f"Insufficient available capacity for the requested daily rate. Required: {daily_capacity}; available: {available_capacity}")
             if daily_capacity > quantity:
-                return self.error_response(response, "INSUFFICIENT_DAILY_CAPACITY", f"每日产能 {daily_capacity} 大于生产数量 {quantity},无法创建生产计划")
+                return self.error_response(response, "INSUFFICIENT_DAILY_CAPACITY", f"Daily capacity {daily_capacity} exceeds total quantity {quantity}; the production plan cannot be created")
 
         assigned_lines = self._assign_production_lines(daily_capacity)
         if not assigned_lines:
-            return self.error_response(response, "INSUFFICIENT_CAPACITY", "无法分配生产线，可用产能不足")
+            return self.error_response(response, "INSUFFICIENT_CAPACITY", "Could not allocate production lines, available at capacity insufficient")
 
         material_costs = self._estimate_total_material_cost(recipe, quantity)
 
@@ -642,7 +642,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_FUNDS",
-                f"资金不足，生产计划至少需要 ¥{conversion_cost:,.2f}"
+                f"Insufficient funds; the production plan requires at least {conversion_cost:,.2f}"
             )
 
         cash_summary = self._get_cash_summary()
@@ -667,7 +667,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MARGIN_GUARD_BLOCKED",
-                f"预计销售毛利不足，当前不建议创建 {product_id} 的生产计划"
+                f"Projected gross margin is insufficient; a production plan for {product_id} is not currently recommended"
             )
         if _cobweb_scripted_formula_override:
             margin_guard = {
@@ -701,7 +701,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ASSIGN_WORKERS_ERROR",
-                getattr(hr_assign_result, "message", "生产计划工人分配失败")
+                getattr(hr_assign_result, "message", "Failure in the distribution of workers in production schemes")
             )
         cost_result = finance_manager.add_cost(labor_cost + equipment_cost, "production_cost")
         if not getattr(cost_result, "success", True):
@@ -709,7 +709,7 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "COST_RECORD_FAILED",
-                getattr(cost_result, "message", "生产成本记录失败")
+                getattr(cost_result, "message", "Failure to record production costs")
             )
 
         # 11. Update production line status
@@ -762,7 +762,7 @@ class ProductionManager(EnhancedBaseModule):
         self.production_metrics["total_plans"] += 1
 
 
-        return self.success_response(response, f"生产计划 {plan_id} 已创建，计划生产 {production_days} 天", {
+        return self.success_response(response, f"Production plan {plan_id} created for {production_days} days", {
             "plan_id": plan_id,
             "plan": production_plan,
             "completion_time": self.enterprise.time_manager.get_day() + production_days,
@@ -980,7 +980,7 @@ class ProductionManager(EnhancedBaseModule):
                     "unit_cost": plan["unit_cost"]
                 })
 
-        return self.success_response(response, f"成功处理 {len(daily_production)} 个生产计划", {
+        return self.success_response(response, f"Processed {len(daily_production)} production plans", {
             "completed_products": completed_products,
             "completed_plans": completed_plans,
             "daily_production": daily_production,
@@ -1010,20 +1010,20 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法取消生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
+                f"Insufficient staff to cancel a production plan. Minimum required: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
         # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
-            return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
+            return self.error_response(response, "PLAN_NOT_FOUND", f"Plan {plan_id} does not exist")
 
         # 3. Status of the certification plan
         if plan["status"] not in ["pending", "in_progress", "interrupted"]:
-            return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法取消")
+            return self.error_response(response, "INVALID_PLAN_STATUS", f"Plan status {plan['status']} cannot be canceled")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         # Release the production line and return the remaining raw materials if the plan is ongoing or interrupted
         released_lines = []
@@ -1077,7 +1077,7 @@ class ProductionManager(EnhancedBaseModule):
         if released_lines:
             response_data["released_lines"] = released_lines
 
-        return self.success_response(response, f"生产计划 {plan_id} 已取消", response_data)
+        return self.success_response(response, f"Production plan {plan_id} canceled", response_data)
 
     @with_response("interrupt_production_plan")
     def interrupt_production_plan(self, plan_id: str, 
@@ -1100,20 +1100,20 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法中断生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
+                f"Insufficient staff to pause a production plan. Minimum required: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
         # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
-            return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
+            return self.error_response(response, "PLAN_NOT_FOUND", f"Plan {plan_id} does not exist")
 
         # 3. Status of the certification plan
         if plan["status"] != "in_progress":
-            return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法中断")
+            return self.error_response(response, "INVALID_PLAN_STATUS", f"Plan status {plan['status']} cannot be paused")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         # 4. Recording progress prior to interruption
         progress = plan.get("progress", {})
@@ -1146,7 +1146,7 @@ class ProductionManager(EnhancedBaseModule):
             "remaining_quantity": remaining_quantity,
         })
 
-        return self.success_response(response, f"生产计划 {plan_id} 已中断", {
+        return self.success_response(response, f"Production plan {plan_id} paused", {
             "plan_id": plan_id,
             "days_completed": days_completed,
             "quantity_produced": quantity_produced,
@@ -1175,17 +1175,17 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法恢复生产计划。至少需要: {self.config.MIN_CANCEL_PLAN_STAFF}"
+                f"Insufficient staff to resume a production plan. Minimum required: {self.config.MIN_CANCEL_PLAN_STAFF}"
             )
 
         # 2. Existence of certification schemes
         plan = self._find_plan(plan_id)
         if not plan:
-            return self.error_response(response, "PLAN_NOT_FOUND", f"计划 {plan_id} 不存在")
+            return self.error_response(response, "PLAN_NOT_FOUND", f"Plan {plan_id} does not exist")
 
         # 3. Status of the certification plan
         if plan["status"] != "interrupted":
-            return self.error_response(response, "INVALID_PLAN_STATUS", f"计划状态为 {plan['status']}，无法恢复")
+            return self.error_response(response, "INVALID_PLAN_STATUS", f"Plan status {plan['status']} cannot be resumed")
 
         # 4. Inspection of progress
         progress = plan.get("progress", {})
@@ -1194,7 +1194,7 @@ class ProductionManager(EnhancedBaseModule):
         remaining_quantity = plan["quantity"] - quantity_produced
 
         if remaining_quantity <= 0:
-            return self.error_response(response, "PLAN_ALREADY_COMPLETED", "计划已完成，无需恢复")
+            return self.error_response(response, "PLAN_ALREADY_COMPLETED", "The plan is complete, no need to resume")
 
         # 5. Validation of surplus raw materials
         inventory_manager = super().get_module_by_type("InventoryManager")
@@ -1214,16 +1214,16 @@ class ProductionManager(EnhancedBaseModule):
                 available_qty = 0
             if available_qty < total_remaining_needed:
                 return self.error_response(response, "INSUFFICIENT_MATERIALS",
-                    f"原材料 {material_id} 库存不足，无法恢复生产。需要: {total_remaining_needed}, 当前: {available_qty}")
+                    f"Insufficient inventory of raw material {material_id} to resume production. Required: {total_remaining_needed}; available: {available_qty}")
 
         # 6. Distribution of production lines
         daily_capacity = plan.get("daily_capacity", 100)
         assigned_lines = self._assign_production_lines(daily_capacity)
         if not assigned_lines:
-            return self.error_response(response, "INSUFFICIENT_CAPACITY", "无法分配生产线，可用产能不足")
+            return self.error_response(response, "INSUFFICIENT_CAPACITY", "Could not allocate production lines, available at capacity insufficient")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         # Update plan status in_progress
         plan["status"] = "in_progress"
@@ -1249,7 +1249,7 @@ class ProductionManager(EnhancedBaseModule):
             "assigned_lines": assigned_lines
         })
 
-        return self.success_response(response, f"生产计划 {plan_id} 已恢复，继续生产剩余 {remaining_quantity} 件", {
+        return self.success_response(response, f"Production plan {plan_id} resumed for the remaining {remaining_quantity} units", {
             "plan_id": plan_id,
             "days_completed": days_completed,
             "quantity_produced": quantity_produced,
@@ -1277,7 +1277,7 @@ class ProductionManager(EnhancedBaseModule):
         # 1. Authentication product formulations
         recipe_response = self.get_product_recipe(product_id)
         if not recipe_response.success:
-            return self.error_response(response, "RECIPE_NOT_FOUND", f"产品 {product_id} 的配方不存在")
+            return self.error_response(response, "RECIPE_NOT_FOUND", f"Recipe for product {product_id} does not exist")
 
         recipe = recipe_response.data
 
@@ -1349,7 +1349,7 @@ class ProductionManager(EnhancedBaseModule):
         total_cost = material_costs + labor_cost + equipment_cost
         unit_cost = total_cost / quantity if quantity > 0 else 0
 
-        return self.success_response(response, f"成功计算产品 {product_id} 的生产成本", {
+        return self.success_response(response, f"Calculated production cost for product {product_id}", {
             "product_id": product_id,
             "quantity": quantity,
             "material_costs": material_costs,
@@ -1439,7 +1439,7 @@ class ProductionManager(EnhancedBaseModule):
             "production_metrics": self.production_metrics
         }
 
-        return self.success_response(response, "成功获取生产状态总览", status_data)
+        return self.success_response(response, "Successfully obtained production status overview", status_data)
 
     @with_response("get_production_plan_detail")
     def get_production_plan_detail(self, plan_id: str, response: ModuleResponse = None) -> ModuleResponse:
@@ -1455,9 +1455,9 @@ class ProductionManager(EnhancedBaseModule):
                 """
         plan = self._find_plan(plan_id)
         if plan:
-            return self.success_response(response, f"成功获取生产计划 {plan_id} 的详情", plan)
+            return self.success_response(response, f"Retrieved production plan {plan_id}", plan)
         else:
-            return self.error_response(response, "PLAN_NOT_FOUND", f"生产计划 {plan_id} 不存在")
+            return self.error_response(response, "PLAN_NOT_FOUND", f"Production plan {plan_id} does not exist")
 
     @with_response("get_all_production_lines")
     def get_all_production_lines(self, response: ModuleResponse = None) -> ModuleResponse:
@@ -1472,7 +1472,7 @@ class ProductionManager(EnhancedBaseModule):
                 """
         production_lines = list(self.production_lines.values())
 
-        return self.success_response(response, f"成功获取 {len(production_lines)} 条生产线信息", {
+        return self.success_response(response, f"Retrieved {len(production_lines)} production lines", {
             "production_lines": production_lines,
             "total_count": len(production_lines)
         })
@@ -1491,10 +1491,10 @@ class ProductionManager(EnhancedBaseModule):
                 """
         if status_filter:
             plans = [plan for plan in self.production_plans if plan["status"] == status_filter]
-            message = f"成功获取状态为 {status_filter} 的生产计划 {len(plans)} 个"
+            message = f"Retrieved {len(plans)} production plans with status {status_filter}"
         else:
             plans = self.production_plans.copy()
-            message = f"成功获取所有生产计划 {len(plans)} 个"
+            message = f"Retrieved all {len(plans)} production plans"
 
         return self.success_response(response, message, {
             "production_plans": plans,
@@ -1557,9 +1557,9 @@ class ProductionManager(EnhancedBaseModule):
                 "margin_guard": self._get_margin_guard_status(),
             }
 
-            return self.success_response(response, "获取生产模块状态成功", state)
+            return self.success_response(response, "Successful acquisition of production module status", state)
         except Exception as e:
-            return self.error_response(response, "STATE_ERROR", f"获取生产模块状态失败: {e}")
+            return self.error_response(response, "STATE_ERROR", f"Failed to retrieve production-module state: {e}")
 
     
     def _find_plan(self, plan_id: str) -> Optional[Dict]:
@@ -1617,7 +1617,7 @@ class ProductionManager(EnhancedBaseModule):
         }
 
     def _estimate_expected_sale_floor(self, product_id: str) -> Dict:
-        """Estimating the current product B2B sales floor for use in the production of Māori columns."""
+        """Estimate the current B2B sales-price floor for product gross-margin calculations."""
         sales_manager = super().get_module_by_type("SalesManager")
         inventory_manager = super().get_module_by_type("InventoryManager")
         if sales_manager and hasattr(sales_manager, "_resolve_b2b_min_price"):
@@ -1673,7 +1673,7 @@ class ProductionManager(EnhancedBaseModule):
         assigned_lines: Optional[List[Dict]] = None,
         candidate: Optional[Dict] = None,
     ) -> Dict:
-        """Assessment of expected Māori health for a restorative production/extension decision."""
+        """Assess expected gross-margin health for production recovery or expansion."""
         recipe = self.product_recipes.get(product_id) or {}
         if not recipe or quantity <= 0:
             return {
@@ -1840,7 +1840,7 @@ class ProductionManager(EnhancedBaseModule):
         }
 
     def _get_margin_guard_status(self) -> Dict:
-        """Provide expected Māori fences for restorative production and expansion."""
+        """Provide expected gross-margin floors for production recovery and expansion."""
         recovery_guard = self._get_recovery_guard_status()
         candidate_evaluations = []
         expansion_candidates = []
@@ -2274,7 +2274,7 @@ class ProductionManager(EnhancedBaseModule):
 
             # Build AnalysisJSON
             analysis_json = {
-                "analysis_type": "生产情况分析",
+                "analysis_type": "Analysis of production",
                 "timestamp": timestamp,
                 "metrics": self.production_metrics,
                 "production_lines_analysis": {
@@ -2316,19 +2316,19 @@ class ProductionManager(EnhancedBaseModule):
                     "capacity_utilization": capacity_utilization
                 },
                 "insights": [
-                    f"总生产计划数: {self.production_metrics.get('total_plans', 0)}",
-                    f"完成生产计划数: {self.production_metrics.get('completed_plans', 0)}",
-                    f"总产量: {self.production_metrics.get('total_production', 0)}",
-                    f"总生产成本: ¥{self.production_metrics.get('total_cost', 0):,.2f}",
-                    f"产能利用率: {capacity_utilization:.2f}",
-                    f"生产效率: {production_efficiency:.2f}",
-                    f"总计划产量: {self.production_metrics.get('total_planned', 0)}",
+                    f"Total production plans: {self.production_metrics.get('total_plans', 0)}",
+                    f"Completed production plans: {self.production_metrics.get('completed_plans', 0)}",
+                    f"Total output: {self.production_metrics.get('total_production', 0)}",
+                    f"Total production cost: {self.production_metrics.get('total_cost', 0):,.2f}",
+                    f"Capacity utilization: {capacity_utilization:.2f}",
+                    f"Production efficiency: {production_efficiency:.2f}",
+                    f"Total planned output: {self.production_metrics.get('total_planned', 0)}",
                 ]
             }
 
             return self.success_response(
                 response,
-                "成功生成生产情况分析",
+                "Successful production analysis",
                 {
                     "analysis": analysis_json
                 }
@@ -2337,5 +2337,5 @@ class ProductionManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ANALYSIS_ERROR",
-                f"生成生产情况分析失败: {e}"
+                f"Failed to generate production analysis: {e}"
             )

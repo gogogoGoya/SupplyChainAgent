@@ -241,8 +241,9 @@ class StaticUtils:
         """
         Decline traditional noise production in shared_resource mode
 
-        In the shared resource landscape, the target product of the empty formulation represents “the acquisition of the product/resource from the shared resource pool”, not the lack
-        BOM raw material. The bottom guard still maintains complete audit data; this is only adjusted to Agent’s decision-making view.
+        In a shared-resource scenario, a target product with an empty recipe represents
+        acquisition from the shared resource pool, not a missing bill of materials.
+        The environment retains complete audit data; this helper adjusts only the Agent's decision view.
         To avoid NO_MATERIAL_FEASIBILITY/ MISSING_RECIPE_OR_ZERO_QUANTITY being misinterpreted as hard to block.
                 """
         if not StaticUtils.is_shared_resource_context(agent_simulation_context):
@@ -289,8 +290,8 @@ class StaticUtils:
                 sanitized = dict(candidate)
                 sanitized["guard_role"] = "service_context_only"
                 sanitized["shared_resource_note"] = (
-                    "该产品由 shared_resource 机制结算；空 raw_materials 是有效配置，"
-                    "资源可得性应参考 shared_resource_metrics，而不是传统原料可行性。"
+                    "This product is settled by the shared_resource mechanism. An empty raw_materials map is valid; "
+                    "resource availability must be read from shared_resource_metrics rather than conventional material feasibility."
                 )
                 sanitized["reason_codes"] = [
                     code for code in (sanitized.get("reason_codes") or [])
@@ -338,8 +339,8 @@ class StaticUtils:
                     sanitized["guard_level"] = "risk_context_only"
                     sanitized["guard_role"] = "shared_resource_risk_context"
                     sanitized["shared_resource_note"] = (
-                        "共享资源产品的销售价格、有效产出和资源质量由 shared_resource_metrics "
-                        "提供；此处传统 margin guard 不作为 create_production_plan 的硬阻塞。"
+                        "Sales price, effective output, and resource quality for shared-resource products come from "
+                        "shared_resource_metrics; the conventional margin guard is not a hard block for create_production_plan."
                     )
                     sanitized["reason_codes"] = [
                         code for code in (sanitized.get("reason_codes") or [])
@@ -384,7 +385,7 @@ class StaticUtils:
         redacted["agent_input_filter"] = {
             "applied": True,
             "mode": "shared_resource_market",
-            "reason": "共享资源产品由公共资源池结算，传统原料可行性和 margin hard block 仅作为背景审计信息。",
+            "reason": "Shared-resource products are settled through the common pool; conventional material feasibility and margin hard blocks are retained only as audit context.",
             "product_id": product_id,
         }
         return redacted
@@ -397,7 +398,7 @@ class StaticUtils:
         """
         Decline traditional noise production in herding_market mode
 
-        In the sheep effect scenario, the target product is expressed in the production plan as “based on market heat and contract information”
+        In a herding scenario, the production plan represents output selected from market-activity and contract signals.
         * The present document is being issued without formal editing. Empty raw_materials is a functional configuration and should not be made available by raw material feasibility
         Or 0 sales price margin guard is misread as hard blockage.
                 """
@@ -456,8 +457,8 @@ class StaticUtils:
                 sanitized = dict(candidate)
                 sanitized["guard_role"] = "herding_feasibility_context_only"
                 sanitized["herding_note"] = (
-                    "该产品由 herding_market 机制提供市场热度、同业摘要和单价/成本参考；"
-                    "空 raw_materials 是有效配置，传统原料可行性不作为 create_production_plan 的硬阻塞。"
+                    "The herding_market mechanism supplies market heat, peer summaries, and unit price/cost references. "
+                    "An empty raw_materials map is valid, and conventional material feasibility is not a hard block for create_production_plan."
                 )
                 sanitized["reason_codes"] = [
                     code for code in (sanitized.get("reason_codes") or [])
@@ -505,8 +506,8 @@ class StaticUtils:
                     sanitized["guard_level"] = "risk_context_only"
                     sanitized["guard_role"] = "herding_market_risk_context"
                     sanitized["herding_note"] = (
-                        "羊群效应产品的价格/成本参考来自 herding_signal.unit_economics；"
-                        "此处传统 margin guard 只提示风险，不作为生产计划硬阻塞。"
+                        "Price and cost references for the herding product come from herding_signal.unit_economics; "
+                        "the conventional margin guard signals risk but does not hard-block a production plan."
                     )
                     sanitized["herding_reference_unit_price"] = unit_price
                     sanitized["herding_reference_unit_cost"] = unit_cost
@@ -568,7 +569,7 @@ class StaticUtils:
         redacted["agent_input_filter"] = {
             "applied": True,
             "mode": "herding_market",
-            "reason": "羊群效应产品由市场热度和聚合同业信号驱动，旧生产 guard 仅作为可行性/风险背景。",
+            "reason": "The herding product is driven by market heat and aggregated peer signals; legacy production guards remain only as feasibility and risk context.",
             "product_id": product_id,
         }
         return redacted
@@ -592,8 +593,8 @@ class StaticUtils:
                 "raw_materials_empty": not bool(raw_materials),
                 "raw_materials": raw_materials or {},
                 "herding_recipe_note": (
-                    "herding_market 模式允许该产品 raw_materials 为空；"
-                    "不要把空配方解释为需要补 recipe 或采购原料。"
+                    "herding_market allows this product to have no raw materials; "
+                    "do not interpret an empty recipe as a request to add a recipe or procure materials."
                 ),
             })
         return compacted
@@ -626,8 +627,8 @@ class StaticUtils:
                 })
             compacted[status] = selected[:12]
         compacted["_compact_note"] = (
-            "herding_market production_plans 已压缩为目标产品计划摘要；"
-            "若无需要中断/恢复的真实计划，优先在 create_production_plan 与 action_pass 间决策。"
+            "herding_market production_plans are compressed into target-product plan summaries. "
+            "If no real plan requires pausing or resuming, choose between create_production_plan and action_pass."
         )
         return compacted
 
@@ -807,9 +808,9 @@ class StaticUtils:
             "applied": True,
             "mode": "profit_balanced_cobweb" if profit_balanced else "agent_endogenous_cobweb",
             "reason": (
-                "生产数量应由价格证据、利润、现金、服务与调整风险共同推导；处方式恢复量仅保留在底层状态用于审计。"
+                "Production quantity must be derived jointly from price evidence, profit, cash, service, and adjustment risk; prescriptive recovery quantities remain only in low-level state for audit."
                 if profit_balanced
-                else "生产数量应由蛛网价格信号、经营约束和已有计划内生推导，恢复性推荐量仅保留在底层状态用于审计。"
+                else "Production quantity must be derived endogenously from the cobweb price signal, operating constraints, and existing plans; recovery recommendations remain only in low-level state for audit."
             ),
         }
         return redacted
@@ -1163,7 +1164,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_pending_proposal_material_ids(state_snapshot: Dict[str, Any]) -> Dict[str, str]:
-        """Returns the material/product that still responds to the proposal for the first second verification."""
+        """Return material or product IDs for proposals that are still awaiting a response."""
         pending_materials: Dict[str, str] = {}
         for proposal in StaticUtils._get_state_proposal_index(state_snapshot).values():
             proposal_id = proposal.get("proposal_id")
@@ -1174,7 +1175,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_procurement_allowed_material_ids(state_snapshot: Dict[str, Any]) -> Set[str]:
-        """Extract the current procurement department real-equitable item and avoid the cross-scenes backlog pollution replenishment candidate."""
+        """Return materials valid for the current procurement state, excluding stale cross-scenario backlog candidates."""
         if not isinstance(state_snapshot, dict):
             return set()
         self_state = state_snapshot.get("self_state") if isinstance(state_snapshot.get("self_state"), dict) else state_snapshot
@@ -1638,7 +1639,7 @@ class StaticUtils:
 
     @staticmethod
     def _get_available_sales_order_ids(state_snapshot: Dict[str, Any]) -> Set[str]:
-        """Draws the current avilable order from the sales status snapshot."""
+        """Extract currently available orders from the sales-state snapshot."""
         self_state = state_snapshot.get("self_state", {}) if isinstance(state_snapshot, dict) else {}
         sales_orders = self_state.get("sales_orders") or state_snapshot.get("sales_orders") or {}
         available_ids: Set[str] = set()
@@ -1988,42 +1989,35 @@ class StaticUtils:
             return text
         cleaned = text
         replacements = {
-            "market_insufficient": "需求不足",
-            "market_shortage": "需求不足",
-            "raw_material_shortage": "原料覆盖不足",
-            "material_shortage": "原料覆盖不足",
-            "capacity_bottleneck": "产能不足",
-            "staff_shortage": "人员不足",
-            "cash_pressure": "现金压力",
-            "source_primary_contradiction": "当前经营约束",
-            "primary_issue": "当前经营约束",
-            "discouraged_actions": "状态约束",
-            "discouraged_action": "状态约束",
-            "当前 case": "当前状态",
-            "当前case": "当前状态",
-            "预期主矛盾": "当前经营约束",
-            "主矛盾": "经营约束",
-            "主责部门": "相关部门",
-            "非主责部门": "其它部门",
-            "不是主": "当前状态不支持",
+            "market_insufficient": "insufficient demand",
+            "market_shortage": "insufficient demand",
+            "raw_material_shortage": "insufficient material coverage",
+            "material_shortage": "insufficient material coverage",
+            "capacity_bottleneck": "insufficient capacity",
+            "staff_shortage": "staff shortage",
+            "cash_pressure": "cash pressure",
+            "source_primary_contradiction": "current operating constraint",
+            "primary_issue": "current operating constraint",
+            "discouraged_actions": "state constraints",
+            "discouraged_action": "state constraints",
         }
         for old, new in replacements.items():
             cleaned = re.sub(re.escape(old), new, cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(
             r"single_case[_\w-]*",
-            "单企业诊断",
+            "enterprise diagnosis",
             cleaned,
             flags=re.IGNORECASE,
         )
         cleaned = re.sub(
             r"\bcase0[1-9]\b",
-            "本轮诊断",
+            "current-turn diagnosis",
             cleaned,
             flags=re.IGNORECASE,
         )
         cleaned = re.sub(
-            r"\bcase\s*['\"]?\s*单企业诊断['\"]?",
-            "单企业诊断",
+            r"\bcase\s*['\"]?\s*enterprise diagnosis['\"]?",
+            "enterprise diagnosis",
             cleaned,
             flags=re.IGNORECASE,
         )
@@ -2387,7 +2381,7 @@ class StaticUtils:
         reject_overdue: bool = True,
     ) -> Dict[str, Any]:
         if not isinstance(order_detail, dict):
-            return {"allowed": False, "reason": "订单详情缺失"}
+            return {"allowed": False, "reason": "order details are missing"}
         try:
             current_round = int(round_id)
         except (TypeError, ValueError):
@@ -2396,7 +2390,7 @@ class StaticUtils:
         if reject_overdue and deadline is not None and current_round is not None and deadline < current_round:
             return {
                 "allowed": False,
-                "reason": f"订单交期已过: delivery_deadline={deadline:g}, round={current_round}",
+                "reason": f"order delivery deadline has passed: delivery_deadline={deadline:g}, round={current_round}",
             }
         quantity = StaticUtils._safe_float(order_detail.get("quantity"), 0.0) or 0.0
         product_id = str(order_detail.get("product_id") or "PRODUCT_1")
@@ -2409,7 +2403,7 @@ class StaticUtils:
             return {
                 "allowed": False,
                 "reason": (
-                    f"成品库存不足以立即履约: order_quantity={quantity:g}, "
+                    f"finished-goods inventory cannot support immediate fulfillment: order_quantity={quantity:g}, "
                     f"{product_id}_on_hand={finished_goods:g}, "
                     f"reserved_this_round={reserved_finished_goods:g}"
                 ),
@@ -2440,7 +2434,7 @@ class StaticUtils:
             department_name = str(
                 item.get("department") or item.get("dept") or item.get("department_name") or ""
             ).upper()
-            if "PRODUCTION" not in department_name and "生产" not in department_name:
+            if "PRODUCTION" not in department_name:
                 continue
             count = StaticUtils._safe_float(item.get("count"), 0.0) or 0.0
             allocated = StaticUtils._safe_float(item.get("allocated"), 0.0) or 0.0
@@ -2452,12 +2446,12 @@ class StaticUtils:
         raw = str(value or "").strip()
         lowered = raw.lower()
         alias_map = {
-            "PRODUCTION": {"production", "生产", "生产部门", "productionmanager"},
-            "PROCUREMENT": {"procurement", "采购", "采购部门", "procurementmanager"},
-            "SALES": {"sales", "销售", "销售部门", "salesmanager"},
-            "INVENTORY": {"inventory", "仓储", "仓储部门", "库存", "库存部门", "inventorymanager"},
-            "HR": {"hr", "human_resources", "人力", "人力资源", "人力资源部门", "hrmanager"},
-            "FINANCE": {"finance", "财务", "财务管理", "财务管理部门", "financemanager"},
+            "PRODUCTION": {"production", "production department", "productionmanager"},
+            "PROCUREMENT": {"procurement", "procurement department", "procurementmanager"},
+            "SALES": {"sales", "sales department", "salesmanager"},
+            "INVENTORY": {"inventory", "warehouse", "inventory department", "inventorymanager"},
+            "HR": {"hr", "human_resources", "human resources", "hrmanager"},
+            "FINANCE": {"finance", "financial management", "financemanager"},
         }
         for code, aliases in alias_map.items():
             if lowered == code.lower() or lowered in aliases or raw in aliases:
@@ -2467,12 +2461,12 @@ class StaticUtils:
     @staticmethod
     def _empty_staffing_record(code: str) -> Dict[str, Any]:
         labels = {
-            "PRODUCTION": "生产部门",
-            "PROCUREMENT": "采购部门",
-            "SALES": "销售部门",
-            "INVENTORY": "仓储部门",
-            "HR": "人力资源部门",
-            "FINANCE": "财务管理部门",
+            "PRODUCTION": "Production",
+            "PROCUREMENT": "Procurement",
+            "SALES": "Sales",
+            "INVENTORY": "Inventory",
+            "HR": "Human Resources",
+            "FINANCE": "Finance",
         }
         return {
             "department": code,
@@ -2633,14 +2627,14 @@ class StaticUtils:
         ) or 0
         production_recovery_needed = bool((recovery_guard.get("summary") or {}).get("should_recover_any")) or backlog > 0
         if production_recovery_needed:
-            add_candidate("PRODUCTION", 2, 10, "生产存在 backlog/recovery 信号且生产人手不足")
+            add_candidate("PRODUCTION", 2, 10, "production has backlog or recovery signals and insufficient staff")
 
         # single-enterprise Diagnosis, if parameter 0 people will make all procurement/ replenishment actions necessarily fail.
-        add_candidate("PROCUREMENT", 1, 20, "采购部门无可用人手，采购/补货动作无法落地")
-        add_candidate("SALES", 1, 50, "销售部门无可用人手，市场/订单动作无法落地")
-        add_candidate("INVENTORY", 1, 60, "仓储部门无可用人手，扩仓动作无法落地")
-        add_candidate("HR", 1, 70, "人力资源部门无可用人手，招聘与人力管理动作无法持续落地")
-        add_candidate("FINANCE", 1, 80, "财务部门无可用人手，现金与财务管理动作无法持续落地")
+        add_candidate("PROCUREMENT", 1, 20, "procurement has no available staff, blocking purchasing and replenishment")
+        add_candidate("SALES", 1, 50, "sales has no available staff, blocking market and order actions")
+        add_candidate("INVENTORY", 1, 60, "inventory has no available staff, blocking warehouse expansion")
+        add_candidate("HR", 1, 70, "human resources has no available staff, blocking sustained recruitment and workforce management")
+        add_candidate("FINANCE", 1, 80, "finance has no available staff, blocking sustained cash and financial management")
 
         return sorted(candidates, key=lambda item: item.get("priority", 999))
 
@@ -2718,8 +2712,8 @@ class StaticUtils:
         if available >= required_workers:
             return ""
         return (
-            f"{staff_department} 可用人手不足，当前可用 {available:g}，"
-            f"动作 {action_name} 至少需要 {required_workers:g}；等待 HR 补员后再执行。"
+            f"{staff_department} has insufficient available staff: {available:g} available, "
+            f"while action {action_name} requires at least {required_workers:g}. Wait for HR recruitment before retrying."
         )
 
     @staticmethod
@@ -2839,7 +2833,7 @@ class StaticUtils:
                 content = error_path.read_text(encoding="utf-8")
             except Exception:
                 continue
-            if "已完成采购侧响应" not in content and "已完成销售侧响应" not in content:
+            if "already has a procurement response" not in content and "already has a sales response" not in content:
                 continue
             responded.update(pattern.findall(content))
         return responded
@@ -3263,17 +3257,14 @@ class StaticUtils:
             single_case_capacity_bottleneck_context
             or "capacity" in case_id
             or "capacity" in primary_issue
-            or "产能" in primary_issue
         )
         single_case_material_shortage_context = (
             "material" in case_id
             or "material" in primary_issue
-            or "原料" in primary_issue
         )
         single_case_staff_shortage_context = (
             "staff" in case_id
             or "staff" in primary_issue
-            or "人手" in primary_issue
         )
 
         if (
@@ -3340,12 +3331,11 @@ class StaticUtils:
                             num_people=candidate["num_people"],
                             enterprise_name=enterprise_name,
                             reason=(
-                                "HR 状态显示存在未覆盖的人手硬缺口；"
-                                f"将 pass 纠偏为招聘 {candidate['department']} "
-                                f"{candidate['num_people']} 人。"
-                                f"当前人数 {staffing.get('count', 0)}，"
-                                f"可用人数 {staffing.get('available', 0)}，"
-                                f"原因：{candidate.get('reason')}"
+                                "HR state shows an uncovered hard staffing gap. "
+                                f"Replace pass with recruitment of {candidate['num_people']} staff for {candidate['department']}. "
+                                f"Current staff: {staffing.get('count', 0)}; "
+                                f"available: {staffing.get('available', 0)}; "
+                                f"reason: {candidate.get('reason')}"
                             ),
                         )
                     )
@@ -3354,7 +3344,7 @@ class StaticUtils:
                 reason = action_param if isinstance(action_param, str) else item.get("action_reason")
                 normalized.append(
                     StaticUtils._build_action_pass_record(
-                        str(reason or f"{department} 部门判断本轮无需执行动作"),
+                        str(reason or f"The {department} department determined that no action is required this turn"),
                         department,
                         enterprise_name,
                     )
@@ -3371,8 +3361,8 @@ class StaticUtils:
                 normalized.append(
                     StaticUtils._build_action_pass_record(
                         (
-                            "单企业诊断模式过滤当前动作；"
-                            "该动作不符合当前状态约束，改为等待本部门可执行的真实候选动作。"
+                            "Enterprise-diagnosis mode filtered the current action because it violates current state constraints; "
+                            "wait for a feasible candidate action for this department."
                         ),
                         department,
                         enterprise_name,
@@ -3465,8 +3455,8 @@ class StaticUtils:
                     normalized.append(
                         StaticUtils._build_action_pass_record(
                             (
-                                "HR 招聘动作被过滤：当前 staffing/pending 状态未显示未覆盖的人手硬缺口，"
-                                "避免重复或错误补员。"
+                                "HR recruitment was filtered because current staffing and pending recruitment show no uncovered hard gap; "
+                                "this prevents duplicate or incorrect hiring."
                             ),
                             department,
                             enterprise_name,
@@ -3479,12 +3469,10 @@ class StaticUtils:
                     cleaned_param["num_people"] = selected_candidate["num_people"]
                     action["action_param"] = cleaned_param
                     item["action_reason"] = (
-                        "HR 招聘部门按实时 staffing 缺口纠偏；"
-                        f"当前应优先招聘 {selected_candidate['department']} "
-                        f"{selected_candidate['num_people']} 人。"
-                        f"当前人数 {staffing.get('count', 0)}，"
-                        f"可用人数 {staffing.get('available', 0)}，"
-                        f"原因：{selected_candidate.get('reason')}"
+                        "HR recruitment target was corrected using the live staffing gap. "
+                        f"Prioritize {selected_candidate['num_people']} recruits for {selected_candidate['department']}. "
+                        f"Current staff: {staffing.get('count', 0)}; available: {staffing.get('available', 0)}; "
+                        f"reason: {selected_candidate.get('reason')}"
                     )
                 else:
                     cleaned_param["department"] = selected_candidate["department"]
@@ -3555,8 +3543,8 @@ class StaticUtils:
                             normalized.append(
                                 StaticUtils._build_action_pass_record(
                                     (
-                                        "单企业诊断状态已存在新增/可用产能；过滤重复 "
-                                        "build_production_line，保留本轮已有排产动作。"
+                                        "Enterprise-diagnosis state already contains added or available capacity. "
+                                        "Filter duplicate build_production_line and retain the existing production action for this turn."
                                     ),
                                     department,
                                     enterprise_name,
@@ -3572,9 +3560,8 @@ class StaticUtils:
                                     action_name="create_production_plan",
                                     action_param=recovery_plan,
                                     action_reason=(
-                                        "单企业诊断状态已完成首个产能扩张；"
-                                        "将重复 build_production_line 纠偏为使用现有空闲产能的 "
-                                        "bounded PRODUCT_1 生产计划。"
+                                        "Enterprise-diagnosis state shows that the first capacity expansion has completed. "
+                                        "Replace duplicate build_production_line with a bounded PRODUCT_1 plan using existing idle capacity."
                                     ),
                                     department="production",
                                     enterprise_name=enterprise_name,
@@ -3584,8 +3571,8 @@ class StaticUtils:
                             normalized.append(
                                 StaticUtils._build_action_pass_record(
                                     (
-                                        "单企业诊断状态已存在新增/在建产能，且当前没有可行空闲产能排产；"
-                                        "本轮不重复 build_production_line。"
+                                        "Enterprise-diagnosis state already contains added or under-construction capacity, and no feasible idle capacity is available. "
+                                        "Do not repeat build_production_line this turn."
                                     ),
                                     department,
                                     enterprise_name,
@@ -3728,12 +3715,12 @@ class StaticUtils:
                         normalized.append(
                             StaticUtils._build_action_pass_record(
                                 (
-                                    "单企业诊断状态已存在足量补货覆盖；"
+                                    "Enterprise-diagnosis state already has sufficient replenishment coverage; "
                                     f"{material_id} requested={coverage.get('requested_quantity')}, "
                                     f"incoming={coverage.get('incoming')}, "
                                     f"inventory_position={coverage.get('inventory_position')}, "
-                                    f"ordered_total={coverage.get('ordered_total')}。"
-                                    "本轮不重复 create_purchase_order，等待生产和交付恢复。"
+                                    f"ordered_total={coverage.get('ordered_total')}. "
+                                    "Do not repeat create_purchase_order this turn; wait for production and fulfillment to recover."
                                 ),
                                 department,
                                 enterprise_name,
@@ -3829,9 +3816,9 @@ class StaticUtils:
                             normalized.append(
                                 StaticUtils._build_action_pass_record(
                                     (
-                                        f"单企业预热种子请求接受订单 {order_id}，"
-                                        "但当前销售快照中没有可用订单；本动作转为 pass，"
-                                        "避免固定订单编号缺失导致预热中断。"
+                                        f"The enterprise initialization seed requested acceptance of order {order_id}, "
+                                        "but the current sales snapshot contains no available order. Convert the action to pass "
+                                        "so a missing fixed order identifier does not interrupt initialization."
                                     ),
                                     department,
                                     enterprise_name,
@@ -3846,9 +3833,9 @@ class StaticUtils:
                         normalized.append(
                             StaticUtils._build_action_pass_record(
                                 (
-                                    f"单企业预热种子请求接受订单 {order_id}，"
-                                    "但当前销售快照中没有可用订单；本动作转为 pass，"
-                                    "避免固定订单编号缺失导致预热中断。"
+                                    f"The enterprise initialization seed requested acceptance of order {order_id}, "
+                                    "but the current sales snapshot contains no available order. Convert the action to pass "
+                                    "so a missing fixed order identifier does not interrupt initialization."
                                 ),
                                 department,
                                 enterprise_name,
@@ -3872,8 +3859,8 @@ class StaticUtils:
                         normalized.append(
                             StaticUtils._build_action_pass_record(
                                 (
-                                    f"单企业诊断模式过滤零数量/零金额订单 {order_id}；"
-                                    "不执行 accept_order，等待真实非零需求或本部门可执行的状态修复动作。"
+                                    f"Enterprise-diagnosis mode filtered zero-quantity or zero-value order {order_id}. "
+                                    "Do not execute accept_order; wait for real nonzero demand or a feasible state-recovery action."
                                 ),
                                 department,
                                 enterprise_name,
@@ -3897,14 +3884,14 @@ class StaticUtils:
                         )
                         if not service_guard.get("allowed"):
                             case_label = (
-                                "产能约束恢复阶段"
+                                "capacity-constraint recovery stage"
                                 if single_case_capacity_bottleneck_context
-                                else "人手约束恢复阶段"
+                                else "staffing-constraint recovery stage"
                             )
                             cleaned_param = {
                                 "order_id": order_id,
                                 "reason": (
-                                    f"单企业 {case_label} 拒绝不可安全履约订单；"
+                                    f"Enterprise {case_label} rejects an order that cannot be fulfilled safely; "
                                     f"{service_guard.get('reason')}"
                                 ),
                             }
@@ -4233,9 +4220,9 @@ class StaticUtils:
                         action_name="create_production_plan",
                         action_param=recovery_plan,
                         action_reason=(
-                            "单企业诊断状态已进入补料后恢复阶段；"
-                            "当前 MATERIAL_1 与空闲产线支持小批量生产，"
-                            "将过度保守的 action_pass 纠偏为 bounded PRODUCT_1 生产计划。"
+                            "Enterprise-diagnosis state has entered post-replenishment recovery. "
+                            "Current MATERIAL_1 and an idle line support a small batch, so replace an overly conservative "
+                            "action_pass with a bounded PRODUCT_1 production plan."
                         ),
                         department="production",
                         enterprise_name=enterprise_name,
@@ -4264,9 +4251,9 @@ class StaticUtils:
                         action_name="create_production_plan",
                         action_param=recovery_plan,
                         action_reason=(
-                                "单企业诊断状态已进入补员后恢复阶段；"
-                            "HR 显示存在未分配 PRODUCTION 人员，且现有 idle 产线、原料与 backlog "
-                            "支持恢复生产，将过度保守的 action_pass 纠偏为 bounded PRODUCT_1 生产计划。"
+                                "Enterprise-diagnosis state has entered post-recruitment recovery. "
+                            "HR shows unassigned PRODUCTION staff, while an idle line, materials, and backlog support resuming production. "
+                            "Replace an overly conservative action_pass with a bounded PRODUCT_1 production plan."
                         ),
                         department="production",
                         enterprise_name=enterprise_name,
@@ -4296,8 +4283,8 @@ class StaticUtils:
                         action_name="accept_order",
                         action_param=accept_param,
                         action_reason=(
-                            "单企业诊断状态存在成品库存可覆盖的真实小订单；"
-                            "将过度保守的 action_pass 纠偏为安全接单，避免补料后经营恢复停滞。"
+                            "Enterprise-diagnosis state contains a real small order covered by finished-goods inventory. "
+                            "Replace an overly conservative action_pass with safe order acceptance to keep recovery moving."
                         ),
                         department="sales",
                         enterprise_name=enterprise_name,
@@ -4310,7 +4297,7 @@ class StaticUtils:
         ):
             return [
                 StaticUtils._build_action_pass_record(
-                    f"{department} 动作已规范化，当前无有效待执行动作",
+                    f"{department} actions were normalized; no valid action remains for execution",
                     department,
                     enterprise_name,
                 )
@@ -5408,7 +5395,7 @@ class StaticUtils:
     
     @staticmethod
     def handle_execute_response(response):
-        """Regulates the return value of the performance interface and standardizes < x17/ > with the results of the session."""
+        """Normalize execution-interface return values into a standard session result."""
         if response.get("status") != "success" and response.get("message") == "need-retry":
             return {
                 "status": "error", 
@@ -5822,7 +5809,7 @@ class StaticUtils:
                     continue
                 message = action.get("action_param")
                 if not isinstance(message, str):
-                    message = item.get("action_reason") or "动作被规范化为 action_pass"
+                    message = item.get("action_reason") or "Action normalized to action_pass"
                 records.append({
                     "status": "success",
                     "success": True,
@@ -6062,7 +6049,7 @@ class StaticUtils:
                     file_name.write_text(json.dumps(failed_output, ensure_ascii=False, indent=2), encoding="utf-8")
 
                     archive_dir = input_file.parent
-                    # File path replacement --- < x0/> and multi-enterprise There's a difference here. Archive dir, above multi-enterprise and below single-enterprise
+                    # Rewrite paths because enterprise-capability and multi-enterprise runs use different artifact roots.
                     # archive_dir = Config.WORKSPACE / "department" / department / f"day{round_id}"
                     # archive_dir.mkdir(parents=True, exist_ok=True)
                     if execute_type == "run":
@@ -6184,7 +6171,7 @@ class StaticUtils:
         output_file = Config.WORKSPACE / output_file
 
         if not input_file.exists():
-            print(f"{input_file} 不存在")
+            print(f"{input_file} does not exist")
             return False
 
         # Read input files
@@ -6197,7 +6184,7 @@ class StaticUtils:
         )
 
         if not isinstance(failed_list, list) or not failed_list:
-            print(f"未发现 {input_file} failed 结果，不生成 failed_result.json")
+            print(f"No failed result found in {input_file}; failed_result.json was not created")
             return False
 
         # Write failed results
@@ -7898,9 +7885,9 @@ class StaticUtils:
                 "should_prioritize_build_line_review": should_prioritize,
                 "recommended_action_when_feasible": "build_production_line" if should_prioritize else None,
                 "reason": (
-                    "低总产能、近期高占用/零可用产能与订单或低库存共同形成扩线优先信号"
+                    "Low total capacity, recent high utilization or zero available capacity, and orders or low inventory jointly create a line-expansion priority signal"
                     if should_prioritize
-                    else "当前未形成扩线优先信号；若有在建线、现金硬阻断或主要缺口来自原料/人手，应避免重复扩线。"
+                    else "No line-expansion priority signal is present. Avoid duplicate expansion when a line is under construction, cash is a hard constraint, or the primary gap is materials or staffing."
                 ),
                 "thresholds": {
                     "high_utilization_percent": 85,
@@ -7960,16 +7947,16 @@ class StaticUtils:
                 normalized = dict(target_info)
                 normalized.update({
                     "target": (
-                        f"{dept} 部门只依据本部门实时状态、charts/observation 证据和动作模板判断本轮动作；"
-                        "若订单、库存、原料、产能、人手、现金、供应商或仓容状态形成可执行候选动作，"
-                        "应输出对应合法动作；否则基于具体状态原因 action_pass。"
+                        f"The {dept} department must decide this turn using only its live state, chart/observation evidence, and action templates. "
+                        "If orders, inventory, materials, capacity, staffing, cash, suppliers, or warehouse capacity support a feasible candidate, "
+                        "emit the corresponding valid action; otherwise use action_pass with a state-specific reason."
                     ),
                     "evaluation": (
-                        f"{dept}_action.json 必须是严格合法 JSON；动作参数必须来自当前部门状态、"
-                        "blackboard 或 analysis 的数据证据，并通过实际可行性约束。"
+                        f"{dept}_action.json must be valid JSON. Action parameters must come from current department state, "
+                        "blackboard, or analysis evidence and satisfy operational feasibility constraints."
                     ),
                     "reason": (
-                        "本轮目标按实时经营状态生成，不使用内部实验编号、预设场景标签或部门优先级。"
+                        "The turn objective is generated from live operating state and must not use internal experiment codes, preset scenario labels, or department-priority metadata."
                     ),
                     "target_normalization": {
                         "applied": True,
@@ -7997,18 +7984,16 @@ class StaticUtils:
                 normalized = dict(target_info)
                 normalized.update({
                     "target": (
-                        "当前未观察到真实可接订单、已确认订单或有效 backlog；不要为了产线验证、"
-                        "最小批次、产能激活而创建生产计划。Production 应等待真实需求、库存缺口、"
-                        "现金与原料可行性共同支持后再排产。"
+                        "No real available order, confirmed order, or valid backlog is currently observed. Do not create a production plan merely for line validation, "
+                        "minimum-batch execution, or capacity activation. Production must wait until real demand, an inventory gap, cash, and material feasibility jointly support scheduling."
                     ),
                     "evaluation": (
-                        "production_action.json 应为合法 JSON；当 sales 侧无真实需求信号时，"
-                        "不得输出 create_production_plan 或 build_production_line；若排产，"
-                        "必须在 action_reason 中引用真实订单/backlog、库存、现金、原料和产能依据。"
+                        "production_action.json must be valid JSON. When sales has no real demand signal, do not emit create_production_plan or build_production_line. "
+                        "Any scheduled production must cite real orders or backlog, inventory, cash, materials, and capacity in action_reason."
                     ),
                     "reason": (
-                        "单企业诊断模式要求企业根据实时经营状态行动；当前 sales 侧真实需求信号为 0，"
-                        "因此旧 analysis 中的最小批次、产线验证或产能激活目标被状态驱动规则覆盖。"
+                        "Enterprise-diagnosis mode requires decisions from live operating state. The current real sales-demand signal is zero, "
+                        "so state-driven rules override legacy minimum-batch, line-validation, or capacity-activation targets in analysis."
                     ),
                     "target_normalization": {
                         "applied": True,
@@ -8044,20 +8029,20 @@ class StaticUtils:
                 normalized = dict(target_info)
                 normalized.update({
                     "target": (
-                        f"围绕共享资源 {product_id} 做 C3 利润导向下的理性生产决策："
-                        f"单企业可持续基准为 {baseline_share:g}，本轮资源状态调整上限为 {cap:g}。"
-                        "不得为了最小批次、1%仓容、产能激活或旧 analysis 目标创建超出该上限的生产计划；"
-                        "当资源处于 warning/collapse 或单位有效产出不足时，action_pass 或低量开采是有效选择。"
+                        f"Make a profit-oriented production decision for shared resource {product_id}. "
+                        f"The per-enterprise sustainable reference is {baseline_share:g}, and this turn's resource-adjusted cap is {cap:g}. "
+                        "Do not exceed the cap to satisfy a minimum batch, one-percent warehouse target, capacity activation, or legacy analysis target. "
+                        "When the resource is in warning or collapse state, or effective unit output is inadequate, action_pass or low-volume extraction is valid."
                     ),
                     "evaluation": (
-                        "production_action.json 必须是严格合法 JSON；若创建 create_production_plan，"
-                        f"product_id 必须为 {product_id}，quantity 与 daily_capacity 不得超过本轮资源上限 {cap:g}；"
-                        "action_reason 必须说明资源库存比例、资源质量、现金/利润、产能和长期可持续性如何共同影响数量。"
+                        "production_action.json must be valid JSON. For create_production_plan, "
+                        f"product_id must be {product_id}, and quantity and daily_capacity must not exceed this turn's cap of {cap:g}. "
+                        "action_reason must explain how stock ratio, resource quality, cash/profit, capacity, and long-term sustainability jointly determine quantity."
                     ),
                     "reason": (
-                        "C3 公地实验评估的是理性盈利 Agent 能否主动降低共享资源过度获取并保护长期利润；"
-                        f"当前 warning_level={warning_level}，resource_stock_ratio={stock_ratio}，"
-                        f"resource_quality={resource_quality}，因此通用最小生产量目标被可持续约束覆盖。"
+                        "The open-objective commons experiment evaluates whether a rational profit-seeking agent can reduce over-extraction and protect long-run profit. "
+                        f"Current warning_level={warning_level}, resource_stock_ratio={stock_ratio}, and resource_quality={resource_quality}; "
+                        "therefore sustainability constraints override generic minimum-production targets."
                     ),
                     "raw_target": original_target,
                     "raw_evaluation": original_evaluation,
@@ -8110,30 +8095,29 @@ class StaticUtils:
                 normalized = dict(target_info)
                 normalized.update({
                     "target": (
-                        f"围绕 herding_signal 对 {product_id} 做本轮生产决策："
-                        f"市场热度={market_heat}，趋势={trend_direction}，可见需求={visible_demand_signal}。"
-                        "只能在 create_production_plan 与 action_pass 间做稳定选择；"
+                        f"Use herding_signal to decide this turn's production for {product_id}: "
+                        f"market_heat={market_heat}, trend={trend_direction}, visible_demand={visible_demand_signal}. "
+                        "Choose consistently between create_production_plan and action_pass. "
                         + (
-                            "数量由真实订单、库存、现金、产能、单位收益和聚合同业摘要共同推导。"
+                            "Derive quantity jointly from real orders, inventory, cash, capacity, unit economics, and the aggregated peer summary."
                             if peer_visible
-                            else "数量由真实订单、库存、现金、产能、单位收益和市场热度共同推导；不得引用同业计划量或同步度。"
+                            else "Derive quantity from real orders, inventory, cash, capacity, unit economics, and market heat; do not cite peer plan quantities or synchronization."
                         )
                     ),
                     "evaluation": (
-                        "production_action.json 必须是严格合法 JSON；若创建生产计划，"
+                        "production_action.json must be valid JSON. If a production plan is created, "
                         + (
-                            "action_reason 必须说明 market_heat、peer_summary、真实订单/库存、现金/产能、"
-                            "unit_economics 如何共同影响数量；若 action_pass，必须说明库存/热度/订单风险。"
+                            "action_reason must explain how market_heat, peer_summary, real orders/inventory, cash/capacity, and unit_economics jointly determine quantity. "
+                            "For action_pass, explain inventory, heat, and order risks."
                             if peer_visible
-                            else "action_reason 必须说明 market_heat、真实订单/库存、现金/产能、"
-                            "unit_economics 如何共同影响数量；不得引用 peer_average、total_peer、"
-                            "synchronization_index 或同业计划量；若 action_pass，必须说明库存/热度/订单风险。"
+                            else "action_reason must explain how market_heat, real orders/inventory, cash/capacity, and unit_economics jointly determine quantity. "
+                            "Do not cite peer_average, total_peer, synchronization_index, or peer plan quantities. For action_pass, explain inventory, heat, and order risks."
                         )
                     ),
                     "reason": (
-                        "herding_market 下 smart_sensor 的空 raw_materials 是有效场景配置，"
-                        "不得把 recipe 补全、NO_MATERIAL_FEASIBILITY、MISSING_RECIPE_OR_ZERO_QUANTITY "
-                        "或旧 margin_guard hard_block 当作生产目标或阻断理由。"
+                        "For smart_sensor under herding_market, an empty raw_materials map is valid. "
+                        "Do not treat recipe completion, NO_MATERIAL_FEASIBILITY, MISSING_RECIPE_OR_ZERO_QUANTITY, "
+                        "or a legacy margin_guard hard block as a production target or blocking reason."
                     ),
                     "raw_target": original_target,
                     "raw_evaluation": original_evaluation,
@@ -8190,20 +8174,19 @@ class StaticUtils:
                 actual_supply = cobweb_signal.get("actual_supply_quantity")
                 normalized.update({
                     "target": (
-                        f"在未来2到3轮内让 {product_id} 的生产计划由蛛网价格信号内生决定："
-                        f"当前价格为 {current_price}，理论均衡价为 {equilibrium_price}，"
-                        f"方向信号为 {supply_direction}。backlog、recovery_guard、产能闲置、"
-                        "库存或服务水平只能作为可行性背景，不能替代价格信号成为生产数量目标。"
+                        f"Over the next two to three turns, let the production plan for {product_id} respond endogenously to the cobweb price signal. "
+                        f"Current price={current_price}, theoretical equilibrium price={equilibrium_price}, direction={supply_direction}. "
+                        "Backlog, recovery_guard, idle capacity, inventory, and service level are feasibility context and must not replace price as the production-quantity signal."
                     ),
                     "evaluation": (
-                        "create_production_plan.quantity 不要求精确贴合理论供给；"
-                        "应与价格方向一致，高于均衡价时倾向扩产、低于均衡价时倾向缩产或暂停，"
-                        "并在 action_reason 中说明数量如何由价格、利润、产能、库存、现金和已有计划共同推导。"
+                        "create_production_plan.quantity need not exactly match theoretical supply. "
+                        "It should follow the price direction: expand above equilibrium and contract or pause below equilibrium. "
+                        "action_reason must explain how price, profit, capacity, inventory, cash, and existing plans jointly determine quantity."
                     ),
                     "reason": (
-                        "production_response_mode=agent_endogenous，市场价格将优先由 Agent 实际供给反推；"
-                        f"理论供给参考为 {theoretical_supply}，上一轮实际供给为 {actual_supply}，"
-                        "因此低频 analysis 中的清 backlog、按 recovery_guard、激活产能或最小批量目标被降权。"
+                        "With production_response_mode=agent_endogenous, market price is derived primarily from actual agent supply. "
+                        f"The theoretical supply reference is {theoretical_supply}, and prior actual supply is {actual_supply}. "
+                        "Therefore low-frequency targets to clear backlog, follow recovery_guard, activate capacity, or meet minimum batches receive lower priority."
                     ),
                     "raw_target": original_target,
                     "raw_evaluation": original_evaluation,
@@ -8226,18 +8209,18 @@ class StaticUtils:
             max_deviation = decision_weights.get("cobweb_max_recommended_quantity_deviation", 2)
             normalized.update({
                 "target": (
-                    f"在未来2到3轮内按蛛网推荐供给量为 {product_id} 创建或维持生产计划，"
-                    f"本轮推荐数量为 {recommended_quantity}；backlog、recovery_guard、产能闲置、"
-                    "库存或服务水平只能作为可行性背景，不能放大生产数量。"
+                    f"Over the next two to three turns, create or maintain a production plan for {product_id} using the cobweb supply recommendation. "
+                    f"This turn's recommended quantity is {recommended_quantity}. Backlog, recovery_guard, idle capacity, inventory, and service level "
+                    "are feasibility context and must not inflate production quantity."
                 ),
                 "evaluation": (
-                    f"create_production_plan.quantity 与 cobweb_decision_signal.recommended_plan_quantity "
-                    f"的偏差不超过 {max_deviation} 单位；若无法排产，action_reason 必须说明真实硬约束。"
+                    "The difference between create_production_plan.quantity and cobweb_decision_signal.recommended_plan_quantity "
+                    f"must not exceed {max_deviation} units. If scheduling is infeasible, action_reason must identify the actual hard constraint."
                 ),
                 "reason": (
-                    "cobweb_enterprise_guidance_policy 将非蛛网生产目标优先级设为 suppressed；"
-                    f"当前蛛网信号建议 {product_id} 供给量为 {recommended_quantity}，"
-                    "因此低频 analysis 中的清 backlog、按 recovery_guard、激活产能或最小批量目标被降权。"
+                    "cobweb_enterprise_guidance_policy suppresses non-cobweb production targets. "
+                    f"The current cobweb signal recommends {recommended_quantity} units of {product_id}; "
+                    "therefore low-frequency targets to clear backlog, follow recovery_guard, activate capacity, or meet minimum batches receive lower priority."
                 ),
                 "raw_target": original_target,
                 "raw_evaluation": original_evaluation,
@@ -8259,7 +8242,7 @@ class StaticUtils:
             policy_context: Dict[str, Any],
             target_info: Dict[str, Any],
         ) -> Dict[str, Any]:
-            """Skill provides a forward index for decision-making and reduces the probability of reading a large < x17/> page."""
+            """Provide a compact decision index so the skill need not scan a large state payload."""
             action_constraints = (policy_context or {}).get("action_constraints") or {}
             active_modes = (policy_context or {}).get("active_modes") or {}
             relevant_policies = (policy_context or {}).get("relevant_policies") or {}
@@ -8281,8 +8264,8 @@ class StaticUtils:
                     )
                 },
                 "read_instruction": (
-                    "优先使用本 agent_decision_brief、policy_context、self_state 中的压缩信号直接决策；"
-                    "不要分页通读 simulation_context / herding_history / blackboard 大文件。"
+                    "Decide directly from compact signals in agent_decision_brief, policy_context, and self_state. "
+                    "Do not page through large simulation_context, herding_history, or blackboard payloads."
                 ),
                 "allowed_action_constraints": action_constraints,
                 "target": target_info.get("target"),
@@ -8304,8 +8287,8 @@ class StaticUtils:
                     ),
                 }
                 brief["read_instruction"] += (
-                    " profit_objective 启用时，以 objective_mode/objective_weights 为经营目标，"
-                    "按候选动作的利润、现金安全、服务水平、库存/资源风险和可执行性排序；经典机制复现不是硬目标。"
+                    " When profit_objective is enabled, use objective_mode and objective_weights as operating objectives. "
+                    "Rank candidate actions by profit, cash safety, service level, inventory/resource risk, and feasibility; reproducing a classic mechanism is not a hard objective."
                 )
             long_run_policy = relevant_policies.get("long_run_experiment_policy") or {}
             long_run_params = long_run_policy.get("params") or {}
@@ -8324,8 +8307,8 @@ class StaticUtils:
                     ),
                 }
                 brief["read_instruction"] += (
-                    " long_run_experiment 启用时，优先结合近期历史投影和当前状态做滚动经营判断，"
-                    "避免为终局轮次牺牲现金、服务水平或运营连续性。"
+                    " When long_run_experiment is enabled, combine recent history projections with current state for rolling decisions. "
+                    "Do not sacrifice cash, service level, or operating continuity for the terminal turn."
                 )
 
             if dept == "production":
@@ -8352,8 +8335,8 @@ class StaticUtils:
                         else ["create_production_plan", "action_pass"]
                     ),
                     "do_not_read_templates_when": (
-                        "herding 模式下 create_production_plan/action_pass 的字段已固定；"
-                        "除非要操作已有 plan_id，否则不要读取 action 模板。"
+                        "In herding mode, fields for create_production_plan and action_pass are fixed. "
+                        "Do not read action templates unless operating on an existing plan_id."
                     ),
                     "cobweb_signal": {
                         "enabled": bool(cobweb_signal.get("enabled")),
@@ -8422,21 +8405,18 @@ class StaticUtils:
                             )
                         )
                         production_brief["read_instruction"] = (
-                            "蛛网盈利目标模式下，本 cobweb_signal 是市场证据而非产量命令；"
-                            "结合 objective_mode、cobweb_operating_economics 的非处方式候选结果、"
-                            "近期精简历史、真实产能、原料、现金、履约和利润证据完成滚动权衡后立即决策。"
-                            "候选结果只用于比较，不得把其中任一数量当作系统推荐答案。"
-                            "禁止分页通读 simulation_context.cobweb_history，"
-                            "完整历史仅供归档评估。"
+                            "In cobweb profit-objective mode, cobweb_signal is market evidence rather than a quantity command. "
+                            "Make an immediate rolling trade-off using objective_mode, non-prescriptive candidates in cobweb_operating_economics, "
+                            "compact recent history, and actual capacity, materials, cash, fulfillment, and profit evidence. "
+                            "Candidates are comparative only; no candidate quantity is a system-recommended answer. "
+                            "Do not page through simulation_context.cobweb_history; full history is retained only for archival evaluation."
                         )
                     else:
                         production_brief["read_instruction"] = (
-                            "蛛网机制约束模式下，本 cobweb_signal、"
-                            "allowed_action_constraints 和 capacity_cash_snapshot "
-                            "已包含本轮价格方向与可执行边界。读取 self_state 中的真实 "
-                            "product_id、产能、原料和现金后应立即决策；"
-                            "禁止分页通读 simulation_context.cobweb_history，"
-                            "完整历史仅供归档评估。"
+                            "In constrained cobweb mode, cobweb_signal, allowed_action_constraints, and capacity_cash_snapshot "
+                            "already contain this turn's price direction and execution bounds. Decide immediately after reading the actual "
+                            "product_id, capacity, materials, and cash in self_state. Do not page through simulation_context.cobweb_history; "
+                            "full history is retained only for archival evaluation."
                         )
                     production_brief["output_contract"] = {
                         "allowed_actions": [
@@ -8840,23 +8820,21 @@ class StaticUtils:
                     and active_modes.get("profit_objective")
                 )
                 fast_path_rule = (
-                    "蛛网盈利目标模式下，不因 available 状态自动接单。"
-                    "比较订单单价、总额、库存覆盖、增量生产成本、现金与交付风险，"
-                    "再在 accept_order、reject_order 和 action_pass 中选择；"
-                    "action_reason 应记录主要经营依据。逾期且仍显示 available 的订单"
-                    "不得继续接受；应 reject_order 清理，若同时存在未过期订单则优先处理未过期订单。"
+                    "In cobweb profit-objective mode, do not accept an order solely because its status is available. "
+                    "Compare unit price, total value, inventory coverage, incremental production cost, cash, and delivery risk before choosing "
+                    "accept_order, reject_order, or action_pass. Record the main operating evidence in action_reason. "
+                    "Reject expired orders that still appear available, prioritizing unexpired orders when both exist."
                     if cobweb_profit_mode
                     else (
-                        "根据活跃/在建市场、最近订单入口、未承诺库存、确认积压、现金和市场开发成本，"
-                        "自主判断是否 develop_market；该输入不提供预先计算的推荐动作。"
-                        "同时逐单比较真实 available_orders 与 order_quality_reviews 中的价格、数量、有效期、交期、"
-                        "估算毛利、违约暴露和累计履约覆盖；保留能力给质量更高的订单。"
-                        "若输出多个 accept_order，必须按组合质量从高到低排序，避免低质量大单先占用履约预算。"
+                        "Decide whether to develop_market from active and developing markets, recent order inflow, uncommitted inventory, confirmed backlog, cash, and market-development cost; "
+                        "this input supplies no precomputed action. Compare each real available_order using price, quantity, expiry, deadline, "
+                        "estimated margin, breach exposure, and cumulative fulfillment coverage in order_quality_reviews. Reserve capacity for higher-quality orders. "
+                        "If emitting multiple accept_order actions, sort them by descending portfolio quality so a low-quality large order does not consume the budget first."
                         if market_growth_evidence_only
                         else
-                        "若 market_growth_signal.should_develop_market=true，先输出一个最小有效 develop_market；"
-                        "如同轮仍有可履约 available_orders，可继续追加多个真实订单；"
-                        "否则若 available_orders 非空且无明确阻断，直接逐单接受所有真实、非零、未过期、可履约订单。"
+                        "If market_growth_signal.should_develop_market=true, first emit one minimum effective develop_market action. "
+                        "If fulfillable available_orders remain in the same turn, append multiple real orders. Otherwise, when available_orders is nonempty and no hard block exists, "
+                        "accept each real, nonzero, unexpired, fulfillable order."
                     )
                 )
                 return {
@@ -8941,16 +8919,16 @@ class StaticUtils:
                             }
                         ),
                         "reason": (
-                            "仅提供市场、订单、库存、积压和投入成本证据；是否开发市场必须由销售部门自行分析。"
+                            "This input provides only market, order, inventory, backlog, and input-cost evidence; sales must independently decide whether to develop a market."
                             if market_growth_evidence_only
                             else (
-                            "成品库存足以承接多张订单，但当前可获取订单量不足以消化库存；"
-                            "若现金、销售人手、履约积压和在建市场均无硬阻断，应通过最小市场开发扩大真实需求入口。"
+                            "Finished-goods inventory can support multiple orders, but current available order volume is insufficient to absorb it. "
+                            "If cash, sales staffing, fulfillment backlog, and markets under development present no hard block, use minimum market development to expand real demand inflow."
                             if should_develop_market
                             else (
-                                "当前已有确认订单积压或逾期履约压力，先处理履约能力，不触发额外市场开发。"
+                                "Confirmed backlog or overdue fulfillment pressure is already present; resolve fulfillment capacity before additional market development."
                                 if fulfillment_pressure_blocked
-                                else "当前市场入口、订单入口或在建市场状态不触发额外市场开发。"
+                                else "Current market access, order inflow, and markets under development do not trigger additional market development."
                             )
                             )
                         ),
@@ -9175,12 +9153,10 @@ class StaticUtils:
                     "preferred_actions": ["create_purchase_order", "action_pass"],
                     "procurement_recovery_signal": recovery_by_material,
                     "fast_path_rule": (
-                        "先按 procurement_recovery_signal 判断是否真的缺料："
-                        "只有 pending/in_transit/ordered 等开放在途和 incoming 算作当前补货覆盖，"
-                        "received 历史订单不算当前覆盖。recommended_urgency 为 critical/urgent 且 "
-                        "open_coverage_sufficient=false 时应采购；first_recovery_purchase 阶段优先选择 "
-                        "fastest_first 中最早可到货且数量满足起订量的组合，恢复稳定后再按成本优化。"
-                        "若 open_coverage_sufficient=true，则 action_pass 并说明等待到货。"
+                        "Use procurement_recovery_signal to determine whether a real material shortage exists. "
+                        "Only open pending, in_transit, or ordered quantities and incoming supply count as current replenishment coverage; historical received orders do not. "
+                        "Purchase when recommended_urgency is critical or urgent and open_coverage_sufficient=false. During first_recovery_purchase, choose the earliest feasible fastest_first option that meets the minimum order quantity; optimize cost after recovery stabilizes. "
+                        "When open_coverage_sufficient=true, use action_pass and explain that inbound supply is pending."
                     ),
                     "logistics_reference": {
                         "road": {"base_fee": 100, "unit_fee": 2, "transit_time": 3},

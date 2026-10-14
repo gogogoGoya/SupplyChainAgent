@@ -50,7 +50,7 @@ class SimulationEnvAdapter:
 
     def normalize_executor_id(self, payload: list, enterprise_name: str, dept: str) -> list:
         """
-        Force all < x17/ > in payload to correct enterprise name
+        Normalize every executor_id in the payload to the current enterprise name.
         Also amend module_type to the correct value
                 """
         if not isinstance(payload, list):
@@ -128,10 +128,11 @@ class SimulationEnvAdapter:
         current_day: int = None,
     ) -> List[str]:
         """
-        Parsing Daily External Market Order Injecting Targets.
+        Resolve daily external-market order targets.
 
-        The new configuration gives priority to external_market_order_policy; old fields continue to be used as a background to ensure that historical scenes can be repeated.
-                """
+        external_market_order_policy takes precedence; legacy fields remain as a
+        compatibility fallback for reproducible historical scenarios.
+        """
         policy = runtime_config.get("external_market_order_policy") or {}
         if policy.get("enabled") is False:
             return []

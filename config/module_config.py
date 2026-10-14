@@ -1,15 +1,15 @@
 """
-Business module configuration centre.
+Business-module configuration center.
 
-This document focuses on maintaining the parameters of the six business modules themselves, including:
+This module centralizes parameters for the six business modules, including:
 - Enumeration fields and options
 - Thresholds, costs, formulation constraints
-- Time consumption of actions within modules
+- Action durations within modules
 
 Use boundary:
 - Only at `enterprise/modules/*`
-- No multi-enterprise scenario, enterprise initial disk, Beer Game market preset
-- These scene-level fixed data are unified at `simulation_preset_config.py`
+- It does not define multi-enterprise scenarios, enterprise initialization, or market presets.
+- Scenario-level settings belong in `simulation_preset_config.py`.
 """
 
 from dataclasses import dataclass, field
@@ -19,14 +19,14 @@ from typing import Dict, List
 @dataclass
 class FinanceConfig:
     """
-    Finance module configuration Category
+    Finance-module configuration.
 
-    The classification dictionary, warning threshold, depreciation rules and actions of the financial module are centrally managed.
+    Centralizes finance categories, warning thresholds, depreciation rules, and action durations.
 
     Scope of use:
     - `enterprise/modules/finance_manager.py`
     - choice verification in `enterprise/modules/decorators.py`
-        """
+    """
     
     
     REVENUE_SOURCES: List[str] = field(default_factory=lambda: [
@@ -215,7 +215,7 @@ class HRConfig:
         """
 
 
-    # < x6/ > Wage Allocation (NMB/person/month)
+    # Salary allocation (currency units per person per month)
     DEPARTMENT_WAGES: Dict[str, float] = field(default_factory=lambda: {
         "HR": 700,
         "PRODUCTION": 900,
@@ -225,7 +225,7 @@ class HRConfig:
         "FINANCE": 850
     })
 
-    # < x6/> Recruitment cost allocation (NMB/person)
+    # Recruitment cost allocation (currency units per person)
     DEPARTMENT_RECRUIT_COSTS: Dict[str, float] = field(default_factory=lambda: {
         "HR": 800,
         "PRODUCTION": 1000,
@@ -356,19 +356,19 @@ class ProcurementConfig:
 
     LOGISTICS_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
         "road": {
-            "name": "公路运输",
+            "name": "Road transportation",
             "base_fee": 100,
             "unit_fee": 2,
             "transit_time": 3
         },
         "rail": {
-            "name": "铁路运输",
+            "name": "Rail transport",
             "base_fee": 200,
             "unit_fee": 1.5,
             "transit_time": 2
         },
         "air": {
-            "name": "航空运输",
+            "name": "Air transportation",
             "base_fee": 500,
             "unit_fee": 5,
             "transit_time": 1
@@ -434,24 +434,24 @@ class ProcurementConfig:
 @dataclass
 class SalesConfig:
     """
-    Sales management module configuration Category
+    Sales-module configuration.
 
-    The market development parameters, personnel constraints and movements of department sales are centrally managed.
+    Centralizes market-development parameters, staffing constraints, and sales action durations.
 
     Scope of use:
     - `enterprise/modules/sales_manager.py`
-    - Only for the sales module itself, not for the multi-enterprise scenery
-        """
+    - Applies only to the sales module, not multi-enterprise scenario structure.
+    """
 
 
     MARKET_DEVELOPMENT_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
         "regional": {
-            "name": "区域市场",
+            "name": "Regional markets",
             "cost": 50000,
             "development_time": 1
         },
         "international": {
-            "name": "国际市场",
+            "name": "International markets",
             "cost": 150000,
             "development_time": 1
         }
@@ -461,21 +461,21 @@ class SalesConfig:
 
 
     MIN_DEVELOP_MARKET_STAFF: int = 1   # Minimum number of employees needed to develop the market
-    MIN_PLACE_ORDER_STAFF: int = 0      # Minimum number of staff required to accept/decree
+    MIN_PLACE_ORDER_STAFF: int = 0      # Minimum staff required to accept an order
     MIN_SEND_QUOTATION_STAFF: int = 1   # Minimum number of employees required to send offers
     MIN_RESPOND_QUOTATION_STAFF: int = 1  # Minimum number of staff required to respond to offers
 
 
-    # The sales side no longer directly treats the unit price of the inventory as the absolute floor, but rather gives the floating floor price based on the pressure of the stock.
+    # Use a stock-sensitive price floor rather than treating inventory unit price as an absolute floor.
     B2B_PRICE_REFERENCE_FALLBACK: float = 1.0
     B2B_BASE_MIN_PRICE_MULTIPLIER: float = 1.00
     B2B_LOW_STOCK_MIN_PRICE_MULTIPLIER: float = 1.10
     B2B_HIGH_STOCK_MIN_PRICE_MULTIPLIER: float = 0.95
-    # Whatever the stock pressure, the B2B sales floor should not be below its own hard cost in the long term.
+    # The B2B sales floor should remain above hard cost regardless of inventory pressure.
     B2B_HARD_COST_FLOOR_MULTIPLIER: float = 1.02
-    # Upon resale of raw material after external procurement, Suplier required a higher Māori base to cover operational fluctuations.
+    # Raw materials resold after external procurement require a higher supplier margin floor to absorb operating variation.
     B2B_TOP_TIER_RAW_MATERIAL_MARGIN_FLOOR: float = 1.08
-    # Manufacturer should maintain a more active, but higher, sales floor for downstream sales to beer and avoid a continued low-cost resumption of production.
+    # The manufacturer maintains a higher downstream finished-goods floor to avoid persistent below-cost replenishment.
     B2B_MANUFACTURER_FINISHED_GOODS_BASE_MIN_PRICE_MULTIPLIER: float = 1.08
     B2B_MANUFACTURER_FINISHED_GOODS_LOW_STOCK_MIN_PRICE_MULTIPLIER: float = 1.16
     B2B_MANUFACTURER_FINISHED_GOODS_HIGH_STOCK_MIN_PRICE_MULTIPLIER: float = 1.02
@@ -509,14 +509,14 @@ class SalesConfig:
 @dataclass
 class ProductionConfig:
     """
-    Production management module configuration Category
+    Production-module configuration.
 
-    The production of department line parameters, human constraints and time-consuming operations are centrally managed.
+    Centralizes production-line parameters, staffing constraints, and action durations.
 
     Scope of use:
     - `enterprise/modules/production_manager.py`
-    - Use only the production module itself and do not participate in the multi-enterprise scenery
-        """
+    - Applies only to the production module, not multi-enterprise scenario structure.
+    """
 
 
     LINE_CONFIGS: Dict[str, Dict] = field(default_factory=lambda: {
@@ -552,7 +552,7 @@ class ProductionConfig:
     PLAN_QUANTITY_PER_WORKER: int = 1000
 
 
-    # Low stock recovery signals are considered to be held at a level below < x 17/ > when this is multiplied by the following ratio.
+    # This ratio scales the threshold used to identify a low-stock recovery signal.
     RECOVERY_LOW_STOCK_RATIO: float = 0.5
 
     # Proposal backlog is only used as a weak signal to estimate restorative production, avoiding direct 100% magnification.
@@ -571,13 +571,13 @@ class ProductionConfig:
     RECOVERY_ACTIVE_PLAN_OFFSET_SHARE: float = 0.5
 
 
-    # Restorative production is expected to achieve the minimum Māori rate under the normal business model.
+    # Recovery production must meet the minimum expected gross-margin rate under normal operations.
     RECOVERY_MARGIN_HEALTHY_FLOOR_RATE: float = 0.08
 
-    # If there is a real confirmed/stale backlog, a small low-māori recovery area is tolerated.
+    # When confirmed or stale backlog exists, permit a narrow low-margin recovery band.
     RECOVERY_MARGIN_SERVICE_FLOOR_RATE: float = -0.03
 
-    # The increase is more stringent than the resumption of production; if the Māori rate is expected to fall below that threshold, the construction of new production lines is not recommended.
+    # Expansion has a stricter threshold than production recovery; do not build a new line when expected gross margin falls below it.
     BUILD_LINE_MIN_MARGIN_RATE: float = 0.10
     # When the unit price of the inventory or the sales side price signal is missing, an operational sale price for the key product is reversed to avoid a completely priceless cold start-up phase.
     EXPECTED_SALE_PRICE_FALLBACKS: Dict[str, float] = field(default_factory=lambda: {

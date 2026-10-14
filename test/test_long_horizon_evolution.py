@@ -376,13 +376,13 @@ def test_agent_policy_context_hides_future_event_schedule():
         "latest_event": {
             "event_id": "upstream_material_price_surge",
             "turn": 40,
-            "label": "上游原料价格上涨",
+            "label": "Price increases upstream raw material",
         },
         "recent_events": [
             {
                 "event_id": "upstream_material_price_surge",
                 "turn": 40,
-                "label": "上游原料价格上涨",
+                "label": "Price increases upstream raw material",
             }
         ],
         "active_factors": {"external_material_price": 1.25},
@@ -622,9 +622,9 @@ def test_run_metrics_projection_exposes_event_detection_and_actions(tmp_path):
             "external_environment_response": {
                 "observed_event_ids": ["upstream_material_price_surge"],
                 "active_factor_assessment": {},
-                "impact_assessment": "成本影响",
-                "response_strategy": "条件式采购",
-                "review_criteria": "现金与单位成本",
+                "impact_assessment": "Cost implications",
+                "response_strategy": "Conditional procurement",
+                "review_criteria": "Cash versus unit cost",
             }
         }),
         encoding="utf-8",

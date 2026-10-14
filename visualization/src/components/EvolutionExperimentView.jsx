@@ -34,7 +34,7 @@ const toNumber = (value, fallback = 0) => {
   return Number.isFinite(numeric) ? numeric : fallback;
 };
 
-const formatNumber = (value, digits = 0) => new Intl.NumberFormat('zh-CN', {
+const formatNumber = (value, digits = 0) => new Intl.NumberFormat('en-US', {
   maximumFractionDigits: digits,
 }).format(toNumber(value));
 

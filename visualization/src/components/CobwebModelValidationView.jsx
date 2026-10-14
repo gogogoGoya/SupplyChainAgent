@@ -39,7 +39,7 @@ const formatNumber = (value, maximumFractionDigits = 2) => {
   if (!Number.isFinite(numeric)) {
     return '-';
   }
-  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits }).format(numeric);
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits }).format(numeric);
 };
 
 const formatPercent = (value) => {
@@ -748,10 +748,10 @@ function CobwebModelValidationView({
   const cobwebTypeNote = summary.scenarioType === 'unknown'
     ? 'The run lacks a recognizable cobweb scenario identifier'
     : `Classified by d / b = ${slopeRelation}: below 1 convergent, equal to 1 neutral, above 1 divergent`;
-  const scenarioEffectTitle = String(summary.scenarioExpectation.title || '').replace(/^.*?[：:]\s*/, '');
+  const scenarioEffectTitle = String(summary.scenarioExpectation.title || '').replace(/^.*?:\s*/, '');
   const scenarioEffectText = [scenarioEffectTitle, summary.effectExplanation]
     .filter(Boolean)
-    .join('，');
+    .join(', ');
   const cobwebParameterCards = [
     {
       label: 'a Demand Intercept',

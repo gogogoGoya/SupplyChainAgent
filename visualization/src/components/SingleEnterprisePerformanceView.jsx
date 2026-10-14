@@ -89,7 +89,7 @@ const formatNumber = (value, suffix = '') => {
   if (!Number.isFinite(numeric)) {
     return String(value);
   }
-  return `${numeric.toLocaleString('zh-CN', { maximumFractionDigits: 2 })}${suffix}`;
+  return `${numeric.toLocaleString('en-US', { maximumFractionDigits: 2 })}${suffix}`;
 };
 
 const asArray = (value) => {
@@ -2179,7 +2179,7 @@ const SingleEnterprisePerformanceView = ({
   const formatMetric = (value, suffix = '') => (
     value === null || value === undefined
       ? '-'
-      : `${Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}${suffix}`
+      : `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 })}${suffix}`
   );
   const snapshotCards = [
     { label: 'Current Turn', value: `Turn ${latest.day ?? currentDay}` },

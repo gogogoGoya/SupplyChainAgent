@@ -508,7 +508,7 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "PRODUCT_NOT_SALABLE",
-                f"企业 {self.enterprise.id} 不允许销售产品 {product_id}。可售产品: {getattr(self.enterprise, 'salable_products_idList', [])}"
+                f"Enterprise {self.enterprise.id} may not sell {product_id}. Saleable products: {getattr(self.enterprise, 'salable_products_idList', [])}"
             )
 
         # Inspection of department personnel
@@ -518,15 +518,15 @@ class SalesManager(EnhancedBaseModule):
         # TODO Subsequent consideration of the impact of sales on transactions enterprise
         assigned_workers = 1
         if employee_count < assigned_workers:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足。目标投入: {assigned_workers}，当前可用: {employee_count}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff. Required assignment: {assigned_workers}; available: {employee_count}")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         current_time = self.enterprise.time_manager.get_day()
         inventory_manager = super().get_module_by_type("InventoryManager")
         detail_result = inventory_manager.get_inventory_detail(product_id)
         if not getattr(detail_result, "success", False):
-            return self.error_response(response, "PRODUCT_NOT_FOUND", f"产品 {product_id} 不存在")
+            return self.error_response(response, "PRODUCT_NOT_FOUND", f"Product {product_id} does not exist")
         stock = detail_result.data if isinstance(detail_result.data, dict) else {}
         pricing = self._resolve_b2b_min_price(product_id)
 
@@ -540,7 +540,7 @@ class SalesManager(EnhancedBaseModule):
         )
         payload = asdict(data)
         payload["pricing_strategy"] = pricing
-        return self.success_response(response, f"已在交易所更新销售需求，等待下游企业响应", payload)
+        return self.success_response(response, "Sales offer updated on the exchange and awaiting downstream response", payload)
 
     @with_response("develop_market")
     def develop_market(self, market_type: str,  assigned_workers: int, market_name: str = None, dry_run: bool = False, response: ModuleResponse = None) -> ModuleResponse:
@@ -565,15 +565,15 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INVALID_WORKERS_COUNT",
-                f"销售员人数必须大于等于 {self.config.MIN_DEVELOP_MARKET_STAFF}"
+                f"Sales staffing must be at least {self.config.MIN_DEVELOP_MARKET_STAFF}"
             )
 
         if employee_count < assigned_workers:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足。目标投入: {assigned_workers}，当前可用: {employee_count}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff. Required assignment: {assigned_workers}; available: {employee_count}")
 
         # 2. Types of certification market
         if market_type not in self.config.MARKET_DEVELOPMENT_CONFIGS:
-            return self.error_response(response, "INVALID_MARKET_TYPE", f"无效的市场类型，请选择 'regional' 或 'international'")
+            return self.error_response(response, "INVALID_MARKET_TYPE", "Invalid market type; choose 'regional' or 'international'")
 
         config = self.config.MARKET_DEVELOPMENT_CONFIGS[market_type]
         finance_manager = super().get_module_by_type("FinanceManager")
@@ -590,10 +590,10 @@ class SalesManager(EnhancedBaseModule):
         else:
             balance = 0
         if balance < config["cost"]:
-            return self.error_response(response, "INSUFFICIENT_FUNDS", f"资金不足，需要 ¥{config['cost']:,}")
+            return self.error_response(response, "INSUFFICIENT_FUNDS", f"Insufficient funds; required: {config['cost']:,}")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         # 4. Creation of market logos and early distribution of sales personnel
         market_id = f"market_{self.next_market_id}"
         self.next_market_id += 1
@@ -611,7 +611,7 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ASSIGN_WORKERS_ERROR",
-                getattr(assign_result, "message", "市场开发人手分配失败")
+                getattr(assign_result, "message", "Market development staff distribution failed")
             )
 
         # 5. Less development costs
@@ -625,7 +625,7 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "COST_RECORD_FAILED",
-                getattr(result, "message", "市场开发成本记录失败")
+                getattr(result, "message", "Market development cost record failure")
             )
 
         self.markets[market_id] = {
@@ -652,7 +652,7 @@ class SalesManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            f"市场 {market_name} 开始开发，将于第 {completion_time} 个工作日 完成",
+            f"Market development started for {market_name} and will complete on working day {completion_time}",
             {
                 "market_id": market_id,
                 "market_name": market_name,
@@ -679,28 +679,28 @@ class SalesManager(EnhancedBaseModule):
                 """
         # Validation of the existence of a market
         if market_id not in self.markets:
-            return self.error_response(response, "MARKET_NOT_FOUND", f"市场 {market_id} 不存在")
+            return self.error_response(response, "MARKET_NOT_FOUND", f"Market {market_id} does not exist")
         
         # 2. Types of verification adjustments
         if adjust_type not in ["increase", "decrease"]:
-            return self.error_response(response, "INVALID_ADJUST_TYPE", f"无效的调整类型，请选择 'increase' 或 'decrease'")
+            return self.error_response(response, "INVALID_ADJUST_TYPE", "Invalid adjustment type; choose 'increase' or 'decrease'")
         # 3. Volume of validation adjustments
         if adjust_nums < 1:
-            return self.error_response(response, "INVALID_ADJUST_NUMS", f"调整数量必须大于等于 1")
+            return self.error_response(response, "INVALID_ADJUST_NUMS", "Adjustment count must be at least 1")
         market = self.markets[market_id]
         market_workers = market["assigned_workers"]
         if adjust_type == "decrease":
             if adjust_nums > market_workers:
-                return self.error_response(response, "INSUFFICIENT_WORKERS", f"当前市场 {market_id} 有 {market_workers} 个销售员，无法减少 {adjust_nums} 个")
+                return self.error_response(response, "INSUFFICIENT_WORKERS", f"Market {market_id} has {market_workers} sales workers and cannot release {adjust_nums}")
         else:
             hr_manager = super().get_module_by_type("HRManager")
             hr_result = hr_manager.get_available_workers(department="sales")  
             employee_count = hr_result.data.get("count", 0) 
             if adjust_nums > employee_count:
-                    return self.error_response(response, "INSUFFICIENT_WORKERS", f"当前销售部门的空闲员工只有{employee_count} 个，无法增加 {adjust_nums} 个")
+                    return self.error_response(response, "INSUFFICIENT_WORKERS", f"The sales department has only {employee_count} available workers and cannot add {adjust_nums}")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # 4. Adjustment of staffing
         if adjust_type == "decrease":
@@ -715,7 +715,7 @@ class SalesManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "RELEASE_WORKERS_ERROR",
-                    getattr(release_result, "message", "市场销售人员释放失败")
+                    getattr(release_result, "message", "Market salesman release failed")
                 )
         elif adjust_type == "increase":
             market_workers += adjust_nums
@@ -728,11 +728,11 @@ class SalesManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "ASSIGN_WORKERS_ERROR",
-                    getattr(assign_result, "message", "市场销售人员分配失败")
+                    getattr(assign_result, "message", "Market sales staff distribution failed")
                 )
         self.markets[market_id]["assigned_workers"] = market_workers
         
-        return self.success_response(response, "SUCCESS", f"成功调整市场 {market_id} 的销售员人数为 {market_workers}")
+        return self.success_response(response, "SUCCESS", f"Adjusted sales staffing for market {market_id} to {market_workers}")
 
     @skip_dry_run_validation
     @with_response("check_market_development_completion")
@@ -768,7 +768,7 @@ class SalesManager(EnhancedBaseModule):
                 })
         return self.success_response(
             response,
-            f"成功检查并激活 {len(completed_markets)} 个已完成开发的市场",
+            f"Checked and activated {len(completed_markets)} completed markets",
             {
                 "completed_markets": completed_markets,
                 "total_completed": len(completed_markets)
@@ -789,9 +789,9 @@ class SalesManager(EnhancedBaseModule):
                 """
         market_data = self.markets.get(market_id)
         if market_data:
-            return self.success_response(response, f"成功获取市场 {market_id} 的信息", market_data)
+            return self.success_response(response, f"Retrieved market {market_id}", market_data)
         else:
-            return self.error_response(response, "MARKET_NOT_FOUND", f"市场 {market_id} 不存在")
+            return self.error_response(response, "MARKET_NOT_FOUND", f"Market {market_id} does not exist")
 
     @with_response("get_all_markets")
     def get_all_markets(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
@@ -807,10 +807,10 @@ class SalesManager(EnhancedBaseModule):
                 """
         if status_filter:
             markets = [m for m in self.markets.values() if m["status"] == status_filter]
-            message = f"成功获取状态为 {status_filter} 的市场 {len(markets)} 个"
+            message = f"Retrieved {len(markets)} markets with status {status_filter}"
         else:
             markets = list(self.markets.values())
-            message = f"成功获取所有市场 {len(markets)} 个"
+            message = f"Retrieved all {len(markets)} markets"
 
         return self.success_response(
             response,
@@ -887,13 +887,13 @@ class SalesManager(EnhancedBaseModule):
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
             if not exchange_proposal or not self._is_relevant_proposal(exchange_proposal):
-                return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {proposal_id} 不存在")
+                return self.error_response(response, "ORDER_NOT_FOUND", f"Order {proposal_id} does not exist")
             if exchange_proposal.status != "pending":
-                return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {exchange_proposal.status}，无法接受")
-            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"订单 {proposal_id} 已完成销售侧响应")
+                return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {exchange_proposal.status} cannot be accepted")
+            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"Order {proposal_id} already has a sales response")
         
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # 3. Updating the order status
         self.enterprise.downstream_exchange.handle_company_response(
@@ -904,7 +904,7 @@ class SalesManager(EnhancedBaseModule):
         self._refresh_proposal_views()
         return self.success_response(
             response,
-            f"订单 {proposal_id} 已接受, 等待下游",
+            f"Order {proposal_id} accepted and awaiting the downstream enterprise",
             {
                 "proposal_id": proposal_id,
             }
@@ -926,13 +926,13 @@ class SalesManager(EnhancedBaseModule):
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
             if not exchange_proposal or not self._is_relevant_proposal(exchange_proposal):
-                return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {proposal_id} 不存在")
+                return self.error_response(response, "ORDER_NOT_FOUND", f"Order {proposal_id} does not exist")
             if exchange_proposal.status != "pending":
-                return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {exchange_proposal.status}，无法拒绝")
-            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"订单 {proposal_id} 已完成销售侧响应")
+                return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {exchange_proposal.status} cannot be rejected")
+            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"Order {proposal_id} already has a sales response")
         
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # 3. Updating the order status
         self.enterprise.downstream_exchange.handle_company_response(
@@ -961,7 +961,7 @@ class SalesManager(EnhancedBaseModule):
         self._refresh_service_level_metrics()
         return self.success_response(
             response,
-            f"订单 {proposal_id} 已拒绝",
+            f"Order {proposal_id} rejected",
             {
                 "proposal_id": proposal_id,
             }
@@ -1029,7 +1029,7 @@ class SalesManager(EnhancedBaseModule):
             if existing_order:
                 return self.success_response(
                     response,
-                    f"外部需求 {external_demand_id} 已存在销售订单，跳过重复创建",
+                    f"A sales order already exists for external demand {external_demand_id}; duplicate creation skipped",
                     {
                         "order_id": existing_order["order_id"],
                         "order": existing_order,
@@ -1088,7 +1088,7 @@ class SalesManager(EnhancedBaseModule):
         })
 
         response.set_status(ResponseStatus.SUCCESS)
-        response.set_message(f"销售订单 {order_id} 已创建")
+        response.set_message(f"Sales order {order_id} created")
         response.data = {
             "order_id": order_id,
             "order": sales_order
@@ -1114,26 +1114,26 @@ class SalesManager(EnhancedBaseModule):
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_PLACE_ORDER_STAFF:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法接受订单。至少需要: {self.config.MIN_PLACE_ORDER_STAFF}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff to accept an order. Minimum required: {self.config.MIN_PLACE_ORDER_STAFF}")
 
         # 2. Finding orders
         order = self._find_order(order_id)
         if not order:
-            return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {order_id} 不存在")
+            return self.error_response(response, "ORDER_NOT_FOUND", f"Order {order_id} does not exist")
         
 
         # 3. Check the order status
         if order["status"] != "available":
-            return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {order['status']}，无法接受")
+            return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {order['status']} cannot be accepted")
         offer_expiry_day = order.get("offer_expiry_day")
         current_day = self.enterprise.time_manager.get_day()
         if offer_expiry_day is not None and current_day > int(offer_expiry_day):
             if not dry_run:
                 order["status"] = "expired"
-            return self.error_response(response, "ORDER_OFFER_EXPIRED", f"订单 {order_id} 的报价已过期")
+            return self.error_response(response, "ORDER_OFFER_EXPIRED", f"Offer for order {order_id} has expired")
         
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # 4. Validation of inventory (optional - based on operational strategy)
         # Policy A: Not to validate inventory upon acceptance and only upon delivery (recommended, in line with order-based production model)
@@ -1167,12 +1167,12 @@ class SalesManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            f"订单 {order_id} 已接受",
+            f"Order {order_id} accepted",
             {
                 "order_id": order_id,
                 "delivery_deadline": order["delivery_deadline"],
                 "immediate_delivery_result": immediate_delivery_result,
-                "note": "请确保在交货截止期前准备足够的产品库存"
+                "note": "Please ensure that sufficient stocks of products are available before delivery deadlines"
             }
         )
 
@@ -1195,18 +1195,18 @@ class SalesManager(EnhancedBaseModule):
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_PLACE_ORDER_STAFF:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法拒绝订单。至少需要: {self.config.MIN_PLACE_ORDER_STAFF}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff to reject an order. Minimum required: {self.config.MIN_PLACE_ORDER_STAFF}")
 
         # 2. Finding orders
         order = self._find_order(order_id)
         if not order:
-            return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {order_id} 不存在")
+            return self.error_response(response, "ORDER_NOT_FOUND", f"Order {order_id} does not exist")
 
         if order["status"] != "available":
-            return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {order['status']}，无法拒绝")
+            return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {order['status']} cannot be rejected")
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
 
         # 3. Mark as rejected (historical record kept)
@@ -1234,7 +1234,7 @@ class SalesManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            f"订单 {order_id} 已拒绝",
+            f"Order {order_id} rejected",
             {
                 "order_id": order_id,
                 "reason": reason
@@ -1255,9 +1255,9 @@ class SalesManager(EnhancedBaseModule):
                 """
         order = self._find_order(order_id)
         if order:
-            return self.success_response(response, f"成功获取订单 {order_id} 的详情", order)
+            return self.success_response(response, f"Retrieved order {order_id}", order)
         else:
-            return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {order_id} 不存在")
+            return self.error_response(response, "ORDER_NOT_FOUND", f"Order {order_id} does not exist")
 
     @with_response("get_all_sales_orders")
     def get_all_orders(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
@@ -1273,10 +1273,10 @@ class SalesManager(EnhancedBaseModule):
                 """
         if status_filter:
             orders = [order for order in self.sales_orders if order["status"] == status_filter]
-            message = f"成功获取状态为 {status_filter} 的订单 {len(orders)} 个"
+            message = f"Retrieved {len(orders)} orders with status {status_filter}"
         else:
             orders = self.sales_orders.copy()
-            message = f"成功获取所有订单 {len(orders)} 个"
+            message = f"Retrieved all {len(orders)} orders"
 
         return self.success_response(
             response,
@@ -1314,7 +1314,7 @@ class SalesManager(EnhancedBaseModule):
                 """
         return self.get_all_orders(status_filter="accepted", response=response)
 
-    # == sync, corrected by elderman ==
+    # Synchronization helpers.
 
     @skip_dry_run_validation
     @with_response("check_deliverable_orders")
@@ -1366,7 +1366,7 @@ class SalesManager(EnhancedBaseModule):
         self._refresh_service_level_metrics()
         return self.success_response(
             response,
-            f"成功检查并处理 {len(delivery_results)} 个到期订单",
+            f"Checked and processed {len(delivery_results)} due orders",
             {
                 "delivery_results": delivery_results,
                 "total_processed": len(delivery_results)
@@ -1396,7 +1396,7 @@ class SalesManager(EnhancedBaseModule):
         hr_result = hr_manager.get_available_workers(department="sales")
         employee_count = hr_result.data.get("count", 0) 
         if employee_count < self.config.MIN_SEND_QUOTATION_STAFF:
-            return self.error_response(response, "INSUFFICIENT_STAFF", f"人手不足，无法生成报价。至少需要: {self.config.MIN_SEND_QUOTATION_STAFF}")
+            return self.error_response(response, "INSUFFICIENT_STAFF", f"Insufficient staff to create a quotation. Minimum required: {self.config.MIN_SEND_QUOTATION_STAFF}")
 
         # 2. Inventory inspections
         inventory_manager = super().get_module_by_type("InventoryManager")
@@ -1411,14 +1411,14 @@ class SalesManager(EnhancedBaseModule):
         else:
             available_inventory = 0
         if available_inventory < quantity:
-            return self.error_response(response, "INSUFFICIENT_INVENTORY", f"库存不足，无法报价。需要: {quantity}, 当前: {available_inventory}")
+            return self.error_response(response, "INSUFFICIENT_INVENTORY", f"Insufficient inventory for quotation. Required: {quantity}; available: {available_inventory}")
 
         # 3. Cost of access to products
         detail_result = inventory_manager.get_inventory_detail(product_id)
         # Addressing different types of return
         product_detail = detail_result if isinstance(detail_result, dict) else detail_result.data
         if not product_detail:
-            return self.error_response(response, "PRODUCT_NOT_FOUND", f"产品 {product_id} 不存在")
+            return self.error_response(response, "PRODUCT_NOT_FOUND", f"Product {product_id} does not exist")
 
         unit_cost = product_detail["unit_price"]
 
@@ -1457,7 +1457,7 @@ class SalesManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            "报价已生成（简化版，实际需要消息系统支持）",
+            "Tenders generated (simplified version, actually required message system support)",
             {
                 "quotation_id": quotation_id,
                 "unit_price": unit_price,
@@ -1483,7 +1483,7 @@ class SalesManager(EnhancedBaseModule):
             ModuleResponse: A unified response that includes the results of the assessment
                 """
         if quotation_id not in self.quotations:
-            return self.error_response(response, "QUOTATION_NOT_FOUND", f"报价 {quotation_id} 不存在")
+            return self.error_response(response, "QUOTATION_NOT_FOUND", f"Quotation {quotation_id} does not exist")
 
         hr_manager = super().get_module_by_type("HRManager")
         hr_result = hr_manager.get_available_workers(department="sales")
@@ -1492,7 +1492,7 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法响应报价。至少需要: {self.config.MIN_RESPOND_QUOTATION_STAFF}"
+                f"Insufficient staff to respond to a quotation. Minimum required: {self.config.MIN_RESPOND_QUOTATION_STAFF}"
             )
 
         quotation = self.quotations[quotation_id]
@@ -1504,10 +1504,10 @@ class SalesManager(EnhancedBaseModule):
         # Assessment of bargaining
         if counter_price >= min_acceptable_price:
             decision = "accept"
-            message = f"可以接受还价 ¥{counter_price:.2f}"
+            message = f"Counteroffer of {counter_price:.2f} is acceptable"
         else:
             decision = "reject"
-            message = f"还价 ¥{counter_price:.2f} 低于底价 ¥{min_acceptable_price:.2f}，拒绝"
+            message = f"Counteroffer {counter_price:.2f} is below the floor price {min_acceptable_price:.2f} and is rejected"
 
         # Setup Successful Response
         return self.success_response(
@@ -1539,8 +1539,8 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MARKET_NOT_FOUND",
-                f"市场 {market_id} 不存在",
-                "无法获取市场绩效"
+                f"Market {market_id} does not exist",
+                "Lack of market performance"
             )
 
         market = self.markets[market_id]
@@ -1564,7 +1564,7 @@ class SalesManager(EnhancedBaseModule):
         }
         
         return response.success(
-            message=f"成功获取市场 {market_id} 的绩效信息",
+            message=f"Retrieved performance data for market {market_id}",
             data=performance_data
         )
 
@@ -1608,7 +1608,7 @@ class SalesManager(EnhancedBaseModule):
             # "quotations": list(self.quotations.values())
 
         }
-        return self.success_response(response, "成功获取模块状态", state)
+        return self.success_response(response, "Successfully accessed modular status", state)
 
 
     @with_response("get_quotation_info")
@@ -1625,9 +1625,9 @@ class SalesManager(EnhancedBaseModule):
                 """
         quotation_data = self.quotations.get(quotation_id)
         if quotation_data:
-            return self.success_response(response, f"成功获取报价 {quotation_id} 的信息", quotation_data)
+            return self.success_response(response, f"Retrieved quotation {quotation_id}", quotation_data)
         else:
-            return self.error_response(response, "QUOTATION_NOT_FOUND", f"报价 {quotation_id} 不存在")
+            return self.error_response(response, "QUOTATION_NOT_FOUND", f"Quotation {quotation_id} does not exist")
 
     @with_response("get_all_quotations")
     def get_all_quotations(self, status_filter: Optional[str] = None, response: ModuleResponse = None) -> ModuleResponse:
@@ -1643,10 +1643,10 @@ class SalesManager(EnhancedBaseModule):
                 """
         if status_filter:
             quotations = [q for q in self.quotations.values() if q["status"] == status_filter]
-            message = f"成功获取状态为 {status_filter} 的报价 {len(quotations)} 个"
+            message = f"Retrieved {len(quotations)} quotations with status {status_filter}"
         else:
             quotations = list(self.quotations.values())
-            message = f"成功获取所有报价 {len(quotations)} 个"
+            message = f"Retrieved all {len(quotations)} quotations"
 
         return self.success_response(
             response,
@@ -1671,7 +1671,7 @@ class SalesManager(EnhancedBaseModule):
                 """
         return self.success_response(
             response,
-            f"成功计算销售收入，总收入: ¥{self.sales_metrics['total_revenue']:,.2f}",
+            f"Calculated sales revenue; total revenue: {self.sales_metrics['total_revenue']:,.2f}",
             {
                 "total_revenue": self.sales_metrics["total_revenue"],
                 "total_quantity_sold": self.sales_metrics["total_quantity_sold"],
@@ -1839,7 +1839,7 @@ class SalesManager(EnhancedBaseModule):
             return {
                 "success": False,
                 "order_id": order_id,
-                "error": "库存不足，订单违约",
+                "error": "Insufficient stock, default orders",
                 "required": quantity,
                 "available": quantity_available,
                 "breach_penalty_effect": penalty_effect
@@ -1871,7 +1871,7 @@ class SalesManager(EnhancedBaseModule):
             return {
                 "success": False,
                 "order_id": order_id,
-                "error": f"出库失败: {self._response_error_text(outbound_result)}",
+                "error": f"Outbound inventory operation failed: {self._response_error_text(outbound_result)}",
                 "breach_penalty_effect": penalty_effect
             }
 
@@ -1895,7 +1895,7 @@ class SalesManager(EnhancedBaseModule):
             return {
                 "success": False,
                 "order_id": order_id,
-                "error": f"记录销售收入失败: {self._response_error_text(result)}"
+                "error": f"Failed to record sales revenue: {self._response_error_text(result)}"
             }
         
         # 4. Updating the order status
@@ -1938,7 +1938,7 @@ class SalesManager(EnhancedBaseModule):
             "quantity": quantity,
             "revenue": revenue,
             "on_time": order["on_time"],
-            "message": f"订单 {order_id} 已交付，收入 ¥{revenue:,.2f}"
+            "message": f"Order {order_id} delivered; revenue: {revenue:,.2f}"
         }
 
     @staticmethod
@@ -2106,7 +2106,7 @@ class SalesManager(EnhancedBaseModule):
 
             # Build AnalysisJSON
             analysis_json = {
-                "analysis_type": "销售订单分析",
+                "analysis_type": "Analysis of sales orders",
                 "timestamp": timestamp,
                 "metrics": self.sales_metrics,
                 "order_analysis": {
@@ -2146,19 +2146,19 @@ class SalesManager(EnhancedBaseModule):
                     "total_quotations": len(self.quotations)
                 },
                 "insights": [
-                    f"总销售订单数: {self.sales_metrics.get('total_orders', 0)}",
-                    f"完成销售订单数: {self.sales_metrics.get('completed_orders', 0)}",
-                    f"总收入: ¥{self.sales_metrics.get('total_revenue', 0):,.2f}",
-                    f"总销售数量: {self.sales_metrics.get('total_quantity_sold', 0)}",
-                    f"订单履约率: {self.sales_metrics.get('order_fulfillment_rate', 0):.2f}",
-                    f"按时交付率: {self.sales_metrics.get('on_time_delivery_rate', 0):.2f}",
-                    f"市场覆盖率: {self.sales_metrics.get('market_coverage_rate', 0):.2f}"
+                    f"Total sales orders: {self.sales_metrics.get('total_orders', 0)}",
+                    f"Completed sales orders: {self.sales_metrics.get('completed_orders', 0)}",
+                    f"Total revenue: {self.sales_metrics.get('total_revenue', 0):,.2f}",
+                    f"Total quantity sold: {self.sales_metrics.get('total_quantity_sold', 0)}",
+                    f"Order fulfillment rate: {self.sales_metrics.get('order_fulfillment_rate', 0):.2f}",
+                    f"On-time delivery rate: {self.sales_metrics.get('on_time_delivery_rate', 0):.2f}",
+                    f"Market coverage rate: {self.sales_metrics.get('market_coverage_rate', 0):.2f}"
                 ]
             }
 
             return self.success_response(
                 response,
-                "成功生成销售订单分析",
+                "Successfully generated sales order analysis",
                 {
                     "analysis": analysis_json
                 }
@@ -2167,5 +2167,5 @@ class SalesManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ANALYSIS_ERROR",
-                f"生成销售订单分析失败: {e}"
+                f"Failed to generate sales-order analysis: {e}"
             )

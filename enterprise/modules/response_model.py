@@ -54,10 +54,10 @@ class ModuleResponse:
               }
 
         errors (List [Dict]: list of errors, each containing code and message
-            - Example: [{"code": "INSUFFICIENT_CASH", "message": "现金不足"}]
+            - Example: [{"code": "INSUFFICIENT_CASH", "message": "Insufficient cash"}]
 
         Warnings (List [Dict]: Warning message list, without prejudice to execution but needing attention
-            - Example: [{"level": "WARNING", "message": "现金余额偏低"}]
+            - Example: [{"level": "WARNING", "message": "Cash balance is low"}]
         """
 
     status: ResponseStatus = ResponseStatus.SUCCESS

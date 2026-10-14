@@ -989,22 +989,22 @@ class SkillRunner:
         )
         reason_parts = []
         if should_prioritize:
-            reason_parts.append("低总产能且近期产能压力持续")
+            reason_parts.append("low total capacity with sustained recent capacity pressure")
         if demand_or_stock_pressure:
-            reason_parts.append("存在订单/可接需求或成品库存低位")
+            reason_parts.append("orders or fulfillable demand exist, or finished-goods inventory is low")
         if no_current_capacity:
-            reason_parts.append("当前无可用产能或可用产线")
+            reason_parts.append("no available capacity or production line")
         if building_lines > 0:
-            reason_parts.append("已有产线在建，避免重复扩线")
+            reason_parts.append("a production line is already under construction; avoid duplicate expansion")
         if cash_hard_blocked:
-            reason_parts.append("现金硬阻断，不能优先扩线")
+            reason_parts.append("cash is a hard constraint, so line expansion cannot be prioritized")
         return {
             "enabled": True,
             "should_prioritize_build_line_review": should_prioritize,
             "recommended_action_when_feasible": (
                 "build_production_line" if should_prioritize else None
             ),
-            "reason": "；".join(reason_parts) or "未形成明确扩线优先信号",
+            "reason": "; ".join(reason_parts) or "no clear line-expansion priority signal",
             "thresholds": {
                 "high_utilization_percent": 85,
                 "avg_recent_utilization_percent": 80,
@@ -1551,13 +1551,13 @@ class SkillRunner:
         objective_weights = profit_policy.get("objective_weights") or {}
         return f"""
 
-蛛网C3盈利目标分析约束：
-- 当前不是机制复现任务。价格方向只能作为市场风险证据，不得写成“高价必须扩产、低价必须停产”的命令。
-- 使用最近已封口历史投影中的价格、供给、利润、履约、库存和生产调整趋势，识别未来2到3轮的经营问题；整体规划窗口为 {profit_policy.get("planning_horizon_rounds", 8)} 轮。
-- 目标权重为 {json.dumps(objective_weights, ensure_ascii=False)}。阶段目标必须同时说明利润/边际收益、现金安全、服务水平以及生产调整或价格边界风险。
-- 不给生产部门指定唯一精确产量；使用可解释的范围、阈值或比较条件，让生产部门结合当轮 cobweb_operating_economics 自主选择。
-- 不得把理论均衡供给、recovery_guard数量或当前backlog直接当作生产答案，也不得把复现发散轨迹作为成功标准。
-- 生产目标必须至少覆盖利润/成本、现金、履约/积压、稳定性/价格风险四类目标中的三类，并明确它们之间的权衡。
+Cobweb open-profit-objective analysis constraints:
+- This is not a mechanism-reproduction task. Treat price direction as market-risk evidence, not as a command to expand at high prices or stop at low prices.
+- Use price, supply, profit, fulfillment, inventory, and production-adjustment trends from the latest closed history to identify issues for the next two to three turns; the overall planning horizon is {profit_policy.get("planning_horizon_rounds", 8)} turns.
+- Objective weights are {json.dumps(objective_weights, ensure_ascii=False)}. Phase objectives must jointly address profit or marginal return, cash safety, service level, and production-adjustment or price-boundary risk.
+- Do not prescribe one exact production quantity. Use interpretable ranges, thresholds, or comparison rules so production can decide using the current cobweb_operating_economics.
+- Do not treat theoretical equilibrium supply, recovery_guard quantity, or current backlog as the production answer, and do not use reproduction of a divergent path as the success criterion.
+- The production objective must cover at least three of four dimensions: profit/cost, cash, fulfillment/backlog, and stability/price risk, with explicit trade-offs.
 """.rstrip()
 
     def _single_enterprise_chart_export_policy(self) -> Dict[str, Any]:
@@ -1806,24 +1806,24 @@ class SkillRunner:
 
         return f"""
 
-单企业 S0 诊断运行时补充规则：
-- 当前运行已识别为单企业 Agent 诊断模式；Agent 必须只依据运行时企业数据完成诊断。
-- 这些规则只在本次单企业诊断运行中生效，不属于通用 Analyst Skill 文档，也不应用于多企业场景。
-- 所有单企业诊断运行使用同一套综合诊断框架；不得根据任何内部实验元信息、预设答案或部门优先级改变分析路径。
-- 不得在 enterprise_summarys、department_targets 或 reason 中引用任何不来自 observation、charts_data_export、history_projection 或部门状态文件的实验元信息，也不要使用实验类别、部门优先级或预设矛盾等表述。
-- 若启动提示提供 charts_data_export.json 或 history_projection.json，它们是单企业诊断的重点输入：先用其中的履约覆盖、原料覆盖、仓容压力、现金压力、需求产能缺口、订单漏斗、历史趋势来定位瓶颈，再回到 observation 和部门状态核实动作可行性。
-- 不要把通用 Skill 文档中的多企业链路、企业间交易、同业聚合、共享资源治理或蛛网机制复现要求套到单企业 S0；除非 observation 的真实字段明确显示这些机制在本单企业运行中启用，否则只按单企业内部经营诊断处理。
-- 必须按统一顺序全面检查：市场/真实需求、订单漏斗与履约老化、生产计划/产能/产线、原料库存位点与在途补货、采购供应商与预算、人力空闲/利用/待招聘、现金/净利润/收入成本变化/回款、库存与仓容压力。
-- 若 observation.production.capacity_expansion_signal 或顶层 capacity_expansion_signal 显示 should_prioritize_build_line_review=true，必须把它作为产能诊断的优先证据：先核对近期产能占用/可用产能、当前总产能、在建产线、订单或低库存、现金和人手，再在 department_targets.production 中明确建议优先评估 build_production_line；不得仅因还能建立小批量生产计划就忽略扩线瓶颈。
-- enterprise_summarys 应按证据链说明当前最主要的 1 到 3 个经营约束，并说明它们之间的因果关系，例如“市场需求不足导致订单入口偏弱”“原料覆盖不足限制排产”“产能或人手阻断履约”“现金压力限制新增支出”。
-- 每个部门目标必须按本部门真实状态与职能写：有合法候选动作就给出可执行目标；没有候选动作就说明具体状态原因，例如“原料覆盖已足够”“暂无真实非零订单”“现金水平不支持新增支出”“已有待招聘覆盖缺口”。
-- Sales：从真实订单、需求、金额、交期、市场覆盖、库存/近期待产和现金影响判断是否应推动 market development、accept/reject order 或保持静默；quantity<=0 或 total_amount<=0 的订单只能视为无效/占位信号。
-- Procurement：从 MATERIAL_1 库存位点、生产配方需求、订单/backlog、供应商、在途补货、预算与交期判断是否采购；只把仍未到货的 pending/in_transit/ordered 采购和真实 incoming 视为补货覆盖，不要把已 received 且可能已被生产消耗的历史订单当作当前覆盖。
-- Procurement 首笔恢复采购与后续滚动采购要区分：当关键原料 on_hand/inventory_position 很低、存在已接受订单/backlog 或近期待产、且没有开放在途覆盖时，优先保证最早可用到货；恢复稳定后再转向低成本补库存。
-- Production：从真实订单/backlog、原料可行量、空闲产能、产线状态和可用生产人手判断是否排产或扩线；缺少任一硬条件时说明具体阻断。
-- HR：从员工数量、空闲人数、利用率、待招聘和上一轮人员不足失败判断是否招聘；不要因为场景标签招聘或静默。
-- Finance/Inventory：从现金、净利润、收入/成本历史变化、库存占用、仓容和履约风险判断是否需要在企业摘要中作为约束或风险写入。
-- 输出仍需保留 department_targets.sales、department_targets.procurement、department_targets.production、department_targets.hr；若某部门无动作，原因必须是本部门状态原因。
+Enterprise capability-diagnosis runtime rules:
+- The current run is an enterprise Agent diagnosis. Diagnose only from runtime enterprise data.
+- These rules apply only to the current diagnosis run; they are not part of the generic Analyst Skill and do not apply to multi-enterprise scenarios.
+- Use the same comprehensive diagnostic framework for every case. Do not alter the analysis path using internal experiment metadata, preset answers, or department priority.
+- Do not cite experiment metadata absent from observation, charts_data_export, history_projection, or department state in enterprise_summarys, department_targets, or reason.
+- When charts_data_export.json or history_projection.json is supplied, first locate bottlenecks through fulfillment coverage, material coverage, warehouse pressure, cash pressure, demand-capacity gaps, order funnel, and history trends; then verify action feasibility against observation and department state.
+- Do not apply multi-enterprise links, inter-enterprise trades, peer aggregates, shared-resource governance, or cobweb-reproduction requirements unless observation explicitly enables them.
+- Inspect in this order: market and real demand; order funnel and fulfillment aging; production plans, capacity, and lines; material inventory position and inbound replenishment; suppliers and procurement budget; staffing availability, utilization, and pending recruitment; cash, net profit, revenue/cost changes, and collections; inventory and warehouse pressure.
+- If capacity_expansion_signal shows should_prioritize_build_line_review=true, treat it as primary evidence. Check recent utilization and available capacity, current total capacity, lines under construction, orders or low inventory, cash, and staff. Then explicitly prioritize evaluation of build_production_line in department_targets.production.
+- enterprise_summarys must identify the leading one to three operating constraints and their causal links, such as weak demand reducing order inflow, insufficient materials limiting schedules, capacity or staffing blocking fulfillment, or cash limiting spending.
+- Each department target must reflect its actual state and function. Provide an executable objective when a valid candidate exists; otherwise give a state-specific reason.
+- Sales: use real orders, demand, value, deadlines, market coverage, inventory or near-term output, and cash effects to decide market development, order acceptance/rejection, or no action. Orders with quantity<=0 or total_amount<=0 are invalid placeholders.
+- Procurement: decide from MATERIAL_1 inventory position, recipe demand, orders/backlog, suppliers, inbound replenishment, budget, and lead time. Only open pending, in_transit, or ordered purchases and real incoming quantities count as coverage; historical received orders do not.
+- Distinguish the first recovery purchase from rolling replenishment. When critical on_hand or inventory_position is low, accepted orders/backlog or near-term production exists, and no open inbound coverage exists, prioritize the earliest feasible arrival; optimize replenishment cost after recovery stabilizes.
+- Production: decide scheduling or line expansion from real orders/backlog, material-feasible quantity, idle capacity, line status, and available production staff; identify any missing hard prerequisite.
+- HR: decide recruitment from employee count, availability, utilization, pending recruitment, and prior staffing failures, not from scenario labels.
+- Finance and Inventory: determine whether cash, net profit, revenue/cost trends, inventory occupation, warehouse capacity, or fulfillment risk belongs in the enterprise summary.
+- Preserve department_targets.sales, department_targets.procurement, department_targets.production, and department_targets.hr. If a department takes no action, give a reason grounded in that department's state.
 """.rstrip()
 
     def _build_single_enterprise_department_decision_prompt(self, role: str) -> str:
@@ -1837,52 +1837,52 @@ class SkillRunner:
 
         lines = [
             "",
-            "单企业 S0 部门决策阶段化补充：",
-            "- 这段补充只适用于当前单企业 Agent 诊断运行；不要迁移到多企业判断。",
-            "- 禁止在 action_reason 中引用任何不来自部门状态、blackboard 或 analysis 数据证据的实验元信息，也不要声称自己知道当前实验类型。",
-            "- 只根据本部门状态文件、blackboard、analysis 中的数据证据、动作模板和可行性约束判断是否行动。",
+            "Single-enterprise S0 phased department decision guidance:",
+            "- This guidance applies only to the current single-enterprise Agent diagnostic run; do not transfer it to multi-enterprise decisions.",
+            "- Do not cite experimental metadata in action_reason unless it is supported by department state, blackboard, or analysis evidence, and do not claim knowledge of the current experiment type.",
+            "- Decide whether to act only from this department's state, blackboard and analysis evidence, action templates, and feasibility constraints.",
         ]
 
         if role_key == "procurement":
             lines.extend([
-                "- 若 MATERIAL_1 或关键原料的库存位点、真实在途补货和供应商覆盖不足以支持已接受订单/backlog/近期待产，应创建必要采购；可以在同一 JSON 中输出多个互不冲突的采购动作。",
-                "- 若 self_state.supplier_candidates 或 materials_suppliers_matrix 中存在尚未注册的候选供应商，必须比较单价、起订量、processing_time、reliability_score 与物流 transit_time；supplier_name 只能选择其中真实名称。首次合法采购会建立合作关系，无需另行虚构注册动作。",
-                "- 供应商处理时间与物流运输时间必须相加得到预计到货时间；先筛选能覆盖最早未满足生产/履约期限的组合，再在可行组合中比较落地总成本和可靠性。",
-                "- 物流方式必须按真实紧急程度选择：road=公路，基础费100、单位费2、运输3天；rail=铁路，基础费200、单位费1.5、运输2天；air=航空，基础费500、单位费5、运输1天。原料为 0、库存位点为负、或首笔恢复采购会影响近期排产/履约时优先最快可到货组合；中等缺口用 rail；普通补库存才用 road。",
-                "- 不要把历史 received 采购订单总量当作当前覆盖；只有 replenishment.pending_by_material、operational_summary.incoming 或 orders 中 pending/ordered/in_transit/confirmed/created 的开放订单可阻止重复采购。",
-                "- 若已有开放在途覆盖当前缺口，不要继续重复采购；若库存位点已被生产消耗到 0 或负数且开放在途不足，即使历史上曾采购成功，也应重新采购。",
-                "- 若 agent_decision_brief.procurement_recovery_signal 存在，应优先按其中的 recovery_stage、recommended_urgency、incoming_or_open_order_quantity、supplier_option_ranking 和 suggested_quantity_band 决定是否采购、采购多少、选哪个供应商和物流。",
-                "- 预计到货必须能在当前可见的订单/backlog/近期待产窗口内产生作用；若慢速物流到货过晚，应选择更快组合，或在没有有效经营作用时 action_pass。",
-                "- 采购数量必须能由库存位点、配方需求、订单/backlog 或生产恢复需求解释。",
+                "- If the inventory position, confirmed inbound replenishment, and supplier coverage for MATERIAL_1 or another critical input cannot support accepted orders, backlog, or near-term production, create the necessary purchases. Multiple non-conflicting procurement actions may be returned in one JSON document.",
+                "- If self_state.supplier_candidates or materials_suppliers_matrix contains unregistered candidates, compare unit price, minimum order quantity, processing_time, reliability_score, and logistics transit_time. supplier_name must be an actual candidate name. The first valid purchase establishes the relationship; do not invent a separate registration action.",
+                "- Add supplier processing time and logistics transit time to estimate arrival. First retain combinations that can meet the earliest unmet production or fulfillment deadline, then compare landed cost and reliability among feasible combinations.",
+                "- Select logistics by actual urgency: road has base cost 100, unit cost 2, and 3-day transit; rail has base cost 200, unit cost 1.5, and 2-day transit; air has base cost 500, unit cost 5, and 1-day transit. Prefer the fastest feasible combination when raw material is zero, inventory position is negative, or the first recovery purchase affects near-term production or fulfillment; use rail for a moderate gap and road only for routine replenishment.",
+                "- Do not treat the historical total of received purchase orders as current coverage. Only open orders in replenishment.pending_by_material, operational_summary.incoming, or orders with pending/ordered/in_transit/confirmed/created status prevent duplicate purchasing.",
+                "- Do not reorder when open inbound supply covers the current gap. Reorder when production has reduced inventory position to zero or below and open inbound supply is insufficient, even if earlier purchases succeeded.",
+                "- When agent_decision_brief.procurement_recovery_signal exists, prioritize its recovery_stage, recommended_urgency, incoming_or_open_order_quantity, supplier_option_ranking, and suggested_quantity_band when deciding whether and how much to purchase and which supplier and logistics mode to use.",
+                "- Expected arrival must matter within the visible order, backlog, or near-term production window. If slow transport arrives too late, choose a faster feasible option or use action_pass when the purchase would have no operational effect.",
+                "- Purchase quantity must be justified by inventory position, bill-of-material requirements, orders or backlog, or production-recovery needs.",
             ])
         elif role_key == "production":
             lines.extend([
-                "- 若 agent_decision_brief.capacity_expansion_signal.should_prioritize_build_line_review=true，应优先核对 build_production_line 模板并输出一条可执行扩线动作；只有在已有产线在建、现金/人手硬阻断、或信号证据与实时状态冲突时才 action_pass。",
-                "- 产能扩线判断应使用最近几轮 capacity_expansion_signal.evidence.recent_utilization_percent / recent_available_capacity 与当前 total_capacity/available_capacity；连续高占用、零可用产能或总产能很低时，不要只尝试 create_production_plan。",
-                "- 若存在真实订单/backlog、原料可行、生产人手可用且有空闲产能，优先创建 bounded PRODUCT_1 生产计划。",
-                "- 若没有空闲/可用产线，且成品库存低于低库存阈值、无法覆盖真实订单/backlog、或明显低于安全缓冲，同时现金和人手没有硬阻断，应优先考虑 build_production_line。",
-                "- 若已有产线在建、已有可用产能，或主要阻断来自原料/人手/现金，则不得重复扩线；扩线参数只能来自模板允许字段。",
-                "- 若原料、人手或产能任一硬条件不足，应 action_pass 并在 reason 中写清具体数据阻断。",
+                "- If agent_decision_brief.capacity_expansion_signal.should_prioritize_build_line_review=true, first check the build_production_line template and return one executable expansion action. Use action_pass only when a line is already under construction, cash or staffing imposes a hard constraint, or the signal conflicts with live state evidence.",
+                "- Base expansion review on capacity_expansion_signal.evidence.recent_utilization_percent and recent_available_capacity over recent rounds, together with current total_capacity and available_capacity. Do not attempt only create_production_plan when utilization remains high, available capacity is zero, or total capacity is very low.",
+                "- When real orders or backlog exist and materials, production staffing, and idle capacity are feasible, prioritize a bounded PRODUCT_1 production plan.",
+                "- When no line is idle or available, finished-goods inventory is below its low-stock threshold, cannot cover real orders or backlog, or is clearly below the safety buffer, and cash and staffing impose no hard constraint, prioritize build_production_line review.",
+                "- Do not expand again when a line is already under construction, capacity is available, or the binding constraint is material, staffing, or cash. Expansion parameters must use only fields allowed by the template.",
+                "- If materials, staffing, or capacity has a hard shortfall, use action_pass and identify the blocking values in reason.",
             ])
         elif role_key == "sales":
             lines.extend([
-                "- 只能接受真实非零、未过期、且可由成品库存或明确近期待产覆盖的订单；不可履约订单应 reject_order 或 action_pass。",
-                "- 若有多个真实 available_orders，应比较 unit_price、quantity、offer_expiry_day、delivery_deadline、违约成本和资源占用；按预计贡献与履约可行性选择组合，而不是机械接受全部订单。",
-                "- 若 agent_decision_brief.order_quality_reviews 存在，必须把其中 estimated_unit_margin、estimated_gross_margin、breach_penalty_exposure、days_to_deadline、days_to_expiry、quantity_to_uncommitted_inventory_ratio 和 risk_flags 作为订单组合筛选依据。",
-                "- 当 order_quality_reviews 与通用“available 订单优先接受”规则冲突时，以 order_quality_reviews 的组合质量证据为准。",
-                "- 低毛利、高违约暴露、短交期且大量占用未承诺库存/近期待产能力的订单，即使状态为 available，也应优先 reject_order 或暂不接受；高单价但会导致违约的订单也不是优质订单。",
-                "- 输出多个 accept_order 时，必须按组合质量从高到低排序：先写高单位毛利/低风险/低资源占用订单，再写低质量或大占用订单；不要让低质量大单先占用库存和产能预算。",
-                "- 可以在同一 JSON 中输出多个 accept_order 或 reject_order；没有“一轮只能接一个订单”的规则，但组合后的累计承诺也必须可履约。",
-                "- 若 market_growth_signal.recommendation_mode=evidence_only，不存在预先计算的市场开发答案；必须比较活跃/在建市场、最近订单入口、未承诺库存、确认积压、开发成本与时长后自行判断。其它模式下才可参考 should_develop_market。市场覆盖率只能作为弱参考。",
-                "- 若同轮仍有可履约 available_orders，可在 develop_market 后继续接受所有真实可履约订单；不要因存量订单长期存在而忽略市场开发。",
-                "- 接受多个订单时要按已承诺库存和截止日前可完成产能逐单递减预算，不能把同一批库存或同一段产能重复用于多个订单；高收入但会导致违约的订单不属于有利订单。",
+                "- Accept only real, nonzero, unexpired orders that finished-goods inventory or explicit near-term production can cover. Use reject_order or action_pass for infeasible orders.",
+                "- When multiple real available_orders exist, compare unit_price, quantity, offer_expiry_day, delivery_deadline, breach cost, and resource use. Select a portfolio by expected contribution and fulfillment feasibility instead of accepting every order mechanically.",
+                "- When agent_decision_brief.order_quality_reviews exists, use estimated_unit_margin, estimated_gross_margin, breach_penalty_exposure, days_to_deadline, days_to_expiry, quantity_to_uncommitted_inventory_ratio, and risk_flags to screen the order portfolio.",
+                "- When order_quality_reviews conflicts with the generic rule to prioritize available orders, follow the portfolio-quality evidence in order_quality_reviews.",
+                "- Prefer reject_order or defer acceptance for an available order with low margin, high breach exposure, a short deadline, and heavy use of uncommitted inventory or near-term capacity. A high unit price does not make an order attractive when it would cause a breach.",
+                "- When returning multiple accept_order actions, order them from highest to lowest portfolio quality: high unit margin, low risk, and low resource use first; lower-quality or resource-intensive orders later. Do not let a large low-quality order consume inventory and capacity budgets first.",
+                "- One JSON document may contain multiple accept_order or reject_order actions. There is no one-order-per-round rule, but the combined commitment must remain feasible.",
+                "- If market_growth_signal.recommendation_mode=evidence_only, there is no precomputed market-development answer. Independently compare active and developing markets, recent order inflow, uncommitted inventory, confirmed backlog, development cost, and duration. Refer to should_develop_market only in other modes. Treat market coverage as weak evidence.",
+                "- If fulfillable available_orders remain in the same round, accept all genuinely feasible orders after develop_market where appropriate. Do not ignore market development merely because existing orders persist.",
+                "- When accepting multiple orders, decrement committed inventory and deadline-feasible capacity after each order. Do not allocate the same inventory or capacity window more than once. High-revenue orders that cause a breach are not beneficial.",
             ])
         elif role_key == "hr":
             lines.extend([
-                "- 若生产、销售、采购或仓储存在人员可用数为 0、高利用率、待处理人员不足失败，且 pending recruitment 未覆盖缺口，应输出 handle_recruitment；多个部门同时有未覆盖硬缺口时可输出多个招聘动作。",
-                "- 招聘部门必须来自真实人员阻断所在部门；采购执行被人手阻断写 PROCUREMENT，生产执行被人手阻断写 PRODUCTION，销售/仓储同理。",
-                "- 招聘记录通常在发起后的下一工作日由每日固定结算检查到岗；若已有 pending recruitment 覆盖缺口，不要重复招聘。",
-                "- 若员工数量、空闲人数、待招聘和失败记录均未显示人员硬阻断，应 action_pass。",
+                "- If production, sales, procurement, or inventory has zero available staff, high utilization, or a pending failure caused by insufficient staffing, and pending recruitment does not cover the gap, return handle_recruitment. Multiple recruitment actions may be returned when several departments have uncovered hard gaps.",
+                "- The recruitment department must be the department with the actual staffing constraint: use PROCUREMENT when procurement execution is blocked, PRODUCTION when production is blocked, and likewise for SALES or INVENTORY.",
+                "- Recruitment normally reaches onboarding during the next business day's fixed settlement. Do not recruit again when pending recruitment already covers the gap.",
+                "- Use action_pass when headcount, available staff, pending recruitment, and failure records show no hard staffing constraint.",
             ])
 
         return "\n".join(lines).rstrip()
@@ -1899,9 +1899,9 @@ class SkillRunner:
             or "off"
         )
         requirement = (
-            "必须写入，即使 messages 为空"
+            "must be written even when messages is empty"
             if validation_mode == "strict"
-            else "如需向其它部门传递信息则写入"
+            else "write it when information must be sent to another department"
         )
         semantic_rule_pack = str(
             self._coordination_profile().get("semantic_rule_pack") or "none"
@@ -1913,17 +1913,17 @@ class SkillRunner:
                 spec.role.lower(),
             )
             semantic_prompt = f"""
-- 当前语义规则包：{semantic_rule_pack}。
-- topic 必须从对应目标允许值中选择：{routes}
-- 只传递事实、约束、建议和协作请求；不得在消息中直接写入目标部门专属 action_name。
+- Active semantic rule pack: {semantic_rule_pack}.
+- Select topic from the values allowed for the destination: {routes}
+- Send only facts, constraints, recommendations, and coordination requests. Do not place a destination department's action_name directly in a message.
 """.rstrip()
         return f"""
 
-企业内部通信 sidecar：
-- 路径：{spec.communication_file_path}
-- {requirement}。
-- 格式：{{"schema_version":"enterprise_communication.v1","messages":[{{"to_department":"sales","message":"...","topic":"general","priority":"medium","evidence_refs":[],"round_id":{round_id}}}]}}
-- to_department 只能是本企业已启用部门；不得填写企业 ID，不得把企业内部建议伪装成外部订单或交易事件。
+Internal enterprise communication sidecar:
+- Path: {spec.communication_file_path}
+- {requirement}.
+- Format: {{"schema_version":"enterprise_communication.v1","messages":[{{"to_department":"sales","message":"...","topic":"general","priority":"medium","evidence_refs":[],"round_id":{round_id}}}]}}
+- to_department must be an enabled department in this enterprise. Do not use an enterprise ID or disguise an internal recommendation as an external order or transaction event.
 {semantic_prompt}
 """.rstrip()
 
@@ -2193,24 +2193,24 @@ class SkillRunner:
         long_horizon_response_prompt = (
             """
 
-E1 外部变化分析契约：
-- 必须优先读取 external_change_review，而不是只复述 external_environment 的事件描述。
-- 用 factor_comparison 区分“本轮新变化”“持续生效的历史变化”和“无变化”，并结合本企业最近历史判断影响来自成本变化、订单/积压压力还是二者共同作用。
-- 不得把成本因子变化直接翻译成固定采购量、固定排产量或无条件调价；必须结合单位经济性、现金、库存覆盖、服务与产能说明权衡。
-- analysis.json 必须额外写入顶层 external_environment_response，结构如下：
+E1 external-change analysis contract:
+- Read external_change_review first instead of merely restating event descriptions from external_environment.
+- Use factor_comparison to distinguish a new change this round, an earlier change that remains active, and no change. Combine this with recent enterprise history to determine whether the effect comes from cost changes, order or backlog pressure, or both.
+- Do not translate a cost-factor change directly into a fixed purchase quantity, fixed production quantity, or unconditional price change. Explain the trade-off using unit economics, cash, inventory coverage, service, and capacity.
+- analysis.json must also contain the top-level external_environment_response object with this structure:
   {
-    "observed_event_ids": ["已实际观察到的 event_id；没有则为空数组"],
+    "observed_event_ids": ["event_id values actually observed; empty when none exist"],
     "active_factor_assessment": {
-      "实际偏离基线的因子名": {
+      "name of a factor that actually deviates from baseline": {
         "observed_value": 1.0,
-        "business_implication": "对本企业的可验证影响"
+        "business_implication": "verifiable effect on this enterprise"
       }
     },
-    "impact_assessment": "用本企业经营证据说明影响及可能的混杂因素",
-    "response_strategy": "未来2到3轮的条件式响应方向，不写死唯一动作",
-    "review_criteria": "未来2到5轮用利润/现金/履约/库存/产能中的可量化指标复核"
+    "impact_assessment": "explain the effect and possible confounders using enterprise evidence",
+    "response_strategy": "conditional response direction for the next 2 to 3 rounds, not one mandatory action",
+    "review_criteria": "quantitative profit, cash, fulfillment, inventory, or capacity criteria for review over the next 2 to 5 rounds"
   }
-- department_targets 中受影响部门的 target/evaluation/reason 必须与该响应契约一致；无须动作时也要说明保持不动如何避免成本、现金或履约风险。
+- target, evaluation, and reason for affected departments in department_targets must agree with this response contract. When no action is needed, explain how holding the current course avoids cost, cash, or fulfillment risk.
 """.rstrip()
             if spec.compact_observation_kind == "long_horizon_e1"
             else ""
@@ -2218,43 +2218,43 @@ E1 外部变化分析契约：
         observation_prompt = (
             f"""
 
-蛛网C3专属输入：
-- 当前 observation 已裁剪为 {spec.observation_path}。
-- 该文件已包含本轮经营状态和最近历史投影；它覆盖 Skill 文档中的通用 observation 示例路径。
-- 只允许读取该紧凑文件，不得再读取原始 observation_day{round_id}.txt、完整订单历史或完整蛛网历史。
+Cobweb C3 dedicated input:
+- The current observation has been compacted to {spec.observation_path}.
+- This file contains the current operating state and a recent-history projection; it overrides the generic observation example path in the Skill document.
+- Read only this compact file. Do not read the raw observation_day{round_id}.txt, full order history, or full cobweb history.
 """.rstrip()
             if spec.compact_observation_kind == "cobweb_c3"
             else f"""
 
-E1 长跑有界分析输入：
-- 当前 observation 已投影为 {spec.observation_path}。
-- 该文件保留当前可执行订单、提案、库存、产能、现金、人员和外部环境状态，并将无界历史压缩为计数、趋势及最近记录。
-- 只允许读取该有界文件，不得再读取原始 observation_day{round_id}.txt、完整订单历史或完整提案历史。
-- 原始完整 observation 仍用于执行、可视化与审计，不得因投影内容较少而推断真实状态缺失。
+E1 bounded long-horizon analysis input:
+- The current observation has been projected to {spec.observation_path}.
+- This file retains actionable orders, proposals, inventory, capacity, cash, staffing, and external-environment state, while compressing unbounded history into counts, trends, and recent records.
+- Read only this bounded file. Do not read the raw observation_day{round_id}.txt, full order history, or full proposal history.
+- The complete raw observation remains available to execution, presentation, and audit. Do not infer that the actual state is missing because the projection is smaller.
 """.rstrip()
             if spec.compact_observation_kind == "long_horizon_e1"
             else ""
         )
         history_prompt = (
             """
-历史诊断输入：
-- 最近已封口历史已嵌入当前紧凑 observation 的 recent_history 字段。
-- 不要再读取独立 history_projection 文件。
+Historical diagnostic input:
+- Closed recent history is embedded in the recent_history field of the compact observation.
+- Do not read a separate history_projection file.
 """.rstrip()
             if spec.compact_observation_enabled
             else f"""
-单企业 S0 历史诊断输入（重点）：
-- 最近已封口历史投影 day{spec.history_projection_day}: {spec.history_projection_path}
-- 若该文件存在，必须优先读取其中的趋势字段，用于判断市场需求、订单履约、库存/原料、产能、人手、现金和采购在最近几轮的变化。
-- 该历史文件只代表当前单企业自身的封口历史；不得从中推断多企业供应链、同业行为或外部企业动作。
-- 若该文件不存在，说明当前轮次没有可用历史窗口，不要尝试读取未来 projection，也不要编造历史趋势。
+Single-enterprise S0 historical diagnostic input (important):
+- Latest closed history projection, day{spec.history_projection_day}: {spec.history_projection_path}
+- If the file exists, read its trend fields first to assess recent changes in market demand, order fulfillment, inventory and materials, capacity, staffing, cash, and procurement.
+- This file represents only the closed history of the current enterprise. Do not infer multi-enterprise supply-chain behavior, peer behavior, or actions by external enterprises.
+- If the file does not exist, no historical window is available for this round. Do not read a future projection or invent a historical trend.
 """.rstrip()
             if single_case_active
             else f"""
-历史诊断输入：
-- 最近已封口历史投影 day{spec.history_projection_day}: {spec.history_projection_path}
-- 若该文件存在，必须优先用其中的趋势字段辅助判断阶段问题。
-- 若该文件不存在，说明当前轮次没有可用历史窗口，不要尝试读取未来 projection，也不要编造历史趋势。
+Historical diagnostic input:
+- Latest closed history projection, day{spec.history_projection_day}: {spec.history_projection_path}
+- If the file exists, use its trend fields first when diagnosing phase-level issues.
+- If the file does not exist, no historical window is available for this round. Do not read a future projection or invent a historical trend.
 """.rstrip()
         )
         chart_export_prompt = ""
@@ -2262,35 +2262,35 @@ E1 长跑有界分析输入：
             chart_export_prompt = (
                 f"""
 
-单企业 S0 图表诊断输入（重点）：
-- 当前轮已导出的 charts_data_export.json: {spec.chart_export_path}
-- 若该文件存在，必须读取一次，并把其中 charts 下的履约覆盖、原料覆盖、仓容压力、现金压力、需求产能缺口、订单漏斗与积压老化作为主要诊断证据。
-- 图表用于帮助你识别当前单企业内部的经营瓶颈与趋势；不要把它解释成多企业链路、企业间交易、同业聚合或机制复现实验。
-- 先用图表定位异常，再用 observation/department 状态核实订单、库存、产能、人手、现金、供应商和动作可行性。
-- 若文件不存在，不要编造图表数据，继续基于 observation/history_projection 完成单企业诊断。
+Single-enterprise S0 chart diagnostic input (important):
+- Current-round charts_data_export.json: {spec.chart_export_path}
+- If this file exists, read it once and use fulfillment coverage, material coverage, warehouse pressure, cash pressure, demand-capacity gap, order funnel, and backlog aging under charts as primary diagnostic evidence.
+- Use the charts to identify operating bottlenecks and trends within the current enterprise. Do not interpret them as a multi-enterprise chain, inter-enterprise transactions, peer aggregation, or a mechanism-reproduction experiment.
+- Locate anomalies with the charts, then verify orders, inventory, capacity, staffing, cash, suppliers, and action feasibility against observation and department state.
+- If the file does not exist, do not invent chart data; complete the single-enterprise diagnosis from observation and history_projection.
 """.rstrip()
                 if single_case_active
                 else f"""
 
-旧单企业图表诊断输入：
-- 当前轮已导出的 charts_data_export.json: {spec.chart_export_path}
-- 若该文件存在，必须读取一次，并将其中 charts 下的履约覆盖、原料覆盖、仓容压力、现金压力、需求产能缺口、订单漏斗等字段作为辅助诊断输入。
-- 它是配置开关启用后的兼容输入；若文件不存在，不要编造图表数据，继续基于 observation/history_projection 完成分析。
+Legacy single-enterprise chart diagnostic input:
+- Current-round charts_data_export.json: {spec.chart_export_path}
+- If this file exists, read it once and use fulfillment coverage, material coverage, warehouse pressure, cash pressure, demand-capacity gap, and order-funnel fields under charts as supporting diagnostic input.
+- This is compatibility input enabled by configuration. If the file does not exist, do not invent chart data; continue from observation and history_projection.
 """.rstrip()
             )
 
         return f"""
-现在是第{round_id}个模拟轮次。
-你是企业 {self.enterprise_spec.enterprise_name} 的分析师，负责输出低频战略分析报告。
+This is simulation round {round_id}.
+You are the analyst for enterprise {self.enterprise_spec.enterprise_name}, responsible for a low-frequency strategic analysis report.
 
-你的职责不是逐轮替各部门下实时操作命令，而是：
-1. 识别当前企业的结构性问题、关键瓶颈与阶段机会；
-2. 基于当前 observation，为未来 2 到 3 轮生成稳定、可执行的部门阶段目标；
-3. 避免输出当前动作体系无法直接执行的目标；
-4. 避免用过强的单轮数值锚定去放大局部波动。
-5. 若 observation.simulation_context.external_environment.enabled=true，必须读取 current_turn、
-   triggered_events、active_factors 和 actual_values；在事件发生轮明确识别变化，并用近期历史判断
-   成本、现金、服务、库存、采购和生产是否需要调整。不得推测未公开的未来事件。
+Your role is not to issue real-time operating commands to each department every round. Instead:
+1. Identify structural issues, key bottlenecks, and phase-level opportunities.
+2. Use the current observation to create stable, executable department objectives for the next 2 to 3 rounds.
+3. Avoid objectives that the current action system cannot execute directly.
+4. Avoid amplifying local fluctuations through overly precise single-round numeric anchors.
+5. If observation.simulation_context.external_environment.enabled=true, read current_turn,
+   triggered_events, active_factors, and actual_values. Identify changes in the round when an event occurs and use recent history to determine
+   whether cost, cash, service, inventory, procurement, or production should adjust. Do not predict unreleased future events.
 {single_case_prompt}
 {cobweb_profit_prompt}
 {long_horizon_response_prompt}
@@ -2298,16 +2298,16 @@ E1 长跑有界分析输入：
 {history_prompt}
 {chart_export_prompt}
 
-本次运行的真实文件路径：
-- 当前 observation: {spec.observation_path}
-- 最终 analysis.json 输出: {spec.output_file_path}
-- 如果 Skill 文档中的示例路径仍指向 workspace_multi，应以这里列出的真实路径为准。
+Actual file paths for this run:
+- Current observation: {spec.observation_path}
+- Final analysis.json output: {spec.output_file_path}
+- If an example path in the Skill document still points to workspace_multi, use the actual paths listed here.
 
-你必须立即调用 Skill 工具，并严格使用下面这一条，不允许省略 args，也不允许改写格式：
+Call the Skill tool immediately and use exactly the following invocation. Do not omit args or change its format:
 Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 
-调用 skill 后，必须在 skill 内继续执行，直到成功写入 {spec.output_file_name}。
-禁止只输出解释或 JSON 文本代替写文件。
+After calling the skill, continue within it until {spec.output_file_name} has been written successfully.
+Do not substitute an explanation or printed JSON for writing the file.
 """.strip()
 
     def _build_analyst_same_session_resume_prompt(
@@ -2324,9 +2324,9 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         long_horizon_response_prompt = (
             """
 
-E1 外部变化分析契约仍然有效：完成 external_environment_response，必须包含 observed_event_ids、
-active_factor_assessment、impact_assessment、response_strategy、review_criteria；按 external_change_review
-中的真实因子和本企业证据修正，不得写成固定动作答案。
+The E1 external-change analysis contract remains active. Complete external_environment_response with observed_event_ids,
+active_factor_assessment, impact_assessment, response_strategy, and review_criteria. Revise it using actual factors from
+external_change_review and enterprise evidence; do not present one fixed action as the answer.
 """.rstrip()
             if spec.compact_observation_kind == "long_horizon_e1"
             else ""
@@ -2334,35 +2334,35 @@ active_factor_assessment、impact_assessment、response_strategy、review_criter
         observation_prompt = (
             f"""
 
-蛛网C3专属输入仍为 {spec.observation_path}。只允许沿用该紧凑输入；
-不得改读原始 observation_day{round_id}.txt、完整订单历史或完整蛛网历史。
+The Cobweb C3 dedicated input remains {spec.observation_path}. Continue using only this compact input;
+do not switch to the raw observation_day{round_id}.txt, full order history, or full cobweb history.
 """.rstrip()
             if spec.compact_observation_kind == "cobweb_c3"
             else f"""
 
-E1 长跑有界分析输入仍为 {spec.observation_path}。只允许沿用该投影；
-不得改读原始 observation_day{round_id}.txt、完整订单历史或完整提案历史。
+The E1 bounded long-horizon analysis input remains {spec.observation_path}. Continue using only this projection;
+do not switch to the raw observation_day{round_id}.txt, full order history, or full proposal history.
 """.rstrip()
             if spec.compact_observation_kind == "long_horizon_e1"
             else ""
         )
         history_prompt = (
             """
-历史诊断输入：
-- 最近已封口历史已嵌入紧凑 observation 的 recent_history 字段，不得读取独立 history_projection 文件。
+Historical diagnostic input:
+- Closed recent history is embedded in the compact observation's recent_history field. Do not read a separate history_projection file.
 """.rstrip()
             if spec.compact_observation_enabled
             else f"""
-单企业 S0 历史诊断输入仍为重点：
-- 最近已封口历史投影 day{spec.history_projection_day}: {spec.history_projection_path}
-- 若文件存在，可用于补齐本企业市场需求、履约、库存/原料、产能、人手、现金和采购趋势判断；不得读取未来 projection。
-- 不要把该历史输入解释成多企业链路、企业间交易或同业行为。
+Single-enterprise S0 historical diagnostic input remains important:
+- Latest closed history projection, day{spec.history_projection_day}: {spec.history_projection_path}
+- If the file exists, use it to complete trend assessments for this enterprise's market demand, fulfillment, inventory and materials, capacity, staffing, cash, and procurement. Do not read a future projection.
+- Do not interpret this historical input as a multi-enterprise chain, inter-enterprise transaction, or peer behavior.
 """.rstrip()
             if single_case_active
             else f"""
-历史诊断输入：
-- 最近已封口历史投影 day{spec.history_projection_day}: {spec.history_projection_path}
-- 若文件存在，可用于补齐趋势判断；若不存在，不要读取未来 projection。
+Historical diagnostic input:
+- Latest closed history projection, day{spec.history_projection_day}: {spec.history_projection_path}
+- If the file exists, use it to complete the trend assessment. If it does not exist, do not read a future projection.
 """.rstrip()
         )
         chart_export_prompt = ""
@@ -2370,56 +2370,56 @@ E1 长跑有界分析输入仍为 {spec.observation_path}。只允许沿用该�
             chart_export_prompt = (
                 f"""
 
-单企业 S0 图表诊断输入仍为重点：
-- 当前轮 charts_data_export.json: {spec.chart_export_path}
-- 若文件存在，必须读取一次，用于补齐履约覆盖、原料覆盖、仓容压力、现金压力、需求产能缺口、订单漏斗与积压老化判断。
-- 图表只服务于当前单企业内部诊断，不要混入多企业机制、企业间交易或同业聚合解释。
+Single-enterprise S0 chart diagnostic input remains important:
+- Current-round charts_data_export.json: {spec.chart_export_path}
+- If the file exists, read it once to complete assessments of fulfillment coverage, material coverage, warehouse pressure, cash pressure, demand-capacity gap, order funnel, and backlog aging.
+- Use the charts only for internal diagnosis of the current enterprise; do not mix in multi-enterprise mechanisms, inter-enterprise transactions, or peer aggregation.
 """.rstrip()
                 if single_case_active
                 else f"""
 
-旧单企业图表诊断输入：
-- 当前轮 charts_data_export.json: {spec.chart_export_path}
-- 若文件存在，必须读取一次，用于补齐履约覆盖、原料覆盖、仓容压力、现金压力、需求产能缺口、订单漏斗等判断。
+Legacy single-enterprise chart diagnostic input:
+- Current-round charts_data_export.json: {spec.chart_export_path}
+- If the file exists, read it once to complete assessments of fulfillment coverage, material coverage, warehouse pressure, cash pressure, demand-capacity gap, and order funnel.
 """.rstrip()
             )
 
         return f"""
-现在是第{round_id}个模拟轮次。
-你仍然是企业 {self.enterprise_spec.enterprise_name} 的分析师。
+This is simulation round {round_id}.
+You remain the analyst for enterprise {self.enterprise_spec.enterprise_name}.
 
-你上一轮在同一个 session 中未完成目标文件写入。
-失败原因：{reason}
+The target file was not completed in the previous turn of this session.
+Failure reason: {reason}
 
-请继续保持 analyst 的角色边界：
-- 只输出低频战略背景与未来 2 到 3 轮的阶段目标；
-- 不要把 analysis 写成逐轮微操命令；
-- 不要输出当前动作体系不可执行的目标；
-- 若 observation 无法支撑过大的精确数值，就使用更稳的阈值、区间或方向性量化指标。
+Maintain the analyst role boundary:
+- Output only low-frequency strategic context and phase objectives for the next 2 to 3 rounds.
+- Do not turn analysis into round-by-round operating instructions.
+- Do not output objectives that the current action system cannot execute.
+- If observation does not support a highly precise value, use a robust threshold, range, or directional quantitative metric.
 {single_case_prompt}
 {cobweb_profit_prompt}
 {long_horizon_response_prompt}
 {observation_prompt}
 
-不要从头解释，不要输出 Markdown 代码块，不要重新做长篇分析。
-优先沿用你上一轮已经完成的读取和推理结果，在当前 session 中直接补完最后缺失的步骤。
+Do not restart the explanation, output a Markdown code block, or repeat a long analysis.
+Reuse the reading and reasoning already completed in the prior turn and finish the missing steps in this session.
 
-你必须继续确保以下调用规范仍然有效：
+Keep the following invocation valid:
 Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 
 {history_prompt}
 {chart_export_prompt}
 
-本次运行的真实文件路径：
-- 当前 observation: {spec.observation_path}
-- 最终 analysis.json 输出: {spec.output_file_path}
-- 如果 Skill 文档中的示例路径仍指向 workspace_multi，应以这里列出的真实路径为准。
+Actual file paths for this run:
+- Current observation: {spec.observation_path}
+- Final analysis.json output: {spec.output_file_path}
+- If an example path in the Skill document still points to workspace_multi, use the actual paths listed here.
 
-现在只允许做与完成 {spec.output_file_name} 有关的必要操作：
-1. 若最终 JSON 已经确定，则直接调用 Write 写入 {spec.output_file_name}
-2. 写入后立即 Read 回读 {spec.output_file_name}
-3. 若上一轮尚未完成必要读取，则补齐必要读取后立即完成写入
-4. 禁止只输出解释或 JSON 文本代替写文件
+Now perform only the operations needed to complete {spec.output_file_name}:
+1. If the final JSON is already determined, call Write and save it directly to {spec.output_file_name}.
+2. Immediately call Read on {spec.output_file_name} after writing it.
+3. If a required read was not completed previously, complete that read and then write the file immediately.
+4. Do not substitute an explanation or printed JSON for writing the file.
 """.strip()
 
     def _inspect_analyst_messages(
@@ -2477,18 +2477,18 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
     ) -> str:
         validation_error = getattr(self, "_last_analysis_validation_error", "")
         mapping = {
-            "skill_not_called": "你上一轮没有真正调用 Skill 工具。现在立即严格按指定格式调用 Skill，并在同一 session 中继续完成写文件。",
-            "skill_args_missing_or_wrong": f"你上一轮调用 Skill 时缺少或改错了 args。必须严格使用 args=\"{spec.skill_args}\"。",
-            "json_printed_but_not_written": f"你上一轮已经给出了最终 JSON，但没有调用 Write。不要重新分析，直接把刚才确定的 JSON 写入 {spec.output_file_name} 并回读。",
-            "write_wrong_target": f"你上一轮调用了 Write，但目标路径不正确。现在把最终 JSON 写入正确文件 {spec.output_file_name} 并回读。",
-            "written_but_not_readback": f"你上一轮已经写入 {spec.output_file_name}，但没有回读校验。现在立即 Read 回读目标文件并完成校验。",
-            "stopped_before_write": f"你上一轮在写文件前中断了。不要重新做长篇分析，继续完成 {spec.output_file_name} 的 Write 和回读。",
-            "unknown": f"你上一轮未完成 {spec.output_file_name}。不要重新开始，优先沿用已有结果完成 Write 和回读。",
+            "skill_not_called": "The Skill tool was not actually called in the previous turn. Call it now in the exact required format and complete the file in this session.",
+            "skill_args_missing_or_wrong": f"The prior Skill call omitted or changed args. Use args=\"{spec.skill_args}\" exactly.",
+            "json_printed_but_not_written": f"The final JSON was printed but Write was not called. Do not repeat the analysis; write the established JSON to {spec.output_file_name} and read it back.",
+            "write_wrong_target": f"Write was called with the wrong target. Write the final JSON to {spec.output_file_name} and read it back.",
+            "written_but_not_readback": f"{spec.output_file_name} was written but not read back for validation. Read the target file now and complete validation.",
+            "stopped_before_write": f"The previous turn stopped before writing. Do not repeat the analysis; complete Write and readback for {spec.output_file_name}.",
+            "unknown": f"The previous turn did not complete {spec.output_file_name}. Do not restart; reuse the existing result and complete Write and readback.",
         }
         if validation_error:
             mapping["unknown"] = (
-                f"你上一轮写入的 {spec.output_file_name} 未通过结构/语义校验，原因："
-                f"{validation_error}。必须按该原因修正后重新 Write，并立即 Read 回读校验。"
+                f"The {spec.output_file_name} written previously failed structural or semantic validation: "
+                f"{validation_error}. Correct that issue, call Write again, and immediately call Read to validate it."
             )
         return self._build_analyst_same_session_resume_prompt(
             spec,
@@ -2520,7 +2520,9 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         lowered = text.lower()
         return (
             lowered in {"string", "todo", "tbd", "none", "null"}
-            or text in {"<...>", "...", "示例", "待填写"}
+            or text in {
+                "<...>", "...", "example", "to be completed",
+            }
             or (text.startswith("<") and text.endswith(">"))
         )
 
@@ -2539,8 +2541,6 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
     def _contains_unnegated_term(self, text: str, terms: List[str]) -> bool:
         lowered = text.lower()
         negations = (
-            "不", "不得", "不要", "禁止", "避免", "暂停", "保持静默",
-            "不新增", "不执行", "不启动", "不接受", "不得输出",
             "do not", "avoid", "no ", "without", "pass", "not ",
             "discourage", "discouraged", "discourages",
             "discouraged_action", "discouraged_actions",
@@ -2586,37 +2586,39 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         ])
         if re.search(
             r"(single_case[_\w-]*|source_primary_contradiction|primary_issue|case_id|case0[1-9]|case\s*['\"]?\s*single_case|"
-            r"\b(market_insufficient|market_shortage|raw_material_shortage|material_shortage|capacity_bottleneck|staff_shortage|cash_pressure)\b|"
-            r"预期主矛盾|主责部门|非主责部门)",
+            r"\b(market_insufficient|market_shortage|raw_material_shortage|material_shortage|capacity_bottleneck|staff_shortage|cash_pressure)\b)",
             visible_analysis_text,
             re.IGNORECASE,
         ):
             return self._set_analysis_validation_error(
-                "analysis.json 不得引用不来自运行状态的实验元信息或部门身份优先级；请只基于订单、库存、原料、产能、人手、现金和供应商状态重新表达诊断。"
+                "analysis.json must not cite experiment metadata or department priority that is absent from runtime state. Restate the diagnosis using only orders, inventory, materials, capacity, staffing, cash, and supplier state."
             )
 
         if "hr" not in targets:
             return self._set_analysis_validation_error(
-                "单企业诊断需要输出 department_targets.hr，并基于真实员工、空闲人数、待招聘和人员不足失败记录评估人力动作。"
+                "A single-enterprise diagnosis must include department_targets.hr and evaluate staffing actions from actual headcount, available staff, pending recruitment, and insufficient-staff failure records."
             )
 
         for action in sorted(discouraged_actions):
             if action and self._contains_unnegated_term(all_target_text, [action]):
                 return self._set_analysis_validation_error(
-                    "单企业诊断目标包含与当前状态边界不匹配的动作，请改为基于真实库存、订单、现金、产能、人员状态设定目标。"
+                    "A single-enterprise diagnostic objective contains an action inconsistent with current state constraints. Set objectives from actual inventory, orders, cash, capacity, and staffing state."
                 )
 
         if primary_issue in {"market_shortage", "market_insufficient"}:
             sales_text = self._flatten_analysis_target_text(targets.get("sales") or {})
             sales_text_lower = sales_text.lower()
-            market_terms = ["develop_market", "开发市场", "市场开发", "市场覆盖", "真实非零需求"]
+            market_terms = [
+                "develop_market", "market development", "market coverage",
+                "real nonzero demand",
+            ]
             invalid_order_terms = [
-                "invalid_quantity", "quantity=0", "quantity <= 0", "零数量",
-                "数量为0", "无效", "占位",
+                "invalid_quantity", "quantity=0", "quantity <= 0", "zero quantity",
+                "invalid", "placeholder",
             ]
             accept_terms = [
-                "accept_order", "接受订单", "接收订单", "接单",
-                "orders_received", "accepted", "available状态订单被系统接收",
+                "accept_order", "accept order", "orders_received", "accepted",
+                "available order accepted by the system",
             ]
             if self._contains_unnegated_term(sales_text, accept_terms) and not any(
                 term.lower() in sales_text_lower
@@ -2626,19 +2628,20 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 for term in invalid_order_terms
             ):
                 return self._set_analysis_validation_error(
-                    "Sales 目标不能把接收无效或占位订单作为增长目标；若真实非零需求不足，应基于市场覆盖、需求形成或等待真实订单来设定目标。"
+                    "A Sales objective must not treat acceptance of an invalid or placeholder order as growth. When real nonzero demand is insufficient, base the objective on market coverage, demand formation, or waiting for a real order."
                 )
 
         if primary_issue == "cash_pressure":
             forbidden_positive_terms = [
                 "create_production_plan", "build_production_line", "create_purchase_order",
                 "handle_recruitment", "develop_market", "expand_warehouse",
-                "生产计划", "执行首个生产", "制造", "入库", "采购补货",
-                "采购订单", "招聘", "扩仓", "市场开发", "开发市场",
+                "production plan", "start production", "manufacturing", "putaway",
+                "procurement replenishment", "purchase order", "recruitment",
+                "warehouse expansion", "market development",
             ]
             if self._contains_unnegated_term(all_target_text, forbidden_positive_terms):
                 return self._set_analysis_validation_error(
-                    "当前现金状态不支持把生产启动、采购、招聘、扩仓或市场开发写成正向目标；请先基于现金、库存和可履约订单判断低风险动作。"
+                    "Current cash state does not support treating production startup, purchasing, recruitment, warehouse expansion, or market development as a positive objective. Determine a low-risk action from cash, inventory, and fulfillable orders first."
                 )
 
         return True
@@ -2656,12 +2659,12 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 payload_round = int(data.get("round_id"))
             except (TypeError, ValueError):
                 return self._set_analysis_validation_error(
-                    "蛛网C3 analysis.round_id 必须是当前轮次整数。"
+                    "Cobweb C3 analysis.round_id must be the integer for the current round."
                 )
             if payload_round != int(expected_round):
                 return self._set_analysis_validation_error(
-                    "蛛网C3 analysis.json 必须由当轮分析生成，"
-                    f"期望 round_id={expected_round}，实际为 {payload_round}。"
+                    "Cobweb C3 analysis.json must be generated for the current round; "
+                    f"expected round_id={expected_round}, received {payload_round}."
                 )
 
         serialized = json.dumps(data, ensure_ascii=False).lower()
@@ -2675,9 +2678,9 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         ]
         if leaked_fields:
             return self._set_analysis_validation_error(
-                "蛛网C3分析引用了已禁止的处方式数量字段："
+                "Cobweb C3 analysis cites prohibited prescriptive quantity fields: "
                 + ", ".join(leaked_fields)
-                + "。请改用利润、现金、履约和稳定性证据形成区间或阈值。"
+                + ". Use profit, cash, fulfillment, and stability evidence to form a range or threshold."
             )
 
         production_target = (
@@ -2687,9 +2690,6 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
             production_target
         )
         exact_quantity_patterns = [
-            r"(?:生产计划数量|生产数量|计划产量|排产量)\s*"
-            r"(?:等于|为|设为|固定为|必须达到|=)\s*\d+(?:\.\d+)?\s*"
-            r"(?:单位|件|瓶|箱)?",
             r"(?:production|plan)\s+quantity\s*(?:is|=|at)\s*"
             r"\d+(?:\.\d+)?\s*(?:units?)?",
             r"exactly\s+\d+(?:\.\d+)?\s*(?:units?)?",
@@ -2699,15 +2699,15 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
             for pattern in exact_quantity_patterns
         ):
             return self._set_analysis_validation_error(
-                "蛛网C3生产阶段目标不能指定唯一精确产量；"
-                "请改为范围、阈值或带条件的比较规则。"
+                "A Cobweb C3 production-phase objective must not prescribe one exact quantity. "
+                "Use a range, threshold, or conditional comparison rule."
             )
 
         objective_groups = [
-            ("利润", "毛利", "边际", "成本", "收入", "profit", "margin", "cost", "revenue"),
-            ("现金", "资金", "cash", "liquidity"),
-            ("履约", "服务", "积压", "订单", "fill", "service", "backlog", "order"),
-            ("稳定", "调整", "波动", "边界", "价格风险", "stability", "adjustment", "volatility", "price risk"),
+            ("profit", "gross margin", "margin", "cost", "revenue"),
+            ("cash", "funding", "liquidity"),
+            ("fulfillment", "service", "backlog", "order", "fill"),
+            ("stability", "adjustment", "volatility", "boundary", "price risk"),
         ]
         lowered = production_text.lower()
         covered_groups = sum(
@@ -2716,8 +2716,8 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         )
         if covered_groups < 3:
             return self._set_analysis_validation_error(
-                "蛛网C3生产目标至少要同时覆盖三类经营证据："
-                "利润/成本、现金、履约/积压、稳定性/价格风险。"
+                "A Cobweb C3 production objective must cover at least three evidence groups: "
+                "profit or cost, cash, fulfillment or backlog, and stability or price risk."
             )
         return True
 
@@ -2734,18 +2734,18 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 payload_round = int(data.get("round_id"))
             except (TypeError, ValueError):
                 return self._set_analysis_validation_error(
-                    "E1 analysis.round_id 必须是当前轮次整数。"
+                    "E1 analysis.round_id must be the integer for the current round."
                 )
             if payload_round != int(expected_round):
                 return self._set_analysis_validation_error(
-                    "E1 analysis.json 必须由当轮分析生成，"
-                    f"期望 round_id={expected_round}，实际为 {payload_round}。"
+                    "E1 analysis.json must be generated for the current round; "
+                    f"expected round_id={expected_round}, received {payload_round}."
                 )
 
         response = data.get("external_environment_response")
         if not isinstance(response, dict):
             return self._set_analysis_validation_error(
-                "E1 analysis.json 缺少 external_environment_response 对象。"
+                "E1 analysis.json is missing the external_environment_response object."
             )
         for field in (
             "impact_assessment",
@@ -2757,17 +2757,17 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 or self._is_placeholder_text(response.get(field))
             ):
                 return self._set_analysis_validation_error(
-                    f"external_environment_response.{field} 缺失或为占位文本。"
+                    f"external_environment_response.{field} is missing or contains placeholder text."
                 )
         observed_event_ids = response.get("observed_event_ids")
         if not isinstance(observed_event_ids, list):
             return self._set_analysis_validation_error(
-                "external_environment_response.observed_event_ids 必须是数组。"
+                "external_environment_response.observed_event_ids must be an array."
             )
         factor_assessment = response.get("active_factor_assessment")
         if not isinstance(factor_assessment, dict):
             return self._set_analysis_validation_error(
-                "external_environment_response.active_factor_assessment 必须是对象。"
+                "external_environment_response.active_factor_assessment must be an object."
             )
 
         review: Dict[str, Any] = {}
@@ -2785,8 +2785,8 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
             str(item) for item in observed_event_ids
         }:
             return self._set_analysis_validation_error(
-                "external_environment_response.observed_event_ids 必须包含"
-                f"当前已公开且持续相关的事件 {latest_event_id}。"
+                "external_environment_response.observed_event_ids must include "
+                f"the released and still relevant event {latest_event_id}."
             )
 
         for factor in review.get("active_deviating_factors") or []:
@@ -2794,7 +2794,7 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
             if not isinstance(assessment, dict):
                 return self._set_analysis_validation_error(
                     "external_environment_response.active_factor_assessment "
-                    f"缺少当前偏离基线的因子 {factor}。"
+                    f"is missing factor {factor}, which currently deviates from baseline."
                 )
             if (
                 not isinstance(assessment.get("business_implication"), str)
@@ -2803,49 +2803,49 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 )
             ):
                 return self._set_analysis_validation_error(
-                    f"因子 {factor} 缺少基于本企业状态的 business_implication。"
+                    f"Factor {factor} lacks a business_implication grounded in this enterprise's state."
                 )
             observed_value = assessment.get("observed_value")
             if observed_value is None:
                 return self._set_analysis_validation_error(
-                    f"因子 {factor} 缺少 observed_value。"
+                    f"Factor {factor} lacks observed_value."
                 )
             try:
                 float(observed_value)
             except (TypeError, ValueError):
                 return self._set_analysis_validation_error(
-                    f"因子 {factor} 的 observed_value 必须是数值。"
+                    f"observed_value for factor {factor} must be numeric."
                 )
         return True
 
     def _is_valid_analysis_payload(self, data: Any) -> bool:
         self._last_analysis_validation_error = ""
         if not isinstance(data, dict):
-            return self._set_analysis_validation_error("analysis.json 顶层必须是对象。")
+            return self._set_analysis_validation_error("The top level of analysis.json must be an object.")
         for key in ("enterprise_name", "round_id", "enterprise_summarys", "department_targets"):
             if key not in data:
-                return self._set_analysis_validation_error(f"analysis.json 缺少顶层字段: {key}")
+                return self._set_analysis_validation_error(f"analysis.json is missing top-level field: {key}")
         if self._is_placeholder_text(data.get("enterprise_name")):
-            return self._set_analysis_validation_error("enterprise_name 为空或占位文本。")
+            return self._set_analysis_validation_error("enterprise_name is empty or contains placeholder text.")
         if self._is_placeholder_text(str(data.get("round_id"))):
-            return self._set_analysis_validation_error("round_id 为空或占位文本。")
+            return self._set_analysis_validation_error("round_id is empty or contains placeholder text.")
         if self._is_placeholder_text(data.get("enterprise_summarys")):
-            return self._set_analysis_validation_error("enterprise_summarys 为空或占位文本。")
+            return self._set_analysis_validation_error("enterprise_summarys is empty or contains placeholder text.")
         targets = data.get("department_targets")
         if not isinstance(targets, dict):
-            return self._set_analysis_validation_error("department_targets 必须是对象。")
+            return self._set_analysis_validation_error("department_targets must be an object.")
         for dept in ("sales", "procurement"):
             if dept not in targets:
-                return self._set_analysis_validation_error(f"department_targets 缺少 {dept}。")
+                return self._set_analysis_validation_error(f"department_targets is missing {dept}.")
         if self.enterprise_spec.enterprise_name == "Manufacturer" and "production" not in targets:
-            return self._set_analysis_validation_error("Manufacturer 的 department_targets 缺少 production。")
+            return self._set_analysis_validation_error("Manufacturer department_targets is missing production.")
         for dept, target in targets.items():
             if not isinstance(target, dict):
-                return self._set_analysis_validation_error(f"department_targets.{dept} 必须是对象。")
+                return self._set_analysis_validation_error(f"department_targets.{dept} must be an object.")
             for field in ("target", "evaluation", "reason"):
                 if field not in target or self._is_placeholder_text(target.get(field)):
                     return self._set_analysis_validation_error(
-                        f"department_targets.{dept}.{field} 缺失或为占位文本。"
+                        f"department_targets.{dept}.{field} is missing or contains placeholder text."
                     )
         if not self._validate_cobweb_profit_analysis_payload(data):
             return False
@@ -2884,7 +2884,7 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         return None
 
     def _extract_json_blocks(self, text: str) -> List[str]:
-        """Extracts all fendd < x17/ > blocks that are compatible with transcript's transcript."""
+        """Extract fenced JSON blocks while remaining compatible with transcript-style output."""
         if not isinstance(text, str):
             return []
         variants = [text]
@@ -3132,9 +3132,7 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
     def _sanitize_long_run_fallback_text(value: Any) -> Any:
         if not isinstance(value, str):
             return value
-        cleaned = re.sub(r"(?i)scripted(?:[_ -]?rules?)?", "状态决策", value)
-        cleaned = re.sub(r"规则算法[：:]?", "", cleaned)
-        cleaned = re.sub(r"脚本(?:规则)?[：:]?", "", cleaned)
+        cleaned = re.sub(r"(?i)scripted(?:[_ -]?rules?)?", "state-based decision", value)
         return re.sub(r"\s+", " ", cleaned).strip()
 
     @classmethod
@@ -3178,10 +3176,10 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         payload = self._sanitize_long_run_fallback_payload(payload)
         prefix = self._sanitize_long_run_fallback_text(
             fallback_policy.get("visible_reason_prefix")
-            or "超时思考，调用兜底逻辑链路"
+            or "Agent reasoning timed out; invoked the state-driven fallback"
         )
         evidence_reason = (
-            f"{prefix}：基于当前订单、库存、现金、产能、人员和履约状态形成可执行决策。"
+            f"{prefix}: formed an executable decision from current orders, inventory, cash, capacity, staffing, and fulfillment state."
         )
         for item in payload:
             if not isinstance(item, dict):
@@ -3225,12 +3223,12 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                 return default
 
         department_aliases = {
-            "PROCUREMENT": {"PROCUREMENT", "procurement", "采购", "采购部门"},
-            "PRODUCTION": {"PRODUCTION", "production", "生产", "生产部门"},
-            "SALES": {"SALES", "sales", "销售", "销售部门"},
-            "INVENTORY": {"INVENTORY", "inventory", "仓储", "仓储部门", "库存", "库存部门"},
-            "HR": {"HR", "hr", "human_resources", "人力", "人力资源", "人力资源部门"},
-            "FINANCE": {"FINANCE", "finance", "财务", "财务管理", "财务管理部门"},
+            "PROCUREMENT": {"PROCUREMENT", "procurement"},
+            "PRODUCTION": {"PRODUCTION", "production"},
+            "SALES": {"SALES", "sales"},
+            "INVENTORY": {"INVENTORY", "inventory", "warehouse"},
+            "HR": {"HR", "hr", "human_resources", "human resources"},
+            "FINANCE": {"FINANCE", "finance", "financial management"},
         }
         department_minimums = {
             "PROCUREMENT": 1,
@@ -3303,8 +3301,8 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         low_staff_signal = any(
             token in target_text
             for token in (
-                "人员不足",
-                "人手不足",
+                "staff shortage",
+                "insufficient staff",
                 "available_workers",
                 "\"available\": 0",
                 "\"available\":0",
@@ -3336,7 +3334,10 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         department_code, shortage, staffing = candidates[0]
 
         recruit_people = 2
-        match = re.search(r"(?:at least|至少|补员|招聘)\s*(\d+)", target_text)
+        match = re.search(
+            r"(?:at least|recruit|add staff)\s*(\d+)",
+            target_text,
+        )
         if match:
             recruit_people = int(match.group(1))
         recruit_people = max(1, min(10, max(recruit_people, shortage)))
@@ -3351,10 +3352,10 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
                     },
                 },
                 "action_reason": (
-                    "HR Skill 多次未写出合法文件，但当前 HR 状态显示存在真实部门人手缺口；"
-                    f"写入保底招聘动作以恢复 {department_code} 人手。"
-                    f"当前人数 {staffing.get('count', 0)}，可用人数 {staffing.get('available', 0)}。"
-                    f"原失败原因：{reason}"
+                    "The HR Skill did not produce a valid file after repeated attempts, while the current HR state shows a real department staffing gap. "
+                    f"A fallback recruitment action was written to restore staffing in {department_code}. "
+                    f"Current headcount: {staffing.get('count', 0)}; available staff: {staffing.get('available', 0)}. "
+                    f"Original failure reason: {reason}"
                 ),
                 "module_type": "HRManager",
                 "executor_id": self.enterprise_spec.enterprise_name,
@@ -3499,46 +3500,46 @@ Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
         if not self._long_run_agent_context_compaction_policy():
             return ""
         evidence_by_role = {
-            "Procurement": "比较到岸单位成本、库存覆盖、在途数量、批量与现金占用",
-            "Production": "比较增量转换成本、订单边际、产能利用、原料覆盖与库存周转",
-            "Sales": "比较可履约订单边际、报价空间、服务风险与成品库存",
-            "Inventory": "比较安全库存覆盖、持有成本、缺货风险与周转",
-            "Finance": "比较单轮与阶段利润、现金变化、应付压力和服务风险",
-            "HR": "仅在变化造成可验证工作负载或执行瓶颈时评估人员调整",
+            "Procurement": "compare landed unit cost, inventory coverage, inbound quantity, lot size, and committed cash",
+            "Production": "compare incremental conversion cost, order margin, capacity use, material coverage, and inventory turnover",
+            "Sales": "compare fulfillable-order margin, pricing room, service risk, and finished-goods inventory",
+            "Inventory": "compare safety-stock coverage, holding cost, stockout risk, and turnover",
+            "Finance": "compare round and phase profit, cash change, payable pressure, and service risk",
+            "HR": "assess staffing changes only when the change creates a verifiable workload or execution bottleneck",
         }
         role_evidence = evidence_by_role.get(
             role,
-            "比较成本、现金、库存、履约和可执行能力",
+            "compare cost, cash, inventory, fulfillment, and execution capacity",
         )
         operating_guard_by_role = {
             "Procurement": (
-                "优先使用 calculate_replenishment_quantity/create_replenishment_order 的覆盖建议；"
-                "库存与在途已覆盖时不得重复发布采购需求，单轮新增承诺不得挤占后续现金安全垫"
+                "prioritize coverage recommendations from calculate_replenishment_quantity/create_replenishment_order; "
+                "do not issue another purchase request when inventory and inbound supply already provide coverage, and do not let new single-round commitments consume the future cash buffer"
             ),
             "Production": (
-                "只为已确认需求和合理安全库存排产；成本上涨时先核对单位贡献，"
-                "不得用扩大产量掩盖利润下降"
+                "schedule production only for confirmed demand and a reasonable safety stock; verify unit contribution when costs rise, "
+                "and do not conceal declining profit by increasing output"
             ),
             "Sales": (
-                "接受或响应订单前必须核对落地单位成本和正向贡献，"
-                "对外部成本上涨应保护毛利但不得承诺无法履约的数量"
+                "verify landed unit cost and positive contribution before accepting or responding to an order; "
+                "protect margin when external costs rise without committing an infeasible quantity"
             ),
-            "Inventory": "以周转和服务覆盖为目标，避免无需求支撑的扩仓或库存增长",
-            "Finance": "同时核对累计净利润、阶段现金变化、未结采购承诺和单位贡献",
-            "HR": "只有可验证工作负载持续阻断经营时才补员，避免固定成本无依据扩张",
+            "Inventory": "target turnover and service coverage; avoid warehouse expansion or inventory growth unsupported by demand",
+            "Finance": "check cumulative net profit, phase cash change, outstanding purchase commitments, and unit contribution together",
+            "HR": "add staff only when a verifiable workload persistently blocks operations; avoid unsupported fixed-cost expansion",
         }
         operating_guard = operating_guard_by_role.get(
             role,
-            "动作必须保持正向单位贡献并控制新增现金承诺",
+            "actions must preserve positive unit contribution and control new cash commitments",
         )
         return f"""
-E1 外部变化响应约束：
-- 必须读取 policy_context.relevant_policies.external_environment.state，并把 analysis.json.external_environment_response 作为阶段假设；实时部门状态仍是动作依据。
-- 当前部门应{role_evidence}，区分外部变化影响与普通订单/积压压力。
-- 事件发生或复核窗口内，action_reason 必须引用至少一个真实变化因子和一个本部门经营证据；不得只复述事件标签。
-- 若证据不支持本轮动作，可以 action_pass，但要说明保持不动如何控制利润、现金、库存或履约风险。
-- 不得因成本上涨机械扩大采购、补货或生产，也不得因成本上涨无条件停摆；动作方向和数量必须通过本轮可执行数据解释。
-- 长跑盈利执行边界：{operating_guard}。
+E1 external-change response constraints:
+- Read policy_context.relevant_policies.external_environment.state and treat analysis.json.external_environment_response as a phase-level hypothesis; live department state remains the basis for action.
+- This department should {role_evidence}, distinguishing the effect of external change from ordinary order or backlog pressure.
+- During an event or review window, action_reason must cite at least one actual changed factor and one piece of department operating evidence; do not merely repeat the event label.
+- If evidence does not support action this round, action_pass is valid, but explain how holding the current course controls profit, cash, inventory, or fulfillment risk.
+- Do not mechanically increase purchasing, replenishment, or production when costs rise, and do not stop unconditionally. Explain action direction and quantity using executable current-round data.
+- Long-horizon profitable-operation boundary: {operating_guard}.
 """.rstrip()
 
     def _build_launch_prompt(
@@ -3549,10 +3550,10 @@ E1 外部变化响应约束：
     ) -> str:
         trade_prompt = ""
         if need_trade:
-            trade_prompt = "本次是 trade 二阶段：优先处理交易卡中的 proposal，在 accept_proposal_order / reject_proposal_order 中选择有效动作。"
+            trade_prompt = "This is the second, trade phase: prioritize proposals in the trade card and choose a valid accept_proposal_order or reject_proposal_order action."
         extra_input_prompt = ""
         if spec.trade_decision_card_path:
-            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\n优先读取，用 action_candidates / review_queue / new_or_updated_proposals / pressure_changes 决策。"
+            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\nRead this first and decide from action_candidates, review_queue, new_or_updated_proposals, and pressure_changes."
         action_prompt = ""
         long_horizon_response_prompt = (
             self._build_long_horizon_department_response_prompt(spec.role)
@@ -3560,25 +3561,25 @@ E1 外部变化响应约束：
         compact_context_prompt = ""
         if spec.compact_context:
             compact_context_prompt = """
-E1 长跑上下文约束：
-- 本提示中的部门状态和 blackboard 是系统生成的当轮权威紧凑投影，完整归档仍由执行器和可视化保留。
-- 必须直接使用投影中的 agent_decision_brief、policy_context、当前开放记录、近期历史摘要和跨部门摘要完成决策。
-- 禁止搜索或分页读取同轮完整部门归档、累计订单历史、累计补货历史；这些历史不会提供额外可执行对象。
-- 当前候选记录按 max_open_records 给出有界决策窗口，open_records_summary/filtered_non_actionable_summary 会说明覆盖范围；history_summary/recent_* 只用于趋势核对，不得据此虚构订单或 proposal id。
+E1 long-horizon context constraints:
+- The department state and blackboard in this prompt are authoritative compact projections for the current round. The executor and presentation layer retain the complete archive.
+- Decide directly from agent_decision_brief, policy_context, current open records, recent-history summary, and cross-department summary in the projection.
+- Do not search or paginate through the complete same-round department archive, cumulative order history, or cumulative replenishment history; they contain no additional executable objects.
+- Candidate records provide a bounded decision window through max_open_records. open_records_summary and filtered_non_actionable_summary describe coverage; use history_summary and recent_* only for trend checks, never to invent an order or proposal id.
 """.rstrip()
         if spec.role in {"Production", "Sales", "Procurement", "HR"}:
             action_prompt = f"""
 
-{spec.role} 部门附加硬约束：
-- 禁止向用户提问、请求确认或只输出 Markdown/代码块。
-- 读取部门状态文件和 blackboard 后，若字段足以决策，应立即写入 {spec.output_file_name}；不要反复读取 analysis.json 或历史文件。
-- 部门状态文件顶部的 agent_decision_brief 是本轮快速决策索引；优先读 offset=0 的前段内容，不要为了读取 simulation_context / herding_history / blackboard 尾部而分页通读大文件。
-- 若最终 JSON 已经形成，必须直接调用 Write；系统会拒绝只打印 JSON 文本的完成方式。
+Additional hard constraints for the {spec.role} department:
+- Do not ask the user a question, request confirmation, or output only Markdown or a code block.
+- After reading department state and blackboard, write {spec.output_file_name} immediately when the fields support a decision; do not repeatedly read analysis.json or history files.
+- agent_decision_brief at the top of department state is the quick decision index for this round. Read the leading content at offset=0 first; do not paginate through a large file merely to reach simulation_context, herding_history, or the blackboard tail.
+- Once the final JSON is formed, call Write directly. The system rejects completion that only prints JSON.
 """.rstrip()
         if spec.role == "Production":
             action_prompt += """
-- 若处于 herding_market，空 raw_materials 是有效配置，不得围绕 recipe 补全展开长篇推理。
-- 若处于 herding_market，只在 create_production_plan 与 action_pass 中选择；除非需要操作已有 plan_id，否则不要读取生产动作模板。
+- In herding_market, empty raw_materials is valid configuration; do not perform lengthy recipe-completion reasoning.
+- In herding_market, choose only create_production_plan or action_pass. Do not read production action templates unless an existing plan_id must be operated on.
 """.rstrip()
             runtime_contract = self._runtime_contract()
             simulation_config = (
@@ -3602,50 +3603,50 @@ E1 长跑上下文约束：
                     )
                 )
                 action_prompt += """
-- 蛛网模式下，production.json 顶部的 agent_decision_brief.cobweb_signal 是当轮价格信号的权威摘要；只需再核对紧随其后的 policy_context 与 self_state 可行性字段。
-- simulation_context.cobweb_history 已是近期精简窗口，禁止为了寻找完整历史继续分页；全程历史只用于实验归档，不是完成本轮动作的前置条件。
-- 价格方向、真实 product_id、可用产能、原料和现金足以形成动作后，立即写入 production_action.json。
+- In cobweb mode, agent_decision_brief.cobweb_signal at the top of production.json is the authoritative price-signal summary for this round. Check only the following policy_context and self_state feasibility fields.
+- simulation_context.cobweb_history is already a compact recent window. Do not paginate in search of full history; complete history is for experiment archiving, not a prerequisite for current action.
+- Once price direction, actual product_id, available capacity, materials, and cash support an action, write production_action.json immediately.
 """.rstrip()
                 if profit_objective_enabled:
                     action_prompt += """
-- 当前为盈利目标蛛网模式：价格方向只作为市场证据，不是扩产/缩产命令；必须按 objective_mode 综合利润、现金、履约、库存和调整风险形成数量。
+- This is profit-objective cobweb mode: price direction is market evidence, not an instruction to expand or contract production. Determine quantity according to objective_mode using profit, cash, fulfillment, inventory, and adjustment risk.
 """.rstrip()
         if spec.role == "HR":
             action_prompt += """
-- 若 hr.json/analysis/blackboard 显示某部门存在真实人员缺口、可用人数为 0、高利用率、待处理人员不足失败，且 pending recruitment 未覆盖缺口，诊断窗口内必须优先输出 handle_recruitment；不要因为普通阈值未触发而 action_pass。
-- handle_recruitment.action_param.department 必须写真实受阻部门；采购执行被人手阻断写 PROCUREMENT，生产执行被人手阻断写 PRODUCTION。num_people 使用状态目标或保守默认 2。
-- 若没有合法招聘动作，直接按标准结构写入 action_pass；不要读取不存在的 action_pass 模板，不要输出旧版 pass_reason 顶层结构。
+- If hr.json, analysis, or blackboard shows a real department staffing gap, zero available staff, high utilization, or a pending insufficient-staff failure, and pending recruitment does not cover the gap, prioritize handle_recruitment during the diagnostic window. Do not use action_pass merely because a generic threshold was not triggered.
+- handle_recruitment.action_param.department must identify the actually constrained department: use PROCUREMENT when procurement is staffing-blocked and PRODUCTION when production is staffing-blocked. Use the state target for num_people or a conservative default of 2.
+- If no valid recruitment action exists, write action_pass in the standard structure. Do not read a nonexistent action_pass template or output the legacy top-level pass_reason structure.
 """.rstrip()
         if spec.role == "Sales":
             if self._cobweb_profit_objective_contract():
                 action_prompt += """
-- 当前为蛛网C3盈利目标模式。agent_decision_brief.available_orders 中的 unit_price、total_amount、quantity 和 deadline 是订单经济性证据，不得仅因订单 available 就自动接受。
-- 若现有成品库存足以履约，正价格订单可贡献增量收入；若接受订单需要新增生产，则必须比较订单单价、估算增量生产成本、现金、交付风险与服务压力。
-- deadline_status=expired 的残留订单不得接受；若有未过期订单，优先处理其中经济性和时效最合理的一项，否则用 reject_order 清理逾期残留。
-- 在 accept_order / reject_order / action_pass 中选择，并在 action_reason 中说明利润或边际收益、库存覆盖和服务影响。价格方向不是接单命令。
-- agent_decision_brief、精简后的 self_state.sales_orders 和 sales_metrics 足以完成本轮决策；禁止分页追读已完成订单历史或 demand_backlog 历史。
+- This is Cobweb C3 profit-objective mode. unit_price, total_amount, quantity, and deadline in agent_decision_brief.available_orders are order-economics evidence; do not accept an order solely because it is available.
+- If finished-goods inventory can fulfill an order, a positive-price order can contribute incremental revenue. If accepting it requires new production, compare unit price, estimated incremental production cost, cash, delivery risk, and service pressure.
+- Do not accept a residual order with deadline_status=expired. If unexpired orders exist, process the one with the strongest economics and timing; otherwise use reject_order to clear the expired residual.
+- Choose accept_order, reject_order, or action_pass, and explain profit or marginal contribution, inventory coverage, and service effect in action_reason. Price direction is not an instruction to accept an order.
+- agent_decision_brief, compact self_state.sales_orders, and sales_metrics are sufficient for this round. Do not paginate through completed-order or demand_backlog history.
 """.rstrip()
             else:
                 action_prompt += """
-- 若 market_growth_signal.recommendation_mode=evidence_only，应根据其中的市场数、订单入口、未承诺库存、积压、开发成本和时长自行判断是否 develop_market；不得假设系统已经给出推荐动作。其它模式下若 should_develop_market=true，才优先执行最小有效市场开发。
-- 否则若 agent_decision_brief.available_orders 非空，应按价格、数量、报价有效期、交期、预计贡献和累计履约覆盖选择一个或多个订单；积极处理有利可履约订单，同时拒绝明显亏损、被其它订单支配或会造成超额承诺的订单。不要误认为一轮只能接收一个订单。
+- If market_growth_signal.recommendation_mode=evidence_only, decide whether to develop_market from market count, order inflow, uncommitted inventory, backlog, development cost, and duration. Do not assume the system has recommended an action. In other modes, prioritize the minimum effective market-development action only when should_develop_market=true.
+- Otherwise, if agent_decision_brief.available_orders is nonempty, select one or more orders by price, quantity, offer validity, delivery deadline, expected contribution, and cumulative fulfillment coverage. Process beneficial fulfillable orders and reject orders that clearly lose money, are dominated by another order, or create overcommitment. Do not assume only one order can be accepted per round.
 """.rstrip()
         if spec.role in {"Sales", "Procurement"} and spec.trade_decision_card_path:
             action_prompt += """
-- 只能从 trade_decision_card.action_candidates 或仍处于可操作状态的 review_queue 选择 proposal；filtered_proposals 仅供审计，禁止 accept/reject。
-- 若 action_candidates 为空，优先输出 action_pass，不要处理 expired、superseded、fulfilled、rejected 或已响应 proposal。
+- Select a proposal only from trade_decision_card.action_candidates or an actionable item in review_queue. filtered_proposals is audit-only and must not be accepted or rejected.
+- If action_candidates is empty, prioritize action_pass. Do not process an expired, superseded, fulfilled, rejected, or already-responded proposal.
 """.rstrip()
         single_case_department_prompt = self._build_single_enterprise_department_decision_prompt(spec.role)
         if spec.role == "Finance":
             history_projection_path = self._history_projection_path(round_id)
             history_projection_day = self._history_projection_day(round_id)
             action_prompt += f"""
-Finance advisory 附加硬约束：
-- 你只输出财务诊断 sidecar，不输出可执行动作。
-- 最终输出文件必须是 {spec.output_file_path}，不是 finance_action.json。
-- 如存在最近已封口历史投影 day{history_projection_day}，可读取：{history_projection_path}
-- 若该文件不存在，不要读取未来 projection，也不要编造历史趋势。
-- recommended_controls 只能写自然语言控制建议，不得填写 action JSON 或要求其它部门直接执行 action_name。
+Finance advisory hard constraints:
+- Output only the financial diagnostic sidecar, not an executable action.
+- The final output file must be {spec.output_file_path}, not finance_action.json.
+- If the latest closed history projection for day{history_projection_day} exists, read it at {history_projection_path}.
+- If the file does not exist, do not read a future projection or invent a historical trend.
+- recommended_controls may contain only natural-language control recommendations, not action JSON or instructions that another department directly execute an action_name.
 """.rstrip()
         communication_prompt = (
             self._build_communication_prompt(spec, round_id)
@@ -3653,40 +3654,40 @@ Finance advisory 附加硬约束：
             else ""
         )
         return f"""
-现在是第{round_id}个工作日。
-你是企业 {self.enterprise_spec.enterprise_name} 的 {spec.role} 部门负责人。
+This is business day {round_id}.
+You lead the {spec.role} department of enterprise {self.enterprise_spec.enterprise_name}.
 
-你必须立即调用 Skill 工具，并严格使用下面这一条，不允许省略 args，也不允许改写格式：
+Call the Skill tool immediately and use exactly the following invocation. Do not omit args or change its format:
 Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 {trade_prompt}
 
-真实文件路径：
-1. 部门状态文件: {spec.state_path}
+Actual file paths:
+1. Department state: {spec.state_path}
 2. blackboard.json: {spec.blackboard_path}
 {extra_input_prompt}
-{4 if not spec.trade_decision_card_path else 5}. analysis.json（低频战略背景，仅在需要长期目标或跨部门解释时参考）: {spec.analysis_path}
-{5 if not spec.trade_decision_card_path else 6}. 最终输出文件: {spec.output_file_path}
-{6 if not spec.trade_decision_card_path else 7}. 动作模板目录: {spec.action_template_dir}
+{4 if not spec.trade_decision_card_path else 5}. analysis.json (low-frequency strategic context; consult only for long-term objectives or cross-department explanation): {spec.analysis_path}
+{5 if not spec.trade_decision_card_path else 6}. Final output: {spec.output_file_path}
+{6 if not spec.trade_decision_card_path else 7}. Action template directory: {spec.action_template_dir}
 
-Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须以本启动提示中的真实绝对路径为准。动作模板按 `<动作模板目录>/<action_name>.json` 读取。
+If a path in the Skill document is symbolic or an old workspace_multi example, use the actual absolute path in this launch prompt. Read an action template from `<action template directory>/<action_name>.json`.
 
-权威顺序：policy_context + 实时状态文件 / blackboard / trade_decision_card 高于 analysis.json 和自然语言通用规则。
-持续演变附加规则：若 policy_context.active_modes.external_environment_evolution=true，先读取
-policy_context.relevant_policies.external_environment.state 的当轮事件、当前因子和实际数值，再结合本部门
-真实订单、成本、库存、现金和产能决定动作；稳定需求下不得无依据扩大订单、补货或生产波动。
+Authority order: policy_context plus live state, blackboard, and trade_decision_card override analysis.json and generic natural-language rules.
+Continuous-evolution rule: if policy_context.active_modes.external_environment_evolution=true, first read the current-round events,
+active factors, and actual values in policy_context.relevant_policies.external_environment.state. Then decide from this department's
+real orders, costs, inventory, cash, and capacity. Under stable demand, do not increase order, replenishment, or production variability without evidence.
 {long_horizon_response_prompt}
-单企业 S0 诊断附加规则：
-- 若部门状态文件中的 policy_context.single_enterprise_diagnostic_policy.enabled = true，仅把它理解为“当前为单企业诊断运行”的开关；不得寻找、推断或引用内部实验编号、预设场景标签、部门优先级或预设矛盾。
-- 诊断窗口内，不得为了普通经营扩张输出与当前状态相冲突的动作；是否 action_pass 只能基于本部门真实状态、动作模板和可行性约束判断。
-- 禁止在 action_reason 中使用部门身份优先级作为动作或 pass 的理由。
-- Sales 不得仅因为 available_orders 非空就持续 accept_order；必须先确认订单真实非零、未过期、可履约，且不会扩大当前由库存、产能、人手或现金形成的经营压力。
+Single-enterprise S0 diagnostic rules:
+- If policy_context.single_enterprise_diagnostic_policy.enabled=true in department state, interpret it only as a switch indicating a single-enterprise diagnostic run. Do not search for, infer, or cite an internal experiment identifier, preset scenario label, department priority, or preset contradiction.
+- During the diagnostic window, do not output an action that conflicts with current state merely for ordinary expansion. Decide action_pass only from actual department state, action templates, and feasibility constraints.
+- Do not use department priority as the reason for an action or pass in action_reason.
+- Sales must not repeatedly accept_order merely because available_orders is nonempty. First confirm that the order is real, nonzero, unexpired, fulfillable, and does not increase operating pressure created by inventory, capacity, staffing, or cash.
 {single_case_department_prompt}
 {compact_context_prompt}
 {action_prompt}
 {communication_prompt}
 
-调用 skill 后，必须在 skill 内继续执行，直到成功写入 {spec.output_file_name}。
-禁止只输出解释或 JSON 文本代替写文件。
+After calling the skill, continue within it until {spec.output_file_name} has been written successfully.
+Do not substitute an explanation or printed JSON for writing the file.
 """.strip()
 
     def _build_same_session_resume_prompt(
@@ -3698,7 +3699,7 @@ policy_context.relevant_policies.external_environment.state 的当轮事件、�
     ) -> str:
         extra_input_prompt = ""
         if spec.trade_decision_card_path:
-            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\n未读则补读；已读则沿用 review_queue / pressure_changes 完成交易决策。"
+            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\nRead it if not yet read; otherwise reuse review_queue and pressure_changes to complete the trade decision."
         communication_prompt = (
             self._build_communication_prompt(spec, round_id)
             if not need_trade
@@ -3709,40 +3710,40 @@ policy_context.relevant_policies.external_environment.state 的当轮事件、�
             self._build_long_horizon_department_response_prompt(spec.role)
         )
         return f"""
-现在是第{round_id}个工作日。
-你仍然是企业 {self.enterprise_spec.enterprise_name} 的 {spec.role} 部门负责人。
+This is business day {round_id}.
+You remain the head of the {spec.role} department at enterprise {self.enterprise_spec.enterprise_name}.
 
-你上一轮在同一个 session 中未完成目标文件写入。
-失败原因：{reason}
+The target file was not completed in the previous turn of this session.
+Failure reason: {reason}
 
-不要从头解释，不要输出 Markdown 代码块，不要重新做长篇分析。
-优先沿用你上一轮已经完成的读取和决策结果，在当前 session 中直接补完最后缺失的步骤。
+Do not restart the explanation, output a Markdown code block, or repeat a long analysis.
+Reuse the reading and decision results already completed in the previous turn and finish the missing steps in this session.
 
-你必须继续确保以下调用规范仍然有效：
+Keep the following invocation valid:
 Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 
-真实文件路径：
-1. 部门状态文件: {spec.state_path}
+Actual file paths:
+1. Department state: {spec.state_path}
 2. blackboard.json: {spec.blackboard_path}
 {extra_input_prompt}
-{4 if not spec.trade_decision_card_path else 5}. analysis.json（低频战略背景，仅在需要长期目标或跨部门解释时参考）: {spec.analysis_path}
-{5 if not spec.trade_decision_card_path else 6}. 最终输出文件: {spec.output_file_path}
-{6 if not spec.trade_decision_card_path else 7}. 动作模板目录: {spec.action_template_dir}
+{4 if not spec.trade_decision_card_path else 5}. analysis.json (low-frequency strategic context; consult only for long-term objectives or cross-department explanation): {spec.analysis_path}
+{5 if not spec.trade_decision_card_path else 6}. Final output: {spec.output_file_path}
+{6 if not spec.trade_decision_card_path else 7}. Action template directory: {spec.action_template_dir}
 
-Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须以本启动提示中的真实绝对路径为准。动作模板按 `<动作模板目录>/<action_name>.json` 读取。
+If a path in the Skill document is symbolic or an old workspace_multi example, use the actual absolute path in this launch prompt. Read an action template from `<action template directory>/<action_name>.json`.
 
-权威顺序：policy_context + 实时状态文件 / blackboard / trade_decision_card 高于 analysis.json 和自然语言通用规则。
+Authority order: policy_context plus live state, blackboard, and trade_decision_card override analysis.json and generic natural-language rules.
 {long_horizon_response_prompt}
-单企业 S0 诊断附加规则仍然有效：若 policy_context.single_enterprise_diagnostic_policy.enabled = true，只把它理解为单企业诊断运行开关；是否 action_pass 只能基于本部门真实状态、动作模板和可行性约束判断，禁止用部门身份优先级或内部实验标签作为理由。
+The single-enterprise S0 diagnostic rule remains active: if policy_context.single_enterprise_diagnostic_policy.enabled=true, interpret it only as a single-enterprise diagnostic-run switch. Decide action_pass only from actual department state, action templates, and feasibility constraints; never cite department priority or an internal experiment label.
 {single_case_department_prompt}
 {communication_prompt}
 
-现在只允许做与完成 {spec.output_file_name} 有关的必要操作：
-1. 若最终 JSON 已经确定，则直接调用 Write 写入 {spec.output_file_name}
-2. 写入后立即 Read 回读 {spec.output_file_name}
-3. 若上一轮已读取部门状态文件顶部 agent_decision_brief 或关键订单/生产信号，不要继续分页读取大文件，直接完成写入
-4. 若上一轮尚未读完必要文件，只补读 offset=0 的关键前段后立即完成写入
-5. 禁止只输出解释或 JSON 文本代替写文件
+Now perform only the operations needed to complete {spec.output_file_name}:
+1. If the final JSON is already determined, call Write and save it directly to {spec.output_file_name}.
+2. Immediately call Read on {spec.output_file_name} after writing it.
+3. If agent_decision_brief or a key order or production signal at the top of department state was already read, do not paginate through the large file; complete the write directly.
+4. If a required file has not been read, read only its essential leading section at offset=0 and then write immediately.
+5. Do not substitute an explanation or printed JSON for writing the file.
 """.strip()
 
     def _build_business_repair_prompt(
@@ -3754,7 +3755,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
     ) -> str:
         extra_input_prompt = ""
         if spec.trade_decision_card_path:
-            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\n修复时优先参考 review_queue / recommended_action，避免重复处理历史 proposal。"
+            extra_input_prompt = f"\n3. trade_decision_card.json: {spec.trade_decision_card_path}\nDuring repair, consult review_queue and recommended_action first to avoid processing a historical proposal again."
         communication_prompt = (
             self._build_communication_prompt(spec, round_id)
             if not need_trade
@@ -3765,38 +3766,38 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
             self._build_long_horizon_department_response_prompt(spec.role)
         )
         return f"""
-现在是第{round_id}个工作日。
-你仍然是企业 {self.enterprise_spec.enterprise_name} 的 {spec.role} 部门负责人。
+This is business day {round_id}.
+You remain the head of the {spec.role} department at enterprise {self.enterprise_spec.enterprise_name}.
 
-你上一轮已经生成过 {spec.output_file_name}，但业务执行失败。
-错误信息文件路径：/{error_file}
+You generated {spec.output_file_name} in the previous turn, but business execution failed.
+Error file path: /{error_file}
 
-不要从头重做，不要长篇解释。
-请在同一个 session 中仅修复错误，并重新生成正确的 {spec.output_file_name}。
+Do not restart or provide a long explanation.
+Repair only the error in this session and regenerate a correct {spec.output_file_name}.
 
-你必须继续确保以下调用规范仍然有效：
+Keep the following invocation valid:
 Skill(skill="{spec.skill_name}", args="{spec.skill_args}")
 
-真实文件路径：
-1. 部门状态文件: {spec.state_path}
+Actual file paths:
+1. Department state: {spec.state_path}
 2. blackboard.json: {spec.blackboard_path}
 {extra_input_prompt}
-{4 if not spec.trade_decision_card_path else 5}. analysis.json（低频战略背景，仅在需要长期目标或跨部门解释时参考）: {spec.analysis_path}
-{5 if not spec.trade_decision_card_path else 6}. 最终输出文件: {spec.output_file_path}
-{6 if not spec.trade_decision_card_path else 7}. 动作模板目录: {spec.action_template_dir}
+{4 if not spec.trade_decision_card_path else 5}. analysis.json (low-frequency strategic context; consult only for long-term objectives or cross-department explanation): {spec.analysis_path}
+{5 if not spec.trade_decision_card_path else 6}. Final output: {spec.output_file_path}
+{6 if not spec.trade_decision_card_path else 7}. Action template directory: {spec.action_template_dir}
 
-Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须以本启动提示中的真实绝对路径为准。动作模板按 `<动作模板目录>/<action_name>.json` 读取。
+If a path in the Skill document is symbolic or an old workspace_multi example, use the actual absolute path in this launch prompt. Read an action template from `<action template directory>/<action_name>.json`.
 
-权威顺序：policy_context + 实时状态文件 / blackboard / trade_decision_card 高于 analysis.json 和自然语言通用规则。
+Authority order: policy_context plus live state, blackboard, and trade_decision_card override analysis.json and generic natural-language rules.
 {long_horizon_response_prompt}
-单企业 S0 诊断附加规则仍然有效：若 policy_context.single_enterprise_diagnostic_policy.enabled = true，只把它理解为单企业诊断运行开关；不要用普通经营扩张覆盖当前状态边界，也不要用部门身份优先级或内部实验标签解释动作或 pass。
+The single-enterprise S0 diagnostic rule remains active: if policy_context.single_enterprise_diagnostic_policy.enabled=true, interpret it only as a single-enterprise diagnostic-run switch. Do not override current state constraints for ordinary expansion, and do not explain an action or pass using department priority or an internal experiment label.
 {single_case_department_prompt}
 {communication_prompt}
 
-完成后，必须：
-1. 调用 Write 写入新的 {spec.output_file_name}
-2. 立即 Read 回读校验
-3. 禁止只输出解释或 JSON 文本代替写文件
+After repair:
+1. Call Write to save the new {spec.output_file_name}.
+2. Immediately call Read to validate it.
+3. Do not substitute an explanation or printed JSON for writing the file.
 """.strip()
 
     # =========================
@@ -3809,7 +3810,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
 
     def _bind_session_to_options(self, options: Any, session_id: Optional[str]) -> Any:
         """
-        To bind existing sessions to “restore sessions”.
+        Bind an existing session to resume it.
 
         Claude CLI --session-id is not resum; if entered simultaneously in the current SDK
         - session-id without -- fork-session triggers CLI parameter error. So it's a common use here.
@@ -3977,14 +3978,14 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
             )
 
         mapping = {
-            "skill_not_called": "你上一轮没有真正调用 Skill 工具。现在立即严格按指定格式调用 Skill，并在同一 session 中继续完成写文件。",
-            "skill_args_missing_or_wrong": f"你上一轮调用 Skill 时缺少或改错了 args。必须严格使用 args=\"{spec.skill_args}\"。",
-            "required_reads_incomplete": "你上一轮没有读完必要的核心文件。请补齐必要读取后立即完成写文件，不要输出解释。",
-            "json_printed_but_not_written": f"你上一轮已经给出了最终 JSON，但没有调用 Write。不要重新分析，直接把刚才确定的 JSON 写入 {spec.output_file_name} 并回读。",
-            "write_wrong_target": f"你上一轮调用了 Write，但目标路径不正确。现在把最终 JSON 写入正确文件 {spec.output_file_name} 并回读。",
-            "written_but_not_readback": f"你上一轮已经写入 {spec.output_file_name}，但没有回读校验。现在立即 Read 回读目标文件并完成校验。",
-            "stopped_before_write": f"你上一轮在写文件前中断了。不要重新做长篇分析，继续完成 {spec.output_file_name} 的 Write 和回读。",
-            "unknown": f"你上一轮未完成 {spec.output_file_name}。不要重新开始，优先沿用已有结果完成 Write 和回读。",
+            "skill_not_called": "The Skill tool was not actually called in the previous turn. Call it now in the exact required format and complete the file in this session.",
+            "skill_args_missing_or_wrong": f"The prior Skill call omitted or changed args. Use args=\"{spec.skill_args}\" exactly.",
+            "required_reads_incomplete": "Required core files were not fully read. Complete only the necessary reads and write the file immediately without an explanation.",
+            "json_printed_but_not_written": f"The final JSON was printed but Write was not called. Do not repeat the analysis; write the established JSON to {spec.output_file_name} and read it back.",
+            "write_wrong_target": f"Write was called with the wrong target. Write the final JSON to {spec.output_file_name} and read it back.",
+            "written_but_not_readback": f"{spec.output_file_name} was written but not read back for validation. Read the target file now and complete validation.",
+            "stopped_before_write": f"The previous turn stopped before writing. Do not repeat the analysis; complete Write and readback for {spec.output_file_name}.",
+            "unknown": f"The previous turn did not complete {spec.output_file_name}. Do not restart; reuse the existing result and complete Write and readback.",
         }
         return self._build_same_session_resume_prompt(
             spec,
@@ -4072,9 +4073,9 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
         )
         if context_validation_mode in {"warn", "strict"}:
             prompt += (
-                "\n\n结构化上下文边界审计文件："
-                f"{context_audit.get('artifact')}。"
-                "不得引用其中标记为 disallowed 的场景专项字段。"
+                "\n\nStructured context-boundary audit file: "
+                f"{context_audit.get('artifact')}. "
+                "Do not cite scenario-specific fields marked disallowed."
             )
         run_started_at = time.time()
         execution_result: Optional[Dict[str, Any]] = None
@@ -4248,7 +4249,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 time_end = time.time()
                 print(
                     f"END-{retry_time} {self.enterprise_spec.enterprise_id} "
-                    f"{dept.name} 耗时: {time_end - time_start}"
+                    f"{dept.name} elapsed: {time_end - time_start}"
                 )
                 continue
 
@@ -4356,7 +4357,7 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
             time_end = time.time()
             print(
                 f"END-{retry_time} {self.enterprise_spec.enterprise_id} "
-                f"{dept.name} 耗时: {time_end - time_start}"
+                f"{dept.name} elapsed: {time_end - time_start}"
             )
 
         if not success:
@@ -4384,8 +4385,8 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                 raise RuntimeError(transport_failure["message"])
 
             fallback_reason = (
-                "超时思考，调用兜底逻辑链路："
-                "基于当前订单、库存、现金、产能、人员和履约状态继续本轮经营。"
+                "Agent reasoning timed out; invoked the state-driven fallback: "
+                "continue this round from current orders, inventory, cash, capacity, staffing, and fulfillment state."
             )
             if advisory_only:
                 self._write_advisory_fallback_file(spec, fallback_reason)
@@ -4435,8 +4436,8 @@ Skill 文档中的路径若是符号路径或旧 workspace_multi 示例，必须
                         spec,
                         dept.dept_id,
                         (
-                            "超时思考，调用兜底逻辑链路：当轮状态动作未通过执行校验，"
-                            "为保持账务和状态一致性，本轮不新增经营承诺。"
+                            "Agent reasoning timed out; the state-driven fallback action failed execution validation. "
+                            "No new operating commitment is created this round to preserve accounting and state consistency."
                         ),
                     )
                     execution_result = MultiTenantUtils.execute_enterprise_dept_action(

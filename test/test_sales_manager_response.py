@@ -4,16 +4,16 @@ from types import SimpleNamespace
 
 
 def test_sales_manager_extracts_error_text_from_module_response():
-    response = ModuleResponse(success=False, message="库存扣减失败")
+    response = ModuleResponse(success=False, message="Inventory deduction failed")
 
-    assert SalesManager._response_error_text(response) == "库存扣减失败"
+    assert SalesManager._response_error_text(response) == "Inventory deduction failed"
 
 
 def test_sales_manager_extracts_error_text_from_response_errors():
     response = ModuleResponse(success=False)
-    response.errors = [{"code": "NO_STOCK", "message": "库存不足"}]
+    response.errors = [{"code": "NO_STOCK", "message": "Insufficient inventory"}]
 
-    assert SalesManager._response_error_text(response) == "库存不足"
+    assert SalesManager._response_error_text(response) == "Insufficient inventory"
 
 
 def test_sales_manager_expires_unselected_fixed_offer_after_expiry_day():

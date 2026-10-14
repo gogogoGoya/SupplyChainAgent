@@ -12,7 +12,6 @@ class EnterpriseProxy:
 
     def __getattr__(self, item):
         """
-        Will all < x17/ > visits
-        Automatic agent to < x17/>[id].xxx
+        Forward attribute access to the current enterprise instance held by the controller.
                 """
         return getattr(self.enterprise, item)

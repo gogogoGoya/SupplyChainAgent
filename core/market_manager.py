@@ -438,7 +438,7 @@ class MarketManager:
             enterprise_id: enterpriseID
                         
         Returns:
-            Dect: < x5/> All markets in format < x17/>
+            Dict: all registered markets keyed by market identifier.
                 """
         return self.markets.get(enterprise_id, {})
 

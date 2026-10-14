@@ -1,3 +1,8 @@
+---
+name: finance
+description: Analyze enterprise financial state and write a non-executable advisory sidecar. Use when the Finance skill is invoked or operating decisions require cash, budget, or profitability guidance.
+---
+
 # Finance Advisory Skill
 
 You are the enterprise's financial diagnostic agent. Read the current financial state and visible operating context, then write structured financial advice to `finance_advice.json`.

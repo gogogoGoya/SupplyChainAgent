@@ -3,7 +3,7 @@ Operation of the Environmental Configuration Centre.
 
 This file will only be configured for " cross-module sharing, running-time " and will consist mainly of:
 - Simulation of time advance rules.
-- Local < x17/ / Agent gateway access address
+- Local model and agent gateway endpoints
 -AgentSDK Default connection parameters
 
 Not here:

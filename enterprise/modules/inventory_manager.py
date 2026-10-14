@@ -39,7 +39,7 @@ class InventoryManager(EnhancedBaseModule):
 
         # Inventory tracking
         self.inventory: Dict[str, Dict] = {}  # Inventory information
-        self.inventory_history: Dict[str, List] = {}  # History of stock changes < x 17/>
+        self.inventory_history: Dict[str, List] = {}  # Inventory-change history by item.
 
         # Inventory strategy
         self.reorder_points: Dict[str, float] = {}  # Order another {item_id: reorder_point}
@@ -69,11 +69,11 @@ class InventoryManager(EnhancedBaseModule):
 
         # Sales cost tracking (for inventory turnover)
         # parameter = 0.0 # sales cost
-        # < x17/ > = [ ] # Average inventory value history
+        # Average inventory value history is intentionally disabled.
 
         # Shrink tracking (used to calculate water shrunk rates)
         # parameter = 0.0 # Cumulative deflation value
-        # < x17/ > = 0.0 # Total inventory value when water shrunk
+        # Total inventory value at shrinkage is intentionally disabled.
 
         # Maintenance cost tracking
         self.maintenance_cost_rate = self.config.MAINTENANCE_COST_RATE  # Maintenance cost rate (read from config)
@@ -89,7 +89,7 @@ class InventoryManager(EnhancedBaseModule):
 
         # Unit conversion table: External - > SU (Death configuration, no dynamic change provided)
         # Format: parameter:{"to_su": ratio, "from_su": inverse_ratio}}
-        # For example: {"malt": < x17/ } means 100 malt = 1 SU
+        # For example, a to_su ratio of 0.01 means 100 units of malt equal 1 SU.
         self.unit_conversion_table: Dict[str, Dict[str, float]] = {}
 
         # Default Unit Map (Death Profile)
@@ -110,7 +110,7 @@ class InventoryManager(EnhancedBaseModule):
         Args:
             item_id: Material ID (if containing unit information such as "malt_1, automatically detect and convert)
             Quantity: Number (external units, automatically converted to SU)
-            < x17/ >: Purchase unit price (validated by decorator > 0)
+            purchase_price: purchase unit price (validated as greater than zero)
             item_type: "raw_material" or "product"
             parameter: Run for test
             Response: Respond objects (injected by decorator)
@@ -140,10 +140,10 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_CAPACITY",
-                f"容量不足，无法入库。剩余容量: {remaining_capacity}, 需要: {su_quantity} SU"
+                f"Insufficient capacity for inbound inventory. Remaining: {remaining_capacity}; required: {su_quantity} SU"
             )
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         
         # Update inventory (search or create)
@@ -214,7 +214,7 @@ class InventoryManager(EnhancedBaseModule):
         
         return self.success_response(
             response,
-            f"物料 {item_id} 成功入库 {su_quantity} SU ({quantity} {original_unit if original_unit else 'SU'})",
+            f"Added {su_quantity} SU of item {item_id} ({quantity} {original_unit if original_unit else 'SU'}) to inventory",
             response_data
         )
 
@@ -245,7 +245,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"容量检查{'通过' if is_valid else '未通过'}",
+            f"Capacity check {'passed' if is_valid else 'failed'}",
             {
                 "item_id": item_id,
                 "quantity": quantity,
@@ -294,7 +294,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ITEM_NOT_FOUND",
-                f"物料 {item_id} 不存在"
+                f"Item {item_id} does not exist"
             )
 
         # 2. Check for adequacy of stocks
@@ -308,7 +308,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_INVENTORY",
-                f"库存不足。需要: {su_quantity} SU, 当前: {current_stock['quantity']} SU"
+                f"Insufficient inventory. Required: {su_quantity} SU; available: {current_stock['quantity']} SU"
             )
 
         # 3. Updating of inventories (using SU)
@@ -347,7 +347,7 @@ class InventoryManager(EnhancedBaseModule):
         
         return self.success_response(
             response,
-            f"物料 {resolved_item_id} 成功出库 {su_quantity} SU ({quantity} {original_unit if original_unit else 'SU'})",
+            f"Removed {su_quantity} SU of item {resolved_item_id} ({quantity} {original_unit if original_unit else 'SU'}) from inventory",
             response_data
         )
 
@@ -375,7 +375,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INVALID_SIZE",
-                "无效的扩建规模，请选择size 1000, 2000, 或 5000"
+                "Invalid extension, select size 1000, 2000 or 5000"
             )
         needed_workers = self.config.WAREHOUSE_EXPANSION_WORKER_REQUIREMENTS.get(size, 1)
         base_cost = costs[size]
@@ -391,7 +391,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_FUNDS",
-                f"资金不足，无法扩建。至少需要: {cost}"
+                f"Insufficient funds for expansion. Minimum required: {cost}"
             )
 
         # Inspection of human resources
@@ -401,10 +401,10 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法扩建。至少需要: {needed_workers}"
+                f"Insufficient staff for expansion. Minimum required: {needed_workers}"
             )
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         assignment_id = f"warehouse_expand_{self.enterprise.time_manager.get_day()}_{size}"
         assign_result = hr_manager.assign_workers("inventory", assignment_id, needed_workers)
@@ -412,7 +412,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ASSIGN_WORKERS_ERROR",
-                getattr(assign_result, "message", "仓库扩建人手分配失败")
+                getattr(assign_result, "message", "Warehouse expansion staff distribution failed")
             )
 
         # Less costs
@@ -422,7 +422,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "COST_RECORD_FAILED",
-                getattr(cost_result, "message", "仓库扩建成本记录失败")
+                getattr(cost_result, "message", "Failed to record warehouse expansion costs")
             )
 
         # Increased capacity
@@ -442,7 +442,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"仓库成功扩建 {size} 单位，新总容量为 {self.total_capacity}",
+            f"Warehouse expanded by {size} units; new total capacity is {self.total_capacity}",
             {
                 "expanded_size": size,
                 "new_total_capacity": self.total_capacity,
@@ -474,7 +474,7 @@ class InventoryManager(EnhancedBaseModule):
         **Code achieved**:
         - Parameter: `item_id` - Material ID
         - Return: ModuleResponse contains inventory (return 0 when the material does not exist)
-        - If < x17/>=True and the material is original_unit, convert back to the original unit
+        - If convert_to_original_unit is true and a source unit exists, convert back to that unit.
                 """
         # Access to inventory data
         resolved_item_id = self._resolve_item_id(item_id)
@@ -502,7 +502,7 @@ class InventoryManager(EnhancedBaseModule):
         
         return self.success_response(
             response,
-            f"成功获取物料 {resolved_item_id or item_id} 的库存数量",
+            f"Retrieved inventory quantity for item {resolved_item_id or item_id}",
             response_data
         )
 
@@ -524,15 +524,15 @@ class InventoryManager(EnhancedBaseModule):
         - Return: ModuleResponse contains complete material information
         - Return fields:
           - parameter: Current stock levels (conversion back to original unit)
-          - < x17/ > : Original units (if any)
-          - < x17/ > : DU quantities (internal use)
-          - < x 17/ >: unit price
+          - original_unit: source unit, when available
+          - su_quantity: quantity in internal storage units
+          - unit_price: unit price
           Total value
-          - < x17/: Material type
-          - < x17/ > : Last update step
-          - < x17/ >: Safe stock
-          - < x17/ > : Order more points
-          - < x17/ > : Below safe stock
+          - item_type: material type
+          - last_updated: latest update step
+          - safety_stock: safety-stock threshold
+          - reorder_point: reorder threshold
+          - is_low_stock: whether inventory is below safety stock
           - parameter: Is it below the reorder point?
                 """
         resolved_item_id = self._resolve_item_id(item_id)
@@ -540,7 +540,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ITEM_NOT_FOUND",
-                f"物料 {item_id} 不存在"
+                f"Item {item_id} does not exist"
             )
 
         data = self.inventory[resolved_item_id]
@@ -580,7 +580,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"成功获取物料 {resolved_item_id} 的详细信息",
+            f"Retrieved inventory details for item {resolved_item_id}",
             detail
         )
 
@@ -598,10 +598,10 @@ class InventoryManager(EnhancedBaseModule):
 
         **Code achieved**:
         - returns: ModuleResponse contains the following fields
-          - < x17/ > : List [Dict] - List of raw materials
-          - < x17/ > : List [Dict] - List of products
+          - raw_materials: list of raw-material records
+          - products: list of product records
           - `total_inventory_value`: float - Total inventory value
-          - < x17/ >: Dict - repository information (total capacity, usage, usage)
+          - warehouse: total capacity, used capacity, and utilization
           - Each material contains: `id`, `quantity`, `unit` (original unit), `su_quantity`, `unit_price`, `total_value`, `last_updated`
                 """
         raw_materials = []
@@ -640,7 +640,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            "成功获取库存总览",
+            "Successfully acquired inventory overview",
             {
                 "stocks": stocks,
                 "raw_materials": raw_materials,
@@ -689,7 +689,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"成功检查低库存，发现 {len(low_stock_items)} 个低库存物料",
+            f"Low-stock check found {len(low_stock_items)} items",
             {
                 "low_stock_items": low_stock_items,
                 "total_low_stock_items": len(low_stock_items)
@@ -731,7 +731,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"成功检查再订购点，发现 {len(reorder_items)} 个需要再订购的物料",
+            f"Reorder-point check found {len(reorder_items)} items requiring replenishment",
             {
                 "reorder_items": reorder_items,
                 "total_reorder_items": len(reorder_items)
@@ -755,32 +755,32 @@ class InventoryManager(EnhancedBaseModule):
           - parameter: Usage < 30%
           - parameter: 30% ≤ Usage < 75%
           - parameter: 75% ≤ Usage rate < 90%
-          - < x17/ >: Usage 90%
+          - critical: utilization at or above 90 percent
                 """
         utilization = self.inventory_metrics["warehouse_utilization"]
         remaining_capacity = self.total_capacity - self.used_capacity
 
         if utilization < self.config.CAPACITY_LOW_THRESHOLD:
             level = "low"
-            message = "仓库使用率较低，可能存在过度投资"
-            suggestion = "考虑优化库存管理或减少仓库容量"
+            message = "Lower usage of warehouses and possible overinvestment"
+            suggestion = "Consider optimizing inventory management or reducing warehouse capacity"
         elif utilization < self.config.CAPACITY_WARNING_THRESHOLD:
             level = "normal"
-            message = "仓库使用率正常"
-            suggestion = "继续保持"
+            message = "Warehouse usage is normal"
+            suggestion = "Keep going."
         elif utilization < self.config.CAPACITY_CRITICAL_THRESHOLD:
             level = "warning"
-            message = "仓库使用率较高，建议考虑扩建"
-            suggestion = f"建议扩建仓库，当前剩余容量: {remaining_capacity}"
+            message = "Higher usage of warehouse, recommended consideration of expansion"
+            suggestion = f"Warehouse expansion recommended; remaining capacity: {remaining_capacity}"
         else:
             level = "critical"
-            message = "仓库使用率严重过高，需要紧急扩建"
-            suggestion = f"紧急扩建仓库，当前剩余容量: {remaining_capacity}"
+            message = "The use of the warehouse was significantly excessive and required urgent expansion"
+            suggestion = f"Urgent warehouse expansion recommended; remaining capacity: {remaining_capacity}"
 
         # Returns Successful Response
         return self.success_response(
             response,
-            f"容量预警：{message}",
+            f"Capacity alert: {message}",
             {
                 "level": level,
                 "utilization": utilization,
@@ -801,7 +801,7 @@ class InventoryManager(EnhancedBaseModule):
                 
         Args:
             item_id: Material ID
-            < x17/ >: Reorder point (validated by decorator > = 0)
+            reorder_point: reorder point (validated as non-negative)
             safety_stock: Safe inventory (validated by decorator > = 0)
             Response: Respond objects (injected by decorator)
                         
@@ -818,14 +818,14 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ITEM_NOT_FOUND",
-                f"物料 {item_id} 不存在，无法设置策略"
+                f"Item {item_id} does not exist; policy cannot be configured"
             )
 
         if reorder_point < 0 or safety_stock < 0:
             return self.error_response(
                 response,
                 "INVALID_POLICY",
-                "再订购点和安全库存必须大于等于0"
+                "Reorder points and secure stocks must be greater than or equal to 0"
             )
         if dry_run:
             return self.success_response(
@@ -847,7 +847,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"已为物料 {item_id} 设置库存策略",
+            f"Inventory policy configured for item {item_id}",
             {
                 "item_id": resolved_item_id,
                 "policy": {
@@ -881,7 +881,7 @@ class InventoryManager(EnhancedBaseModule):
             # Return empty history
             return self.success_response(
                 response,
-                f"物料 {item_id} 没有库存历史记录",
+                f"Item {item_id} has no inventory history",
                 {
                     "item_id": item_id,
                     "history": [],
@@ -895,7 +895,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"成功获取物料 {item_id} 的库存历史记录",
+            f"Retrieved inventory history for item {item_id}",
             {
                 "item_id": item_id,
                 "history": result_history,
@@ -987,7 +987,7 @@ class InventoryManager(EnhancedBaseModule):
 
         Args:
             item_id: Inventory material ID
-            < x17/ >: Number of physical inventories (valided by decorator > = 0)
+            actual_quantity: physical count (validated as non-negative)
             Response: Respond objects (injected by decorator)
 
         Returns:
@@ -1012,14 +1012,14 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ITEM_NOT_FOUND",
-                f"物料 {item_id} 不存在"
+                f"Item {item_id} does not exist"
             )
 
         if actual_quantity < 0:
             return self.error_response(
                 response,
                 "INVALID_QUANTITY",
-                "盘点数量必须大于等于0"
+                "The number of counts must be greater than or equal to 0"
             )
 
         # 2. Differences in the number of access systems and their calculation
@@ -1034,7 +1034,7 @@ class InventoryManager(EnhancedBaseModule):
             system_quantity_display = self._from_su_quantity(system_quantity, original_unit)
             return self.success_response(
                 response,
-                "盘点数量与系统一致，无需调整",
+                "The number of counts is consistent with the system and no adjustments are required",
                 {
                     "item_id": resolved_item_id,
                     "system_quantity": system_quantity_display,
@@ -1053,7 +1053,7 @@ class InventoryManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "INSUFFICIENT_CAPACITY",
-                    f"盘点数量增加后超出容量。当前使用: {self.used_capacity}, 增加: {variance}, 总容量: {self.total_capacity}"
+                    f"Count adjustment would exceed capacity. Used: {self.used_capacity}; increase: {variance}; total: {self.total_capacity}"
                 )
 
         # 4. Updating of inventories
@@ -1086,7 +1086,7 @@ class InventoryManager(EnhancedBaseModule):
         variance_display = self._from_su_quantity(variance, original_unit)
         return self.success_response(
             response,
-            f"库存已调整，差异为 {variance}",
+            f"Inventory adjusted by {variance}",
             {
                 "item_id": resolved_item_id,
                 "system_quantity": system_quantity_display,
@@ -1102,7 +1102,7 @@ class InventoryManager(EnhancedBaseModule):
             }
         )
 
-    # == sync, corrected by elderman ==
+    # Synchronization helpers.
 
     def _active_runtime_injection_config(self) -> Dict:
         runtime_config = getattr(self.enterprise, "runtime_injection_config", None)
@@ -1172,7 +1172,7 @@ class InventoryManager(EnhancedBaseModule):
         if self._is_inventory_cost_exempt():
             return self.success_response(
                 response,
-                "库存持有成本豁免已生效，本轮不结转库存成本",
+                "The cost exemption for inventory holding is in effect and is not carried over for the current round",
                 {
                     "maintenance_cost": 0.0,
                     "operating_cost": 0.0,
@@ -1287,7 +1287,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"维护成本已计算: ¥{maintenance_cost:.2f}",
+            f"Maintenance cost calculated: {maintenance_cost:.2f}",
             {
                 "maintenance_cost": maintenance_cost,
                 "operating_cost": operating_cost,   
@@ -1326,7 +1326,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INVALID_RATE",
-                "维护成本率必须在0到1之间"
+                "Maintenance cost rates must be between 0 and 1"
             )
         if dry_run:
             return self.success_response(
@@ -1345,11 +1345,11 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"维护成本率已设置为 {rate*100:.2f}%",
+            f"Maintenance cost rate set to {rate*100:.2f}%",
             {
                 "old_rate": old_rate,
                 "new_rate": rate,
-                "message": f"维护成本率已从 {old_rate*100:.2f}% 更新为 {rate*100:.2f}%"
+                "message": f"Maintenance cost rate updated from {old_rate*100:.2f}% to {rate*100:.2f}%"
             }
         )
 
@@ -1377,7 +1377,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            "成功获取维护成本汇总",
+            "Summary of maintenance costs successfully acquired",
             {
                 "total_cost": self.total_maintenance_cost,
                 "current_rate": self.maintenance_cost_rate,
@@ -1411,7 +1411,7 @@ class InventoryManager(EnhancedBaseModule):
         # Returns Successful Response
         return self.success_response(
             response,
-            f"成功获取维护成本历史，共返回 {len(history)} 条记录",
+            f"Retrieved {len(history)} maintenance-cost records",
             {
                 "history": history,
                 "total_records": len(self.maintenance_cost_history),
@@ -1439,7 +1439,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INVALID_CAPACITY",
-                "容量必须大于0",
+                "The capacity must be greater than 0",
                 "Failed to set warehouse capacity"
             )
         
@@ -1448,11 +1448,11 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_CAPACITY",
-                f"新容量不能小于已使用容量。已使用容量: {self.used_capacity}, 新容量: {capacity}",
+                f"New capacity cannot be below used capacity. Used: {self.used_capacity}; new: {capacity}",
                 "Failed to set warehouse capacity"
             )
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # Update Capacity
         old_capacity = self.total_capacity
@@ -1460,7 +1460,7 @@ class InventoryManager(EnhancedBaseModule):
         self._update_inventory_metrics()
         return self.success_response(
             response,
-            f"仓库容量已设置为 {capacity}",
+            f"Warehouse capacity set to {capacity}",
             {
                 "old_capacity": old_capacity,
                 "new_capacity": capacity,
@@ -1481,7 +1481,7 @@ class InventoryManager(EnhancedBaseModule):
             Products: Product inventory data {item_id:{"quantity": float, "unit_price": float}} or short quantities
                         
             Format description:
-            - Brief: < x17/ > or parameter: parameter}
+            - Short form: numeric quantity; full form: a parameter dictionary
             - Automatic detection units from material ID (e.g. "malt_1"→ "malt")
                         
         Returns:
@@ -1508,7 +1508,7 @@ class InventoryManager(EnhancedBaseModule):
         for item_id, item_data in raw_materials.items():
             quantity, unit_price, err = _parse_item_data(item_id, item_data)
             if err:
-                errors.append(f"原材料 {err}")
+                errors.append(f"Raw material: {err}")
                 continue
             
             if quantity > 0:
@@ -1523,13 +1523,13 @@ class InventoryManager(EnhancedBaseModule):
                 if result.success:
                     initialized_count += 1
                 else:
-                    errors.append(f"原材料 {item_id} 初始化失败: {result.errors[0].message if result.errors else '未知错误'}")
+                    errors.append(f"Failed to initialize raw material {item_id}: {result.errors[0].message if result.errors else 'Unknown error'}")
         
         # Initialized product inventory
         for item_id, item_data in products.items():
             quantity, unit_price, err = _parse_item_data(item_id, item_data)
             if err:
-                errors.append(f"产品 {err}")
+                errors.append(f"Product: {err}")
                 continue
             
             if quantity > 0:
@@ -1544,19 +1544,19 @@ class InventoryManager(EnhancedBaseModule):
                 if result.success:
                     initialized_count += 1
                 else:
-                    errors.append(f"产品 {item_id} 初始化失败: {result.errors[0].message if result.errors else '未知错误'}")
+                    errors.append(f"Failed to initialize product {item_id}: {result.errors[0].message if result.errors else 'Unknown error'}")
         
         # Set Response Status and Data
         total_items = len(raw_materials) + len(products)
         if len(errors) == 0:
             response.set_status(ResponseStatus.SUCCESS)
-            response.set_message(f"库存初始化完成，成功初始化 {initialized_count} 个项目")
+            response.set_message(f"Inventory initialization complete: {initialized_count} items initialized")
         elif initialized_count > 0:
             response.set_status(ResponseStatus.PARTIAL)
-            response.set_message(f"库存初始化部分成功，成功初始化 {initialized_count} 个项目，{len(errors)} 个失败")
+            response.set_message(f"Inventory initialization partially completed: {initialized_count} succeeded, {len(errors)} failed")
         else:
             response.set_status(ResponseStatus.FAILED)
-            response.set_message(f"库存初始化失败，所有 {total_items} 个项目均未成功初始化")
+            response.set_message(f"Inventory initialization failed for all {total_items} items")
         
         # Can not open message
         for error in errors:
@@ -1651,7 +1651,7 @@ class InventoryManager(EnhancedBaseModule):
 
             return self.success_response(
                 response,
-                "成功获取模块状态",
+                "Successfully accessed modular status",
                 state_data
             )
         except Exception as e:
@@ -1659,10 +1659,10 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "STATE_ERROR",
-                f"获取模块状态失败: {e}"
+                f"Failed to retrieve module status: {e}"
             )
 
-        # == sync, corrected by elderman ==
+        # Synchronization helpers.
 
     def _record_inventory_transaction(self, item_id: str, quantity: float, trans_type: str, reason: str):
         """
@@ -1850,7 +1850,7 @@ class InventoryManager(EnhancedBaseModule):
 
             # Build AnalysisJSON
             analysis_json = {
-                "analysis_type": "库存变动分析",
+                "analysis_type": "Analysis of inventory changes",
                 "timestamp": timestamp,
                 "metrics": self.inventory_metrics,
                 "inventory_levels": inventory_levels,
@@ -1890,20 +1890,20 @@ class InventoryManager(EnhancedBaseModule):
                 },
                 "maintenance_cost_analysis": maintenance_cost_summary,
                 "insights": [
-                    f"总库存项目数: {len(self.inventory)}",
-                    f"总库存价值: ¥{total_value:,.2f}",
-                    f"仓库利用率: {utilization:.2f}",
-                    f"库存周转率: {turnover:.2f}",
-                    f"缺货率: {self.inventory_metrics.get('stockout_rate', 0):.2f}",
+                    f"Total inventory items: {len(self.inventory)}",
+                    f"Total inventory value: {total_value:,.2f}",
+                    f"Warehouse utilization: {utilization:.2f}",
+                    f"Inventory turnover: {turnover:.2f}",
+                    f"Stockout rate: {self.inventory_metrics.get('stockout_rate', 0):.2f}",
                     # f "Shrink rate: {self.inventory_metrics.get('shrinkage_rate', 0):.2f}",
-                    f"低库存项目数: {len(low_stock_items)}",
-                    f"需要再订购项目数: {len(reorder_items)}"
+                    f"Low-stock items: {len(low_stock_items)}",
+                    f"Items requiring reorder: {len(reorder_items)}"
                 ]
             }
 
             return self.success_response(
                 response,
-                "成功生成库存变动分析",
+                "Successful production of inventory change analysis",
                 {
                     "analysis": analysis_json
                 }
@@ -1912,7 +1912,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ANALYSIS_ERROR",
-                f"生成库存变动分析失败: {e}"
+                f"Failed to generate inventory-change analysis: {e}"
             )
 
     def _initialize_default_unit_mappings(self):
@@ -1964,7 +1964,7 @@ class InventoryManager(EnhancedBaseModule):
         return su_quantity
 
     def _to_pricing_quantity(self, su_quantity: float, original_unit: Optional[str]) -> float:
-        """Conversion of the quantities of SU to < x 17/ > the same calibre."""
+        """Convert an SU quantity to the source unit used for pricing."""
         return self._from_su_quantity(su_quantity, original_unit)
 
     def _normalize_item_type(
@@ -2015,7 +2015,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "UNIT_NOT_FOUND",
-                f"单位 '{unit}' 未在转换表中配置。可用单位: {list(self.unit_conversion_table.keys())}"
+                f"Unit '{unit}' is not configured. Available units: {list(self.unit_conversion_table.keys())}"
             )
         
         conversion_ratio = self.unit_conversion_table[unit_lower]["to_su"]
@@ -2023,7 +2023,7 @@ class InventoryManager(EnhancedBaseModule):
         
         return self.success_response(
             response,
-            f"成功将 {quantity} {unit} 转换为 SU",
+            f"Converted {quantity} {unit} to SU",
             {
                 "original_quantity": quantity,
                 "original_unit": unit,
@@ -2056,7 +2056,7 @@ class InventoryManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "UNIT_NOT_FOUND",
-                f"单位 '{unit}' 未在转换表中配置。可用单位: {list(self.unit_conversion_table.keys())}"
+                f"Unit '{unit}' is not configured. Available units: {list(self.unit_conversion_table.keys())}"
             )
         
         conversion_ratio = self.unit_conversion_table[unit_lower]["from_su"]
@@ -2064,7 +2064,7 @@ class InventoryManager(EnhancedBaseModule):
         
         return self.success_response(
             response,
-            f"成功将 {su_quantity} SU 转换为 {unit}",
+            f"Converted {su_quantity} SU to {unit}",
             {
                 "su_quantity": su_quantity,
                 "target_unit": unit,
@@ -2113,7 +2113,7 @@ def _parse_item_data(item_id: str, item_data) -> tuple:
     Returns:
         tuple: (quantity, unit_price, error)
             Number
-            - < x17/ > : unit price
+            - unit_price: unit price
             - error information (if any)
         """
     try:
@@ -2132,18 +2132,18 @@ def _parse_item_data(item_id: str, item_data) -> tuple:
             if unit_price is None:
                 unit_price = 0.0
         else:
-            return 0, 0.0, f"无效的数据类型: {type(item_data)}"
+            return 0, 0.0, f"Invalid data type: {type(item_data)}"
         
         if not isinstance(quantity, (int, float)) or quantity < 0:
-            return 0, 0.0, f"数量必须是非负数字: {quantity}"
+            return 0, 0.0, f"Quantity must be non-negative: {quantity}"
         
         if not isinstance(unit_price, (int, float)) or unit_price < 0:
-            return 0, 0.0, f"单价必须是非负数字: {unit_price}"
+            return 0, 0.0, f"Unit price must be non-negative: {unit_price}"
         
         return float(quantity), float(unit_price), None
         
     except Exception as e:
-        return 0, 0.0, f"解析错误: {str(e)}"
+        return 0, 0.0, f"Parse error: {str(e)}"
 
 
 def _parse_item_data_with_unit(item_id: str, item_data) -> tuple:
@@ -2160,7 +2160,7 @@ def _parse_item_data_with_unit(item_id: str, item_data) -> tuple:
     Returns:
         tuple: (quantity, unit_price, unit, error)
             Number
-            - < x17/ > : unit price
+            - unit_price: unit price
             - unit: units (optional)
             - error information (if any)
         """
@@ -2182,18 +2182,18 @@ def _parse_item_data_with_unit(item_id: str, item_data) -> tuple:
             if unit_price is None:
                 unit_price = 0.0
         else:
-            return 0, 0.0, None, f"无效的数据类型: {type(item_data)}"
+            return 0, 0.0, None, f"Invalid data type: {type(item_data)}"
         
         if not isinstance(quantity, (int, float)) or quantity < 0:
-            return 0, 0.0, None, f"数量必须是非负数字: {quantity}"
+            return 0, 0.0, None, f"Quantity must be non-negative: {quantity}"
         
         if not isinstance(unit_price, (int, float)) or unit_price < 0:
-            return 0, 0.0, None, f"单价必须是非负数字: {unit_price}"
+            return 0, 0.0, None, f"Unit price must be non-negative: {unit_price}"
         
         if unit is not None and not isinstance(unit, str):
-            return 0, 0.0, None, f"单位必须是字符串: {unit}"
+            return 0, 0.0, None, f"Unit must be a string: {unit}"
         
         return float(quantity), float(unit_price), unit, None
         
     except Exception as e:
-        return 0, 0.0, None, f"解析错误: {str(e)}"
+        return 0, 0.0, None, f"Parse error: {str(e)}"

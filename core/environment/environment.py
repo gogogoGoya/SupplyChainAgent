@@ -121,12 +121,12 @@ class Environment:
         if hasattr(self, 'network_manager') and self.network_manager:
             self.network_manager.reset()
         else:
-            print("警告: 企业网络管理器未设置，跳过重置")
+            print("Warning: enterprise Network Manager not set, Skip Reset")
         
         if hasattr(self, 'event_manager') and self.event_manager:
             self.event_manager.reset()
         else:
-            print("警告: 事件管理器未设置，跳过重置")
+            print("Warning: Event Manager not set, Skip Reset")
         
         
         # Initialization State
@@ -157,7 +157,7 @@ class Environment:
         
         # Handle the acquired events
         if events:
-            print(f"处理 {len(events)} 个环境事件...")
+            print(f"Processing {len(events)} environment events...")
             # Get the current status for event handling
             current_state = self.get_current_state()
             
@@ -167,27 +167,27 @@ class Environment:
                 
                 # Example of specific event handling
                 if event_type == 'MARKET_DEMAND_CHANGE':
-                    print(f"处理市场需求变化事件: {event.get('data', {})}")
+                    print(f"Processing market-demand event: {event.get('data', {})}")
                     # Update the level of demand in market conditions
                     self._update_market_demand(event.get('data', {}))
                     
                 elif event_type == 'SUPPLY_DISRUPTION':
-                    print(f"处理供应中断事件: {event.get('data', {})}")
+                    print(f"Processing supply-disruption event: {event.get('data', {})}")
                     # Impact on supply availability in the supply chain
                     self._handle_supply_disruption(event.get('data', {}))
                     
                 elif event_type == 'SEASONAL_ADJUSTMENT':
-                    print(f"处理季节性调整事件: {event.get('data', {})}")
+                    print(f"Processing seasonal-adjustment event: {event.get('data', {})}")
                     # Adjusting market conditions to seasons
                     self._apply_seasonal_adjustments(event.get('data', {}))
                     
                 elif event_type == 'LOGISTICS_DELAY':
-                    print(f"处理物流延迟事件: {event.get('data', {})}")
+                    print(f"Processing logistics-delay event: {event.get('data', {})}")
                     # Adjustment of logistics-related parameters
                     self._adjust_logistics(event.get('data', {}))
                     
                 elif event_type == 'PRICE_FLUCTUATION':
-                    print(f"处理价格波动事件: {event.get('data', {})}")
+                    print(f"Processing price-fluctuation event: {event.get('data', {})}")
                     # Update of price indices
                     self._update_price_index(event.get('data', {}))
                     
@@ -304,10 +304,10 @@ class Environment:
             try:
                 network_state = self.network_manager.get_network_state()
             except Exception as e:
-                print(f"获取网络状态时出错: {str(e)}")
+                print(f"Failed to retrieve network state: {str(e)}")
                 network_state = {"status": "error", "message": str(e)}
         else:
-            network_state = {"status": "not_available", "message": "企业网络管理器未设置"}
+            network_state = {"status": "not_available", "message": "enterprise Network Manager not set"}
         
         # Secure access to enterprise state
         enterprise_states = {}

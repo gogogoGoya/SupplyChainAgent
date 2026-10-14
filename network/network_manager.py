@@ -60,7 +60,7 @@ class NetworkManager:
             Metadata: Extra metadata
                 """
         if from_id not in self.enterprises or to_id not in self.enterprises:
-            raise ValueError(f"企业ID {from_id} 或 {to_id} 不存在")
+            raise ValueError(f"Enterprise ID {from_id} or {to_id} does not exist")
         
         connection_data = {
             "type": relationship_type,
@@ -400,7 +400,7 @@ class NetworkManager:
         
         return {
             "success": True,
-            "message": "所有关系连接已清空",
+            "message": "All connections cleared",
             "enterprises_affected": len(self.enterprises)
         }
     

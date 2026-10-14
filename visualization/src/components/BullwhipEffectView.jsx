@@ -193,7 +193,7 @@ const formatNumber = (value) => {
   if (!Number.isFinite(numeric)) {
     return '-';
   }
-  return new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }).format(numeric);
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(numeric);
 };
 
 const formatRatio = (value) => {
@@ -1607,7 +1607,7 @@ const BullwhipEffectView = ({
       ? 'Each series is expressed as a percentage of its own peak, enabling comparison of fluctuation shape and timing.'
       : 'Absolute quantities preserve actual request scale; large tier differences may visually compress smaller series.';
   const requestChartExternalNote = includeUpstreamExternalSupplierMode && (externalUpstreamDemandLayer || externalUpstreamOrderLayer)
-    ? `${externalUpstreamDemandLayer ? `The dotted “${externalUpstreamDemandLayer.name}” series shows top-tier replenishment demand from top_tier_supply_plan.` : ''}${externalUpstreamDemandLayer && externalUpstreamOrderLayer ? ' ' : ''}${externalUpstreamOrderLayer ? `The dashed “${externalUpstreamOrderLayer.name}” series shows actual external procurement and is unaffected by the raw/effective filter.` : ''}`
+    ? `${externalUpstreamDemandLayer ? `The dotted "${externalUpstreamDemandLayer.name}" series shows top-tier replenishment demand from top_tier_supply_plan.` : ''}${externalUpstreamDemandLayer && externalUpstreamOrderLayer ? ' ' : ''}${externalUpstreamOrderLayer ? `The dashed "${externalUpstreamOrderLayer.name}" series shows actual external procurement and is unaffected by the raw/effective filter.` : ''}`
     : includeUpstreamExternalSupplierMode
       ? 'No top-tier external procurement orders were recorded, so no external upstream order series is shown.'
       : '';

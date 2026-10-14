@@ -39,7 +39,7 @@ const CompanyInfo = ({ company, day, dataRoot }) => {
     if (!Number.isFinite(numeric)) {
       return '¥-';
     }
-    return `¥${new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 2 }).format(numeric)}`;
+    return `¥${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(numeric)}`;
   };
 
   if (loading) {

@@ -779,10 +779,10 @@ def test_cobweb_c3_analyst_runtime_prompt_preserves_open_quantity_choice():
 
     prompt = runner._build_cobweb_profit_objective_analyst_prompt()
 
-    assert "价格方向只能作为市场风险证据" in prompt
-    assert "未来2到3轮" in prompt
-    assert "不给生产部门指定唯一精确产量" in prompt
-    assert "不得把理论均衡供给" in prompt
+    assert "Treat price direction as market-risk evidence" in prompt
+    assert "next two to three turns" in prompt
+    assert "Do not prescribe one exact production quantity" in prompt
+    assert "with explicit trade-offs" in prompt
 
     c2 = get_scenario_config("cobweb_divergent")
     runner._runtime_contract = lambda: {"scenario_config": c2}
@@ -957,7 +957,7 @@ def test_cobweb_c3_analyst_uses_compact_non_prescriptive_input(tmp_path):
     assert compact["sales_state"]["order_status_counts"]["completed"] == 32
     assert len(compact["recent_history"]["latest_days"]) == 3
     assert spec.observation_path in prompt
-    assert "不得再读取原始 observation_day32.txt" in prompt
+    assert "Do not read the raw observation_day32.txt" in prompt
     assert len(serialized) < len(json.dumps(raw_observation, ensure_ascii=False))
 
 
@@ -972,22 +972,22 @@ def test_cobweb_c3_analysis_validation_rejects_stale_or_prescriptive_targets(
     valid = {
         "enterprise_name": "Manufacturer",
         "round_id": 32,
-        "enterprise_summarys": "滚动优化长期经营表现。",
+        "enterprise_summarys": "Roll to optimize long-term business performance.",
         "department_targets": {
             "sales": {
-                "target": "按边际收益与履约风险筛选订单。",
-                "evaluation": "服务水平保持稳定。",
-                "reason": "避免无利润规模扩张。",
+                "target": "Orders are screened on the basis of marginal gains and fulfillment risk.",
+                "evaluation": "The level of services remained stable.",
+                "reason": "To avoid a no-profit expansion.",
             },
             "procurement": {
-                "target": "维持原料覆盖。",
-                "evaluation": "无缺料中断。",
-                "reason": "保障生产连续性。",
+                "target": "Maintain raw material cover.",
+                "evaluation": "No missing material interruption.",
+                "reason": "The continuity of production is guaranteed.",
             },
             "production": {
-                "target": "按利润与现金安全选择可执行产量区间。",
-                "evaluation": "履约积压下降，生产调整幅度保持稳定。",
-                "reason": "平衡边际收益、现金、服务水平和价格风险。",
+                "target": "An enforceable production range is selected on the basis of profit and cash security.",
+                "evaluation": "fulfillment Backlog decreased, and the adjustment for production remained stable.",
+                "reason": "Balancing marginal gains, cash, service levels and price risks.",
             },
         },
     }
@@ -997,21 +997,21 @@ def test_cobweb_c3_analysis_validation_rejects_stale_or_prescriptive_targets(
     stale = json.loads(json.dumps(valid))
     stale["round_id"] = 30
     assert runner._is_valid_analysis_payload(stale) is False
-    assert "期望 round_id=32" in runner._last_analysis_validation_error
+    assert "expected round_id=32" in runner._last_analysis_validation_error
 
     exact = json.loads(json.dumps(valid))
     exact["department_targets"]["production"][
         "evaluation"
-    ] = "生产计划数量等于160单位，现金与履约保持稳定。"
+    ] = "The production quantity is 160 units, and cash is stable with fulfillment."
     assert runner._is_valid_analysis_payload(exact) is False
-    assert "不能指定唯一精确产量" in runner._last_analysis_validation_error
+    assert "must not prescribe one exact quantity" in runner._last_analysis_validation_error
 
     leaked = json.loads(json.dumps(valid))
     leaked["department_targets"]["production"][
         "reason"
-    ] = "recommended_plan_quantity=160，现金和履约均可行。"
+    ] = "recommended_plan_quantity=160, cash and fulfillment are feasible."
     assert runner._is_valid_analysis_payload(leaked) is False
-    assert "已禁止的处方式数量字段" in runner._last_analysis_validation_error
+    assert "prohibited prescriptive quantity fields" in runner._last_analysis_validation_error
 
 
 def test_cobweb_c3_sales_compaction_keeps_actionable_orders():
@@ -1109,7 +1109,7 @@ def test_cobweb_c3_caps_daily_capacity_to_plan_quantity_only(
                 "daily_capacity": 130,
             },
         },
-        "action_reason": "盈利模式滚动排产。",
+        "action_reason": "Profits mode rolling production scheduling.",
         "module_type": "ProductionManager",
         "executor_id": "Manufacturer",
     }]

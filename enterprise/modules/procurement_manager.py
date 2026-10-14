@@ -1693,7 +1693,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法注册供应商。至少需要: {self.config.MIN_REGISTER_STAFF}"
+                f"Insufficient staff to register a supplier. Minimum required: {self.config.MIN_REGISTER_STAFF}"
             )
         for supplier_info in suppliers_data:
             supplier_type = supplier_info['supplier_type']
@@ -1701,15 +1701,15 @@ class ProcurementManager(EnhancedBaseModule):
                 return self.error_response(
                 response,
                 "INVALID_SUPPLIER_TYPE",
-                "供应商类型必须为 'external' 或 'enterprise'"
+                "The supplier type must be 'external' or 'interprise'"
             )
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         if not suppliers_data:
             return self.success_response(
                 response,
-                "没有供应商数据需要初始化",
+                "No vendor data required initialization",
                 {"registered": 0}
             )
 
@@ -1721,7 +1721,7 @@ class ProcurementManager(EnhancedBaseModule):
             # Validate Required Fields
             if not all(key in supplier_info for key in ['supplier_name', 'supplier_type', 'materials']):
                 failed_count += 1
-                errors.append(f"供应商数据不完整: {supplier_info}")
+                errors.append(f"Incomplete supplier data: {supplier_info}")
                 continue
 
             # Registered vendors
@@ -1745,13 +1745,13 @@ class ProcurementManager(EnhancedBaseModule):
                     if hasattr(result, 'errors') and result.errors:
                         if isinstance(result.errors, list) and len(result.errors) > 0:
                             error_detail = result.errors[0].get('message', error_detail)
-                    errors.append(f"注册供应商失败: {supplier_info['supplier_name']}, 错误: {error_detail}")
+                    errors.append(f"Failed to register supplier {supplier_info['supplier_name']}: {error_detail}")
             else:
                 if result['success']:
                     registered_count += 1
                 else:
                     failed_count += 1
-                    errors.append(f"注册供应商失败: {supplier_info['supplier_name']}, 错误: {result.get('error', '未知错误')}")
+                    errors.append(f"Failed to register supplier {supplier_info['supplier_name']}: {result.get('error', 'Unknown error')}")
 
         # Set Response Status and Message
         if failed_count == 0:
@@ -1759,7 +1759,7 @@ class ProcurementManager(EnhancedBaseModule):
         else:
             response.set_status(ResponseStatus.PARTIAL)
 
-        response.set_message(f"供应商初始化完成: 成功注册{registered_count}个，失败{failed_count}个")
+        response.set_message(f"Supplier initialization complete: {registered_count} registered, {failed_count} failed")
         response.data = {
             "registered": registered_count,
             "failed": failed_count,
@@ -1831,7 +1831,7 @@ class ProcurementManager(EnhancedBaseModule):
                     "type": "order_assignment_pending",
                     "order_id": order_id,
                     "material_id": accepted_order.product_id,
-                    "reason": getattr(assign_result, "message", "采购订单创建后暂未成功分配工人")
+                    "reason": getattr(assign_result, "message", "Procurement orders were not successfully distributed after they were created")
                 })
 
             self.purchase_orders.append(purchase_order)
@@ -1863,10 +1863,10 @@ class ProcurementManager(EnhancedBaseModule):
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
             if not exchange_proposal or not self._is_relevant_proposal(exchange_proposal):
-                return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {proposal_id} 不存在")
+                return self.error_response(response, "ORDER_NOT_FOUND", f"Order {proposal_id} does not exist")
             if exchange_proposal.status != "pending":
-                return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {exchange_proposal.status}，无法接受")
-            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"订单 {proposal_id} 已完成采购侧响应")
+                return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {exchange_proposal.status} cannot be accepted")
+            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"Order {proposal_id} already has a procurement response")
 
         estimated_cost = float(proposal.quantity or 0) * float(proposal.proposed_price or 0)
         cash_commitment = self._evaluate_cash_commitment(estimated_cost)
@@ -1877,17 +1877,17 @@ class ProcurementManager(EnhancedBaseModule):
                     response,
                     "LONG_RUN_COMMITMENT_LIMIT",
                     (
-                        "接受提案将使未结采购承诺超出长跑现金预算。"
-                        f"预计承诺 ¥{long_run_guard.get('projected_pending_commitment', 0):,.2f}，"
-                        f"预算上限 ¥{long_run_guard.get('policy_budget', 0):,.2f}"
+                        "Acceptance of the proposal would result in an open procurement commitment exceeding the long-run cash budget."
+                        f"Projected commitment {long_run_guard.get('projected_pending_commitment', 0):,.2f}; "
+                        f"policy budget {long_run_guard.get('policy_budget', 0):,.2f}"
                     ),
                 )
             return self.error_response(
                 response,
                 "INSUFFICIENT_FUNDS",
                 (
-                    f"接受提案后预计现金将低于 0。提案成本约 ¥{estimated_cost:,.2f}，"
-                    f"待履约承诺后剩余现金约 ¥{cash_commitment['projected_remaining_cash']:,.2f}"
+                    f"Accepting the proposal would reduce projected cash below zero. Estimated proposal cost: {estimated_cost:,.2f}; "
+                    f"projected cash after pending commitments: {cash_commitment['projected_remaining_cash']:,.2f}"
                 )
             )
         
@@ -1911,7 +1911,7 @@ class ProcurementManager(EnhancedBaseModule):
         self._refresh_proposal_views()
         return self.success_response(
             response,
-            f"订单 {proposal_id} 已接受, 等待上游",
+            f"Order {proposal_id} accepted and awaiting the upstream enterprise",
             {
                 "proposal_id": proposal_id,
                 "estimated_cost": estimated_cost,
@@ -1935,13 +1935,13 @@ class ProcurementManager(EnhancedBaseModule):
         if not proposal:
             exchange_proposal = self._get_exchange_proposal(proposal_id)
             if not exchange_proposal or not self._is_relevant_proposal(exchange_proposal):
-                return self.error_response(response, "ORDER_NOT_FOUND", f"订单 {proposal_id} 不存在")
+                return self.error_response(response, "ORDER_NOT_FOUND", f"Order {proposal_id} does not exist")
             if exchange_proposal.status != "pending":
-                return self.error_response(response, "INVALID_ORDER_STATUS", f"订单状态为 {exchange_proposal.status}，无法拒绝")
-            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"订单 {proposal_id} 已完成采购侧响应")
+                return self.error_response(response, "INVALID_ORDER_STATUS", f"Order status {exchange_proposal.status} cannot be rejected")
+            return self.error_response(response, "PROPOSAL_ALREADY_RESPONDED", f"Order {proposal_id} already has a procurement response")
         
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
         
         # 3. Updating the order status
         self.enterprise.upstream_exchange.handle_company_response(
@@ -1952,7 +1952,7 @@ class ProcurementManager(EnhancedBaseModule):
         self._refresh_proposal_views()
         return self.success_response(
             response,
-            f"订单 {proposal_id} 已拒绝",
+            f"Order {proposal_id} rejected",
             {
                 "proposal_id": proposal_id,
             }
@@ -1968,7 +1968,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MATERIAL_NOT_PURCHASABLE",
-                f"企业 {self.enterprise.id} 不允许采购物料 {material_id}。可采购物料: {getattr(self.enterprise, 'purchasable_materials_idList', [])}"
+                f"Enterprise {self.enterprise.id} may not purchase {material_id}. Purchasable items: {getattr(self.enterprise, 'purchasable_materials_idList', [])}"
             )
 
         # Check department personnel
@@ -1979,7 +1979,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法创建采购订单。至少需要: {self.config.MIN_PROCUREMENT_STAFF}"
+                f"Insufficient staff to create a purchase order. Minimum required: {self.config.MIN_PROCUREMENT_STAFF}"
             )
         quantity_guard = self._cap_long_run_manual_purchase_demand(
             material_id,
@@ -1996,7 +1996,7 @@ class ProcurementManager(EnhancedBaseModule):
         inventory_manager = super().get_module_by_type("InventoryManager")
         detail_result = inventory_manager.get_inventory_detail(material_id)
         if not getattr(detail_result, "success", False):
-            return self.error_response(response, "PRODUCT_NOT_FOUND", f"产品 {material_id} 不存在")
+            return self.error_response(response, "PRODUCT_NOT_FOUND", f"Product {material_id} does not exist")
         if quantity <= 0:
             history_item = {
                 "round": current_time,
@@ -2011,7 +2011,7 @@ class ProcurementManager(EnhancedBaseModule):
             self.upstream_order_history.append(history_item)
             return self.success_response(
                 response,
-                f"{material_id} 当前库存与在途覆盖充足，未重复建立采购需求",
+                f"Inventory and inbound coverage for {material_id} are sufficient; no duplicate purchase request was created",
                 history_item,
             )
         stock = detail_result.data if isinstance(detail_result.data, dict) else {}
@@ -2039,7 +2039,7 @@ class ProcurementManager(EnhancedBaseModule):
         payload = asdict(data)
         payload["pricing_strategy"] = pricing
         payload["quantity_guard"] = quantity_guard
-        return self.success_response(response, f"已在交易所建立采购需求，等待上游企业响应", payload)
+        return self.success_response(response, "Purchase request created on the exchange and awaiting upstream response", payload)
 
     @with_response("calculate_replenishment_quantity")
     def calculate_replenishment_quantity(
@@ -2166,7 +2166,7 @@ class ProcurementManager(EnhancedBaseModule):
         }
         return self.success_response(
             response,
-            f"已计算 {material_id} 的补货建议",
+            f"Calculated replenishment recommendation for {material_id}",
             result
         )
 
@@ -2187,7 +2187,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MATERIAL_NOT_PURCHASABLE",
-                f"企业 {self.enterprise.id} 不允许采购物料 {material_id}。可采购物料: {getattr(self.enterprise, 'purchasable_materials_idList', [])}"
+                f"Enterprise {self.enterprise.id} may not purchase {material_id}. Purchasable items: {getattr(self.enterprise, 'purchasable_materials_idList', [])}"
             )
 
         hr_manager = super().get_module_by_type("HRManager")
@@ -2197,7 +2197,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法创建补货订单。至少需要: {self.config.MIN_PROCUREMENT_STAFF}"
+                f"Insufficient staff to create a replenishment order. Minimum required: {self.config.MIN_PROCUREMENT_STAFF}"
             )
 
         calculation = self.calculate_replenishment_quantity(
@@ -2224,7 +2224,7 @@ class ProcurementManager(EnhancedBaseModule):
             self.replenishment_history.append(history_item)
             return self.success_response(
                 response,
-                f"{material_id} 当前无需补货，未创建采购请求",
+                f"No replenishment is currently required for {material_id}; no purchase request was created",
                 history_item
             )
 
@@ -2245,14 +2245,14 @@ class ProcurementManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "UPSTREAM_EXCHANGE_UNAVAILABLE",
-                    "当前企业未连接上游交易所，且未启用直接外部补给 fallback",
+                    "Current enterprise does not connect upstream exchange and no direct external replenishment fallsback",
                 )
             supplier = self._select_external_supplier_for_material(material_id)
             if supplier is None:
                 return self.error_response(
                     response,
                     "EXTERNAL_SUPPLIER_NOT_FOUND",
-                    f"未找到可提供 {material_id} 的外部供应商",
+                    f"No external supplier offers {material_id}",
                 )
             material_info = supplier.get("material_info") or {}
             direct_quantity = self._round_up_to_moq(
@@ -2292,7 +2292,7 @@ class ProcurementManager(EnhancedBaseModule):
             })
             return self.success_response(
                 response,
-                f"已通过外部供应商 {supplier.get('supplier_name')} 为 {material_id} 建立直接补货订单",
+                f"Created a direct replenishment order for {material_id} from external supplier {supplier.get('supplier_name')}",
                 history_item,
             )
 
@@ -2325,7 +2325,7 @@ class ProcurementManager(EnhancedBaseModule):
         })
         return self.success_response(
             response,
-            f"已按补货策略为 {material_id} 建立采购需求",
+            f"Created a purchase request for {material_id} under the replenishment policy",
             history_item
         )
 
@@ -2341,7 +2341,7 @@ class ProcurementManager(EnhancedBaseModule):
             parameter: MaterialsID
             Number of purchases
             parameter: Name of supplier
-            < x17/ > : Logistics Mode ( "Road", "rail", "air")
+            logistics_method: logistics mode ("road", "rail", or "air")
             Response: respond to objects, automatically injected by decorator
 
         Returns:
@@ -2355,13 +2355,13 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法创建采购订单。至少需要: {self.config.MIN_PROCUREMENT_STAFF}"
+                f"Insufficient staff to create a purchase order. Minimum required: {self.config.MIN_PROCUREMENT_STAFF}"
             )
         if logistics_mode not in self.config.LOGISTICS_CONFIGS:
             return self.error_response(
                 response,
                 "INVALID_LOGISTICS_MODE",
-                f"无效的物流方式，请选择 'road', 'rail', 或 'air'"
+                "Invalid logistics method; choose 'road', 'rail', or 'air'"
             )
 
         # Validation of supply Business
@@ -2379,7 +2379,7 @@ class ProcurementManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "SUPPLIER_NOT_FOUND",
-                    f"供应商 {supplier_name} 不存在，也不在可选供应商目录中"
+                    f"Supplier {supplier_name} does not exist and is not listed as a candidate supplier"
                 )
             supplier = selected_candidate
         # 3. Certification of the supplier ' s supply of the material
@@ -2387,7 +2387,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MATERIAL_NOT_AVAILABLE",
-                f"供应商 {supplier_name} 不提供材料 {material_id}"
+                f"Supplier {supplier_name} does not offer material {material_id}"
             )
 
         material_info = supplier["materials"][material_id]
@@ -2398,7 +2398,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MIN_ORDER_NOT_MET",
-                f"未满足最小起订量。需要: {min_order_qty}, 当前: {quantity}"
+                f"Minimum order quantity not met. Required: {min_order_qty}; requested: {quantity}"
             )
 
         # 5. Costing
@@ -2411,7 +2411,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "LOGISTICS_COST_ERROR",
-                f"物流成本计算失败: {logistics_result.message}"
+                f"Failed to calculate logistics cost: {logistics_result.message}"
             )
 
         # Recovery of logistics costs and processing of different types of return
@@ -2454,16 +2454,16 @@ class ProcurementManager(EnhancedBaseModule):
                         response,
                         "EXTERNAL_CREDIT_SINGLE_ORDER_LIMIT_EXCEEDED",
                         (
-                            "单笔外部采购金额超出顶层授信单笔上限。"
-                            f" 需要: ¥{total_cost:,.2f}, 上限: ¥{credit_commitment['guard'].get('max_single_order_amount', 0):,.2f}"
+                            "The amount of individual external purchases exceeded the ceiling of the top-level letter delivery."
+                            f" Required: {total_cost:,.2f}; limit: {credit_commitment['guard'].get('max_single_order_amount', 0):,.2f}"
                         )
                     )
                 return self.error_response(
                     response,
                     "EXTERNAL_CREDIT_LIMIT_EXCEEDED",
                     (
-                        "顶层外部授信额度不足。"
-                        f" 需要: ¥{total_cost:,.2f}, 可用额度: ¥{credit_commitment['guard'].get('available_credit', 0):,.2f}"
+                        "The top-level external crediting line is insufficient."
+                        f" Required: {total_cost:,.2f}; available credit: {credit_commitment['guard'].get('available_credit', 0):,.2f}"
                     )
                 )
             payment_mode = "accounts_payable"
@@ -2472,7 +2472,7 @@ class ProcurementManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "INSUFFICIENT_FUNDS",
-                    f"资金不足，需要 ¥{total_cost:,.2f}"
+                    f"Insufficient funds; required: {total_cost:,.2f}"
                 )
             cash_commitment = self._evaluate_cash_commitment(total_cost)
 
@@ -2553,7 +2553,7 @@ class ProcurementManager(EnhancedBaseModule):
                 return self.error_response(
                     response,
                     "ASSIGN_WORKERS_ERROR",
-                    getattr(assign_result, "message", "采购订单人手分配失败")
+                    getattr(assign_result, "message", "Procurement order staff distribution failed")
                 )
 
             selected_on_order = selected_candidate is not None
@@ -2614,7 +2614,7 @@ class ProcurementManager(EnhancedBaseModule):
             # Setup Successful Response
             return self.success_response(
                 response,
-                f"采购订单 {order_id} 已创建,根据所选物流,至少需要等待{delivery_time}个工作日才能收到采购货物",
+                f"Purchase order {order_id} created; the selected logistics method requires at least {delivery_time} working days for delivery",
                 {
                     "order_id": order_id,
                     "arrival_time": arrival_time,
@@ -2717,7 +2717,7 @@ class ProcurementManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            f"成功处理 {len(arrived_materials)} 个到货订单",
+            f"Processed {len(arrived_materials)} arrived orders",
             {
                 "arrived_materials": arrived_materials,
                 "total_arrived": len(arrived_materials)
@@ -2789,7 +2789,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"已处理 {len(settled_orders)} 笔顶层外采应付账款结算",
+            f"Settled {len(settled_orders)} top-tier external procurement payables",
             {
                 "settled_orders": settled_orders,
                 "blocked_orders": blocked_orders,
@@ -2820,7 +2820,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INSUFFICIENT_STAFF",
-                f"人手不足，无法取消采购订单。至少需要: {self.config.MIN_CANCEL_STAFF}"
+                f"Insufficient staff to cancel a purchase order. Minimum required: {self.config.MIN_CANCEL_STAFF}"
             )
 
         order = self._find_order(order_id)
@@ -2828,18 +2828,18 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ORDER_NOT_FOUND",
-                f"订单 {order_id} 不存在"
+                f"Order {order_id} does not exist"
             )
 
         if order["status"] != "pending":
             return self.error_response(
                 response,
                 "INVALID_STATUS",
-                f"订单状态为 {order['status']}，无法取消"
+                f"Order status {order['status']} cannot be canceled"
             )
 
         if dry_run:
-            return self.success_response(response, "DRY_RUN_SUCCESS", f"测试通过")
+            return self.success_response(response, "DRY_RUN_SUCCESS", "Dry-run validation passed")
 
         # Update order status
         order["status"] = "cancelled"
@@ -2872,7 +2872,7 @@ class ProcurementManager(EnhancedBaseModule):
         # Setup Successful Response
         return self.success_response(
             response,
-            f"订单 {order_id} 已取消，退款 ¥{order['total_cost']:,.2f}",
+            f"Order {order_id} canceled; refund: {order['total_cost']:,.2f}",
             {
                 "order_id": order_id,
                 "refund_amount": order["total_cost"],
@@ -2897,7 +2897,7 @@ class ProcurementManager(EnhancedBaseModule):
         if order:
             return self.success_response(
                 response,
-                f"成功获取订单 {order_id} 详情",
+                f"Retrieved details for order {order_id}",
                 {
                     "order_id": order_id,
                     "order": order
@@ -2907,7 +2907,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ORDER_NOT_FOUND",
-                f"订单 {order_id} 不存在"
+                f"Order {order_id} does not exist"
             )
 
     @with_response("get_all_orders")
@@ -2929,7 +2929,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"成功获取 {len(orders)} 个订单",
+            f"Retrieved {len(orders)} orders",
             {
                 "orders": orders,
                 "total_orders": len(orders),
@@ -2969,7 +2969,7 @@ class ProcurementManager(EnhancedBaseModule):
             supplier_type: Vendor Type ("external" or "interprise")
             Materiels: Materials provided
             processing_time: processing time (time steps)
-            < x17/>: Quality level ( "low", "standard", "high")
+            quality_level: quality level ("low", "standard", or "high")
             reliability_score: Reliability rating (0.0-1.0)
             Response: respond to objects, automatically injected by decorator
 
@@ -3003,7 +3003,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"供应商 {supplier_name} 已注册",
+            f"Supplier {supplier_name} registered",
             {
                 "supplier_id": supplier_id,
                 "supplier_name": supplier_name
@@ -3027,7 +3027,7 @@ class ProcurementManager(EnhancedBaseModule):
         if supplier:
             return self.success_response(
                 response,
-                f"成功获取供应商 {supplier_id} 信息",
+                f"Retrieved supplier {supplier_id}",
                 {
                     "supplier_id": supplier_id,
                     "supplier": supplier
@@ -3037,7 +3037,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "SUPPLIER_NOT_FOUND",
-                f"供应商 {supplier_id} 不存在"
+                f"Supplier {supplier_id} does not exist"
             )
 
     @with_response("get_all_suppliers")
@@ -3060,7 +3060,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"成功获取供应商列表，共 {len(suppliers_list)} 个供应商",
+            f"Retrieved {len(suppliers_list)} suppliers",
             {
                 "suppliers": suppliers_list,
                 "total_suppliers": len(suppliers_list),
@@ -3101,7 +3101,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"成功查询到 {len(suppliers_with_material)} 个提供材料 {material_id} 的供应商",
+            f"Found {len(suppliers_with_material)} suppliers offering material {material_id}",
             {
                 "suppliers": suppliers_with_material,
                 "total_suppliers": len(suppliers_with_material),
@@ -3118,7 +3118,7 @@ class ProcurementManager(EnhancedBaseModule):
         Calculation of logistics costs
 
         Args:
-            < x17/ > : Logistics Mode ( "Road", "rail", "air")
+            logistics_method: logistics mode ("road", "rail", or "air")
             Number
             Response: respond to objects, automatically injected by decorator
 
@@ -3129,7 +3129,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "INVALID_LOGISTICS_MODE",
-                f"未知的物流方式: {logistics_mode}"
+                f"Unknown logistics method: {logistics_mode}"
             )
 
         config = self.config.LOGISTICS_CONFIGS[logistics_mode]
@@ -3137,7 +3137,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            "成功计算物流成本",
+            "Successful calculation of logistics costs",
             {
                 "logistics_mode": logistics_mode,
                 "quantity": quantity,
@@ -3172,7 +3172,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "SUPPLIER_NOT_FOUND",
-                f"供应商 {supplier_name} 不存在"
+                f"Supplier {supplier_name} does not exist"
             )
 
         supplier = self.suppliers[supplier_id]
@@ -3182,7 +3182,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "MATERIAL_NOT_PROVIDED",
-                f"供应商 {supplier_name} 不提供材料 {material_id}"
+                f"Supplier {supplier_name} does not offer material {material_id}"
             )
 
         # 3. Costing of materials
@@ -3197,7 +3197,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "LOGISTICS_COST_ERROR",
-                "物流成本计算失败"
+                "Logistics costing failed"
             )
 
         # Recovery of logistics costs and processing of different types of return
@@ -3215,7 +3215,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            "成功计算总采购成本",
+            "Successful calculation of total procurement costs",
             {
                 "material_id": material_id,
                 "quantity": quantity,
@@ -3250,7 +3250,7 @@ class ProcurementManager(EnhancedBaseModule):
         if logistics_config:
             return self.success_response(
                 response,
-                f"成功获取物流方式 {logistics_mode} 的信息",
+                f"Retrieved logistics method {logistics_mode}",
                 {
                     "logistics_mode": logistics_mode,
                     "logistics_info": logistics_config
@@ -3260,7 +3260,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "LOGISTICS_MODE_NOT_FOUND",
-                f"未知的物流方式: {logistics_mode}"
+                f"Unknown logistics method: {logistics_mode}"
             )
 
 
@@ -3334,7 +3334,7 @@ class ProcurementManager(EnhancedBaseModule):
         if result.success:
             return self.success_response(
                 response,
-                "协商已发起",
+                "Consultations initiated",
                 {
                     "negotiation_id": negotiation_id
                 }
@@ -3343,7 +3343,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "NEGOTIATION_SEND_FAILED",
-                "协商发起失败"
+                "Negotiations failed."
             )
 
     @with_response("respond_to_offer")
@@ -3365,7 +3365,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "NEGOTIATION_NOT_FOUND",
-                f"协商 {negotiation_id} 不存在"
+                f"Negotiation {negotiation_id} does not exist"
             )
 
         negotiation = self.negotiations[negotiation_id]
@@ -3388,7 +3388,7 @@ class ProcurementManager(EnhancedBaseModule):
                 if result.success:
                     return self.success_response(
                         response,
-                        "报价已接受",
+                        "Proposal accepted",
                         {
                             "negotiation_id": negotiation_id,
                             "status": "accepted",
@@ -3399,14 +3399,14 @@ class ProcurementManager(EnhancedBaseModule):
                     return self.error_response(
                         response,
                         "MESSAGE_SEND_FAILED",
-                        "报价接受消息发送失败"
+                        "Can not open message"
                     )
             elif action == "reject":
                 # Rejected quotations
                 negotiation["status"] = "rejected"
                 return self.success_response(
                     response,
-                    "报价已拒绝，协商终止",
+                    "The offer was rejected and the negotiations were terminated.",
                     {
                         "negotiation_id": negotiation_id,
                         "status": "rejected"
@@ -3418,13 +3418,13 @@ class ProcurementManager(EnhancedBaseModule):
                     return self.error_response(
                         response,
                         "MISSING_COUNTER_PRICE",
-                        "还价需要提供 counter_price"
+                        "Repayment requires counter_price"
                     )
 
                 negotiation["rounds"] += 1
                 return self.success_response(
                     response,
-                    f"已发送还价 ¥{counter_price:.2f}（简化版，实际需要消息系统）",
+                    f"Counteroffer sent at {counter_price:.2f} (simplified workflow; a messaging system is required for delivery)",
                     {
                         "negotiation_id": negotiation_id,
                         "status": "countered",
@@ -3447,7 +3447,7 @@ class ProcurementManager(EnhancedBaseModule):
                         self.create_purchase_order(negotiation["product_id"],negotiation["quantity"],negotiation["target_enterprise_id"],logistics_mode="air")
                         return self.success_response(
                             response,
-                            "报价已接受",
+                            "Proposal accepted",
                             {
                                 "negotiation_id": negotiation_id,
                                 "status": "accepted",
@@ -3458,27 +3458,27 @@ class ProcurementManager(EnhancedBaseModule):
                         return self.error_response(
                             response,
                             "MESSAGE_SEND_FAILED",
-                            "报价接受消息发送失败"
+                            "Can not open message"
                         )
                 else:
                     return self.error_response(
                         response,
                         "PRICE_EXCEEDS_LIMIT",
-                        "还价价格超出最大可接受范围"
+                        "Prices are above maximum acceptable"
                     )
             else:
                 # Unknown Action Type
                 return self.error_response(
                     response,
                     "INVALID_ACTION",
-                    f"未知的动作类型: {action}"
+                    f"Unknown action type: {action}"
                 )
         except Exception as e:
             # Addressing anomalies
             return self.error_response(
                 response,
                 "UNKNOWN_ERROR",
-                f"处理报价响应时发生异常: {e}"
+                f"Exception while processing quotation response: {e}"
             )
 
 
@@ -3627,7 +3627,7 @@ class ProcurementManager(EnhancedBaseModule):
 
             return self.success_response(
                 response,
-                "成功获取采购状态总览",
+                "Successful procurement status overview",
                 status_data
             )
         except Exception as e:
@@ -3636,7 +3636,7 @@ class ProcurementManager(EnhancedBaseModule):
             import logging
 
             logger = logging.getLogger(__name__)
-            error_detail = f"获取采购状态失败: {e}"
+            error_detail = f"Failed to retrieve procurement status: {e}"
             stack_trace = traceback.format_exc()
 
             # Log to Log
@@ -3667,7 +3667,7 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "SUPPLIER_NOT_FOUND",
-                f"供应商 {supplier_name} 不存在"
+                f"Supplier {supplier_name} does not exist"
             )
 
         supplier = self.suppliers[supplier_id]
@@ -3699,7 +3699,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"成功获取供应商 {supplier_name} 的绩效信息",
+            f"Retrieved performance data for supplier {supplier_name}",
             performance_data
         )
 
@@ -3723,7 +3723,7 @@ class ProcurementManager(EnhancedBaseModule):
 
             # Check parameter success
             if not procurement_status_result.success:
-                logger.error(f"get_procurement_status 失败: {procurement_status_result.message}")
+                logger.error(f"get_procurement_status failed: {procurement_status_result.message}")
                 logger.error(f"errors: {procurement_status_result.errors}")
 
                 # If you fail, return basic information.
@@ -3733,7 +3733,7 @@ class ProcurementManager(EnhancedBaseModule):
                     "error": procurement_status_result.message,
                     "error_code": procurement_status_result.errors[0].get('code') if procurement_status_result.errors else None
                 }
-                return self.success_response(response, "获取采购模块状态（部分失败）", state_data)
+                return self.success_response(response, "Acquisition of procurement module status (partial failure)", state_data)
 
             # Ensure correct extraction of data
             if hasattr(procurement_status_result, 'data'):
@@ -3742,7 +3742,7 @@ class ProcurementManager(EnhancedBaseModule):
                 procurement_status = procurement_status_result
             else:
                 procurement_status = {}
-                logger.warning(f"意外的 procurement_status_result 类型: {type(procurement_status_result)}")
+                logger.warning(f"Unexpected procurement_status_result type: {type(procurement_status_result)}")
 
             self._refresh_proposal_views()
 
@@ -3760,13 +3760,13 @@ class ProcurementManager(EnhancedBaseModule):
 
             return self.success_response(
                 response,
-                "成功获取采购模块状态",
+                "Successful acquisition of procurement module status",
                 state_data
             )
         except Exception as e:
             # Deal with anomalies and record detailed errors
             import traceback
-            error_detail = f"获取模块状态失败: {e}"
+            error_detail = f"Failed to retrieve module status: {e}"
             stack_trace = traceback.format_exc()
 
             logger.error(f"{error_detail}\n{stack_trace}")
@@ -3834,7 +3834,7 @@ class ProcurementManager(EnhancedBaseModule):
 
         return self.success_response(
             response,
-            f"消息已处理: {message.get('content', 'No content')}",
+            f"Message processed: {message.get('content', 'No content')}",
             {}
         )
     
@@ -3935,7 +3935,7 @@ class ProcurementManager(EnhancedBaseModule):
 
             # Build AnalysisJSON
             analysis_json = {
-                "analysis_type": "采购订单分析",
+                "analysis_type": "Analysis of purchase orders",
                 "timestamp": timestamp,
                 "metrics": self.procurement_metrics,
                 "order_analysis": {
@@ -3962,17 +3962,17 @@ class ProcurementManager(EnhancedBaseModule):
                     "total_purchase_cost": self.procurement_metrics.get("total_cost", 0)
                 },
                 "insights": [
-                    f"总采购订单数: {self.procurement_metrics.get('total_orders', 0)}",
-                    f"完成订单数: {self.procurement_metrics.get('completed_orders', 0)}",
-                    f"准时到货率: {self.procurement_metrics.get('on_time_rate', 0):.2f}",
-                    f"总采购成本: ¥{self.procurement_metrics.get('total_cost', 0):,.2f}",
-                    f"采购成本率: {self.procurement_metrics.get('procurement_cost_rate', 0):.2f}"
+                    f"Total purchase orders: {self.procurement_metrics.get('total_orders', 0)}",
+                    f"Completed orders: {self.procurement_metrics.get('completed_orders', 0)}",
+                    f"On-time arrival rate: {self.procurement_metrics.get('on_time_rate', 0):.2f}",
+                    f"Total procurement cost: {self.procurement_metrics.get('total_cost', 0):,.2f}",
+                    f"Procurement cost ratio: {self.procurement_metrics.get('procurement_cost_rate', 0):.2f}"
                 ]
             }
 
             return self.success_response(
                 response,
-                "成功生成采购订单分析",
+                "Successfully generated analysis of purchase orders",
                 {
                     "analysis": analysis_json
                 }
@@ -3981,5 +3981,5 @@ class ProcurementManager(EnhancedBaseModule):
             return self.error_response(
                 response,
                 "ANALYSIS_ERROR",
-                f"生成采购订单分析失败: {e}"
+                f"Failed to generate purchase-order analysis: {e}"
             )

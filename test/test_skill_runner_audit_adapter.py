@@ -54,17 +54,17 @@ def test_e1_analysis_requires_auditable_external_response(tmp_path):
     payload = {
         "enterprise_name": "Enterprise_A",
         "round_id": 40,
-        "enterprise_summarys": "原料成本发生变化，需要结合现金和库存复核。",
+        "enterprise_summarys": "raw material Cost changes need to be reviewed in conjunction with cash and inventory.",
         "department_targets": {
             "sales": {
-                "target": "复核订单边际",
-                "evaluation": "观察毛利",
-                "reason": "成本变化",
+                "target": "Review the order margin",
+                "evaluation": "Monitor gross margin.",
+                "reason": "Cost changes",
             },
             "procurement": {
-                "target": "复核采购节奏",
-                "evaluation": "观察单位成本和现金",
-                "reason": "库存覆盖",
+                "target": "Review of procurement tempo",
+                "evaluation": "Observation unit cost and cash",
+                "reason": "Inventory coverage",
             },
         },
     }
@@ -75,12 +75,12 @@ def test_e1_analysis_requires_auditable_external_response(tmp_path):
         "active_factor_assessment": {
             "external_material_price": {
                 "observed_value": 1.25,
-                "business_implication": "补货单位成本和现金占用上升",
+                "business_implication": "replenishment Increase in unit cost and cash occupancy",
             }
         },
-        "impact_assessment": "结合库存覆盖判断成本压力",
-        "response_strategy": "按覆盖缺口和边际条件调整采购节奏",
-        "review_criteria": "未来两轮检查单位成本、现金和服务率",
+        "impact_assessment": "Cost pressure measured in conjunction with inventory coverage",
+        "response_strategy": "Adjust the procurement tempo to cover gaps and marginal conditions",
+        "review_criteria": "Unit costs, cash and service rates for the next two rounds",
     }
     assert runner._is_valid_analysis_payload(payload) is True
 
@@ -286,8 +286,8 @@ def test_e1_analyst_uses_bounded_observation_without_rewriting_archive(tmp_path)
     assert "OLD_SO_0" not in serialized
     assert "large_duplicate" not in serialized
     assert "irrelevant_history" not in serialized
-    assert "E1 长跑有界分析输入" in prompt
-    assert "不得再读取原始 observation_day92.txt" in prompt
+    assert "E1 bounded long-horizon analysis input" in prompt
+    assert "Do not read the raw observation_day92.txt" in prompt
     assert len(serialized) < len(original_raw)
     assert raw_path.read_text(encoding="utf-8") == original_raw
 
@@ -438,22 +438,22 @@ def test_skill_runner_accepts_real_analysis_payload(tmp_path):
         {
             "enterprise_name": "Manufacturer",
             "round_id": 10,
-            "enterprise_summarys": "订单积压存在，当前原料库存不足，现金仍健康。",
+            "enterprise_summarys": "There is a backlog of orders, and raw material is currently insufficient in stock and the cash remains healthy.",
             "department_targets": {
                 "production": {
-                    "target": "等待补料到货后安排小批量生产。",
-                    "evaluation": "生产计划数量不超过可用原料支撑量。",
-                    "reason": "原料短缺是当前主瓶颈。",
+                    "target": "Arrange for small-volume production, pending the arrival of supplements.",
+                    "evaluation": "The production schedule does not exceed the amount supported by raw material.",
+                    "reason": "The shortfall raw material is the main bottleneck.",
                 },
                 "sales": {
-                    "target": "停止接受新增订单，避免扩大 backlog。",
-                    "evaluation": "本轮新增 accepted 订单为 0。",
-                    "reason": "现有订单已足够暴露瓶颈。",
+                    "target": "Stop accepting new orders and avoid expanding backlogs.",
+                    "evaluation": "Add accepted order to 0 for this round.",
+                    "reason": "Existing orders are sufficient to expose bottlenecks.",
                 },
                 "procurement": {
-                    "target": "按 top-tier 额度补充 MATERIAL_1。",
-                    "evaluation": "采购单金额不超过单笔授信上限。",
-                    "reason": "当前缺料且现金健康。",
+                    "target": "Supplement MATERIAL_1 at top-tier.",
+                    "evaluation": "The value of the purchase order does not exceed the maximum amount of a single letter of credit.",
+                    "reason": "There is a shortage of material and a healthy cash.",
                 },
             },
         }
@@ -521,7 +521,7 @@ def test_e1_state_fallback_keeps_action_and_hides_scripted_label(tmp_path, monke
                             "logistics_mode": "road",
                         },
                     },
-                    "action_reason": "规则算法：scripted rules 根据库存缺口补货。",
+                    "action_reason": "Standard algorithm: scripted rules based on stock gap replenishment.",
                     "module_type": "ProcurementManager",
                     "executor_id": "Enterprise_A",
                 }
@@ -532,7 +532,7 @@ def test_e1_state_fallback_keeps_action_and_hides_scripted_label(tmp_path, monke
     runner._long_run_experiment_policy = lambda: {
         "state_driven_fallback_policy": {
             "enabled": True,
-            "visible_reason_prefix": "超时思考，调用兜底逻辑链路",
+            "visible_reason_prefix": "Think over time. Call the bottom logic link.",
         }
     }
     monkeypatch.setattr(
@@ -570,6 +570,6 @@ def test_e1_state_fallback_keeps_action_and_hides_scripted_label(tmp_path, monke
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     serialized = json.dumps(payload, ensure_ascii=False).lower()
     assert payload[0]["action"]["action_name"] == "create_purchase_demand"
-    assert "超时思考，调用兜底逻辑链路" in payload[0]["action_reason"]
+    assert "Think over time. Call the bottom logic link." in payload[0]["action_reason"]
     assert "scripted" not in serialized
-    assert "规则算法" not in serialized
+    assert "Standard algorithm" not in serialized

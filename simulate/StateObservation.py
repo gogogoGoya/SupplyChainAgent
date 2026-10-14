@@ -5,7 +5,7 @@ from typing import Dict, List, Any, Set
 # Status observation class for CEOs
 # ============================================================================
 class StateObservation:
-    """Full state observations based on modules < x17/ >()"""
+    """Aggregate a complete enterprise-state observation from module snapshots."""
 
     def __init__(
         self,

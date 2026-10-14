@@ -18,7 +18,7 @@ const formatNumber = (value) => {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
     return '-';
   }
-  return Number(value).toLocaleString('zh-CN', { maximumFractionDigits: 2 });
+  return Number(value).toLocaleString('en-US', { maximumFractionDigits: 2 });
 };
 
 const buildFlowMeta = (enterpriseSpecs = []) => {
